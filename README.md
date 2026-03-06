@@ -8,6 +8,12 @@ HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバ
 - **環境構築不要**: WebサーバーやNode.jsなどの環境構築は一切不要です。
 - **簡単実行**: ブラウザにドラッグ＆ドロップするだけで動かせます。
 
+## アプリ一覧
+
+| アプリ名 | 説明 |
+|----------|------|
+| [Random Picker](https://hatttri.github.io/single-html-apps/random-picker.html) | 改行区切りで入力したテキストからランダムで1つを選ぶツール |
+
 ## 使い方
 1. このリポジトリをクローンまたはダウンロードします。
 2. 各プロジェクトの `.html` ファイルをブラウザ（Chrome, Edge, Safari, Firefoxなど）で開いてください。
