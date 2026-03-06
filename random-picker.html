@@ -158,6 +158,15 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
         button:hover {
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
@@ -237,7 +246,10 @@
             <textarea id="itemsInput" placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"></textarea>
         </div>
 
-        <button id="pickBtn">選ぶ！ (PICK)</button>
+        <div class="button-group">
+            <button id="fullRandomBtn">完全ランダム</button>
+            <button id="exclusiveRandomBtn">排他ランダム</button>
+        </div>
 
         <div id="resultContainer" class="result-container">
             <div id="result"></div>
@@ -246,31 +258,43 @@
 
     <script>
         // DOM要素の参照を保持する変数群
-        let inputArea, pickBtn, resultDisplay, resultContainer;
+        let inputArea, fullRandomBtn, exclusiveRandomBtn, resultDisplay, resultContainer;
 
         document.addEventListener('DOMContentLoaded', () => {
             // 初期化処理：DOM要素の取得
             inputArea = document.getElementById('itemsInput');
-            pickBtn = document.getElementById('pickBtn');
+            fullRandomBtn = document.getElementById('fullRandomBtn');
+            exclusiveRandomBtn = document.getElementById('exclusiveRandomBtn');
             resultDisplay = document.getElementById('result');
             resultContainer = document.getElementById('resultContainer');
 
             // イベントリスナーの登録
-            pickBtn.addEventListener('click', handlePick);
+            fullRandomBtn.addEventListener('click', () => pick(false));
+            exclusiveRandomBtn.addEventListener('click', () => pick(true));
         });
 
-        // ピックボタンが押された時の処理
-        function handlePick() {
-            const rawText = inputArea.value;
-            const items = rawText
+        // テキストエリアから選択肢を取得する
+        function getItems() {
+            return inputArea.value
                 .split('\n')
                 .map(item => item.trim())
                 .filter(item => item !== '');
+        }
 
-            // 選択肢がない場合は空表示にする
-            const finalItem = items.length > 0 ? items[Math.floor(Math.random() * items.length)] : "";
+        // ランダムに選ぶ処理
+        // exclusive: true の場合、現在表示中の結果と同じ文字列を候補から除外する
+        function pick(exclusive) {
+            const items = getItems();
 
-            resultDisplay.textContent = finalItem; // 結果をセット
+            let pool = items;
+            if (exclusive) {
+                const current = resultDisplay.textContent;
+                const candidates = items.filter(item => item !== current);
+                pool = candidates.length > 0 ? candidates : items;
+            }
+
+            const finalItem = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : "";
+            resultDisplay.textContent = finalItem;
         }
     </script>
 </body>
