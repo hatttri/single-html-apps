@@ -1,0 +1,25 @@
+{
+  "name": "single-html-apps",
+  "version": "1.0.0",
+  "description": "ブラウザ上で動作する単一ファイルのHTMLアプリケーション（ゲーム、ツールなど）をまとめたリポジトリです。 HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバー環境なしでローカルですぐに実行・確認できます。",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hatttri/single-html-apps.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hatttri/single-html-apps/issues"
+  },
+  "homepage": "https://github.com/hatttri/single-html-apps#readme",
+  "devDependencies": {
+    "jsdom": "^28.1.0",
+    "vitest": "^4.0.18"
+  }
+}
