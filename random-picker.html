@@ -269,11 +269,11 @@
             resultContainer = document.getElementById('resultContainer');
 
             // イベントリスナーの登録
-            fullRandomBtn.addEventListener('click', () => showResult(pickFullRandom()));
-            exclusiveRandomBtn.addEventListener('click', () => showResult(pickExclusiveRandom()));
+            fullRandomBtn.addEventListener('click', () => showResult(pick(getItems())));
+            exclusiveRandomBtn.addEventListener('click', () => showResult(pick(getExclusiveItems())));
         });
 
-        // テキストエリアから選択肢を取得する
+        // テキストエリアから全選択肢を取得する
         function getItems() {
             return inputArea.value
                 .split('\n')
@@ -281,16 +281,15 @@
                 .filter(item => item !== '');
         }
 
-        // 完全ランダム: 全候補からランダムに選ぶ
-        function pickFullRandom() {
-            const items = getItems();
-            return items.length ? items[Math.floor(Math.random() * items.length)] : "";
+        // 現在の結果以外の選択肢を取得する（排他用）
+        function getExclusiveItems() {
+            const current = resultDisplay.textContent;
+            return getItems().filter(item => item !== current);
         }
 
-        // 排他ランダム: 現在表示中の結果と同じ文字列を除外して選ぶ
-        function pickExclusiveRandom() {
-            const candidates = getItems().filter(item => item !== resultDisplay.textContent);
-            return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : "";
+        // 指定された集合からランダムに1つ選ぶ
+        function pick(items) {
+            return items.length ? items[Math.floor(Math.random() * items.length)] : "";
         }
 
         // 結果を表示する
