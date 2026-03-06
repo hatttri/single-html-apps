@@ -269,8 +269,8 @@
             resultContainer = document.getElementById('resultContainer');
 
             // イベントリスナーの登録
-            fullRandomBtn.addEventListener('click', () => pick(false));
-            exclusiveRandomBtn.addEventListener('click', () => pick(true));
+            fullRandomBtn.addEventListener('click', () => showResult(pickFullRandom()));
+            exclusiveRandomBtn.addEventListener('click', () => showResult(pickExclusiveRandom()));
         });
 
         // テキストエリアから選択肢を取得する
@@ -281,20 +281,21 @@
                 .filter(item => item !== '');
         }
 
-        // ランダムに選ぶ処理
-        // exclusive: true の場合、現在表示中の結果と同じ文字列を候補から除外する
-        function pick(exclusive) {
+        // 完全ランダム: 全候補からランダムに選ぶ
+        function pickFullRandom() {
             const items = getItems();
+            return items.length ? items[Math.floor(Math.random() * items.length)] : "";
+        }
 
-            let pool = items;
-            if (exclusive) {
-                const current = resultDisplay.textContent;
-                const candidates = items.filter(item => item !== current);
-                pool = candidates.length > 0 ? candidates : items;
-            }
+        // 排他ランダム: 現在表示中の結果と同じ文字列を除外して選ぶ
+        function pickExclusiveRandom() {
+            const candidates = getItems().filter(item => item !== resultDisplay.textContent);
+            return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : "";
+        }
 
-            const finalItem = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : "";
-            resultDisplay.textContent = finalItem;
+        // 結果を表示する
+        function showResult(text) {
+            resultDisplay.textContent = text;
         }
     </script>
 </body>
