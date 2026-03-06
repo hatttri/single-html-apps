@@ -257,44 +257,61 @@
     </div>
 
     <script>
-        // DOM要素の参照を保持する変数群
-        let inputArea, fullRandomBtn, exclusiveRandomBtn, resultDisplay, resultContainer;
+        // --- UI要素の参照 ---
+        // テスト時にここを書き換えて、外部から要素にアクセスできるようにする
+        const ui = {
+            inputArea: null,
+            fullRandomBtn: null,
+            exclusiveRandomBtn: null,
+            resultDisplay: null,
+            resultContainer: null
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 初期化処理：DOM要素の取得
-            inputArea = document.getElementById('itemsInput');
-            fullRandomBtn = document.getElementById('fullRandomBtn');
-            exclusiveRandomBtn = document.getElementById('exclusiveRandomBtn');
-            resultDisplay = document.getElementById('result');
-            resultContainer = document.getElementById('resultContainer');
+            // 初期化：DOM要素の取得
+            ui.inputArea = document.getElementById('itemsInput');
+            ui.fullRandomBtn = document.getElementById('fullRandomBtn');
+            ui.exclusiveRandomBtn = document.getElementById('exclusiveRandomBtn');
+            ui.resultDisplay = document.getElementById('result');
+            ui.resultContainer = document.getElementById('resultContainer');
 
             // イベントリスナーの登録
-            fullRandomBtn.addEventListener('click', () => showResult(pick(getItems())));
-            exclusiveRandomBtn.addEventListener('click', () => showResult(pick(getExclusiveItems())));
+            ui.fullRandomBtn.addEventListener('click', () => {
+                const items = getItems(ui.inputArea.value);
+                showResult(ui.resultDisplay, pick(items));
+            });
+
+            ui.exclusiveRandomBtn.addEventListener('click', () => {
+                const items = getItems(ui.inputArea.value);
+                const currentResult = ui.resultDisplay.textContent;
+                const candidates = getExclusiveItems(items, currentResult);
+                showResult(ui.resultDisplay, pick(candidates));
+            });
         });
 
-        // テキストエリアから全選択肢を取得する
-        function getItems() {
-            return inputArea.value
+        // --- ロジック（純粋関数：引数を受け取り、計算結果を返す） ---
+
+        // テキストを配列化する
+        function getItems(rawText) {
+            return rawText
                 .split('\n')
                 .map(item => item.trim())
                 .filter(item => item !== '');
         }
 
-        // 現在の結果以外の選択肢を取得する（排他用）
-        function getExclusiveItems() {
-            const current = resultDisplay.textContent;
-            return getItems().filter(item => item !== current);
+        // 除外リストを適用した集合を返す
+        function getExclusiveItems(items, excludeItem) {
+            return items.filter(item => item !== excludeItem);
         }
 
-        // 指定された集合からランダムに1つ選ぶ
+        // 集合からランダムに1つ選ぶ
         function pick(items) {
             return items.length ? items[Math.floor(Math.random() * items.length)] : "";
         }
 
-        // 結果を表示する
-        function showResult(text) {
-            resultDisplay.textContent = text;
+        // 画面に表示する（DOM操作を関数に分離）
+        function showResult(element, text) {
+            element.textContent = text;
         }
     </script>
 </body>

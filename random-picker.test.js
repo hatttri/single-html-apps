@@ -14,11 +14,9 @@ describe('Random Picker Unit Tests', () => {
     if (scriptMatch) {
       let scriptContent = scriptMatch[1];
       
-      // 変数宣言を window へのプロパティ追加に変換して、テストからアクセス可能にする
-      scriptContent = scriptContent.replace(
-        'let inputArea, fullRandomBtn, exclusiveRandomBtn, resultDisplay, resultContainer;',
-        'window.inputArea; window.fullRandomBtn; window.exclusiveRandomBtn; window.resultDisplay; window.resultContainer;'
-      );
+      // uiオブジェクトをwindowに紐付けて、テストからアクセス可能にする
+      // 'const ui = {' を 'window.ui = {' に置換する
+      scriptContent = scriptContent.replace('const ui = {', 'window.ui = {');
 
       // 関数を明示的に window に紐付ける
       scriptContent += `
@@ -41,22 +39,15 @@ describe('Random Picker Unit Tests', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
   });
 
-  test('getItems(): テキストエリアの内容が正しく配列化される（トリミング・空行除外済み）', () => {
-    const textarea = document.getElementById('itemsInput');
-    textarea.value = "Apple\n  Banana  \n\nOrange";
-    
-    const items = window.getItems();
+  test('getItems(text): テキストが正しく配列化される（トリミング・空行除外済み）', () => {
+    const input = "Apple\n  Banana  \n\nOrange";
+    const items = window.getItems(input);
     expect(items).toEqual(["Apple", "Banana", "Orange"]);
   });
 
-  test('getExclusiveItems(): 現在表示されている結果が除外された集合が返る', () => {
-    const textarea = document.getElementById('itemsInput');
-    const resultDisp = document.getElementById('result');
-    
-    textarea.value = "Apple\nBanana\nOrange";
-    resultDisp.textContent = "Banana";
-    
-    const candidates = window.getExclusiveItems();
+  test('getExclusiveItems(items, exclude): 指定した要素が除外された集合が返る', () => {
+    const items = ["Apple", "Banana", "Orange"];
+    const candidates = window.getExclusiveItems(items, "Banana");
     expect(candidates).toEqual(["Apple", "Orange"]);
   });
 
@@ -70,16 +61,22 @@ describe('Random Picker Unit Tests', () => {
     expect(window.pick([])).toBe("");
   });
 
-  test('showResult(text): 指定した文字列が結果表示エリアに反映される', () => {
-    const resultDisp = document.getElementById('result');
-    window.showResult("テスト結果");
-    expect(resultDisp.textContent).toBe("テスト結果");
+  test('showResult(element, text): 指定した要素にテキストが反映される', () => {
+    const dummyDiv = document.createElement('div');
+    window.showResult(dummyDiv, "テスト結果");
+    expect(dummyDiv.textContent).toBe("テスト結果");
   });
 
-  test('初期化処理: DOMContentLoaded後に各変数がDOM要素を正しく参照しているか', () => {
-    expect(window.inputArea.id).toBe('itemsInput');
-    expect(window.resultDisplay.id).toBe('result');
-    expect(window.fullRandomBtn.id).toBe('fullRandomBtn');
-    expect(window.exclusiveRandomBtn.id).toBe('exclusiveRandomBtn');
+  test('初期化処理: window.ui の各プロパティがDOM要素を正しく参照しているか', () => {
+    expect(window.ui.inputArea.id).toBe('itemsInput');
+    expect(window.ui.resultDisplay.id).toBe('result');
+    expect(window.ui.fullRandomBtn.id).toBe('fullRandomBtn');
+    expect(window.ui.exclusiveRandomBtn.id).toBe('exclusiveRandomBtn');
+  });
+
+  test('UI統合テスト: フルランダムボタンクリックで結果が表示されるか', () => {
+    window.ui.inputArea.value = "TestItem";
+    window.ui.fullRandomBtn.click();
+    expect(window.ui.resultDisplay.textContent).toBe("TestItem");
   });
 });
