@@ -1,319 +1,332 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Random Picker</title>
     <style>
-        :root {
-            /* カラーパレット */
-            --bg-gradient-start: #141E30;
-            /* ダークブルー/ブラック */
-            --bg-gradient-end: #243B55;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            /* ガラスエフェクト */
-            --card-border: rgba(255, 255, 255, 0.1);
-            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      :root {
+        /* カラーパレット */
+        --bg-gradient-start: #141e30;
+        /* ダークブルー/ブラック */
+        --bg-gradient-end: #243b55;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        /* ガラスエフェクト */
+        --card-border: rgba(255, 255, 255, 0.1);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 
-            --text-primary: #FFFFFF;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-placeholder: rgba(255, 255, 255, 0.4);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --text-placeholder: rgba(255, 255, 255, 0.4);
 
-            --accent-glow: rgba(0, 212, 255, 0.6);
-            --btn-bg: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-            --btn-hover: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        --accent-glow: rgba(0, 212, 255, 0.6);
+        --btn-bg: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        --btn-hover: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
 
-            --result-bg: rgba(0, 0, 0, 0.2);
-            --result-glow: 0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
+        --result-bg: rgba(0, 0, 0, 0.2);
+        --result-glow:
+          0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
 
-            /* タイポグラフィ */
-            --font-family: system-ui, -apple-system, sans-serif;
+        /* タイポグラフィ */
+        --font-family: system-ui, -apple-system, sans-serif;
 
-            /* アニメーション */
-            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        /* アニメーション */
+        --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            outline: none;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        outline: none;
+      }
 
-        body {
-            font-family: var(--font-family);
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            background-attachment: fixed;
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-            position: relative;
-        }
+      body {
+        font-family: var(--font-family);
+        background: linear-gradient(
+          135deg,
+          var(--bg-gradient-start),
+          var(--bg-gradient-end)
+        );
+        background-attachment: fixed;
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        overflow-x: hidden;
+        position: relative;
+      }
 
-        /* メインアプリコンテナ */
+      /* メインアプリコンテナ */
+      .glass-container {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+        width: 100%;
+        max-width: 600px;
+        padding: 40px;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        text-align: center;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+        background: linear-gradient(to right, #fff, #b3e5fc);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+
+      /* 入力エリア */
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 180px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 16px;
+        color: var(--text-primary);
+        font-family: var(--font-family);
+        font-size: 1rem;
+        line-height: 1.6;
+        resize: vertical;
+        transition: var(--transition-smooth);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+      }
+
+      textarea::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      textarea::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      textarea::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+      }
+
+      textarea::placeholder {
+        color: var(--text-placeholder);
+      }
+
+      textarea:focus {
+        border-color: rgba(0, 212, 255, 0.5);
+        background: rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+      }
+
+      /* アクションボタン */
+      button {
+        background: var(--btn-bg);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 18px 32px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+      }
+
+      .button-group button {
+        flex: 1;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+        background: var(--btn-hover);
+      }
+
+      button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+      }
+
+      button:disabled {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.3);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* 結果表示エリア */
+      .result-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--result-bg);
+        border-radius: 16px;
+        min-height: 120px;
+        padding: 24px;
+        margin-top: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: var(--transition-smooth);
+        position: relative;
+      }
+
+      #result {
+        font-size: 1.8rem;
+        font-weight: 900;
+        text-align: center;
+        color: var(--text-primary);
+        word-break: break-word;
+        line-height: 1.4;
+        transition: all 0.2s ease;
+      }
+
+      /* レスポンシブ対応 */
+      @media (max-width: 600px) {
         .glass-container {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-            width: 100%;
-            max-width: 600px;
-            padding: 40px;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            position: relative;
-            overflow: hidden;
-            animation: fadeIn 0.3s ease-out;
+          padding: 24px;
+          border-radius: 20px;
         }
 
         h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            text-align: center;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
-            background: linear-gradient(to right, #fff, #b3e5fc);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          font-size: 1.6rem;
         }
 
-        .subtitle {
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-
-        /* 入力エリア */
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 180px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            color: var(--text-primary);
-            font-family: var(--font-family);
-            font-size: 1rem;
-            line-height: 1.6;
-            resize: vertical;
-            transition: var(--transition-smooth);
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-        }
-
-        textarea::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        textarea::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        textarea::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-        }
-
-        textarea::placeholder {
-            color: var(--text-placeholder);
-        }
-
-        textarea:focus {
-            border-color: rgba(0, 212, 255, 0.5);
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
-        }
-
-        /* アクションボタン */
         button {
-            background: var(--btn-bg);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            padding: 18px 32px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .button-group button {
-            flex: 1;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
-            background: var(--btn-hover);
-        }
-
-        button:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
-        }
-
-        button:disabled {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.3);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* 結果表示エリア */
-        .result-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: var(--result-bg);
-            border-radius: 16px;
-            min-height: 120px;
-            padding: 24px;
-            margin-top: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: var(--transition-smooth);
-            position: relative;
+          padding: 16px 24px;
+          font-size: 1.1rem;
         }
 
         #result {
-            font-size: 1.8rem;
-            font-weight: 900;
-            text-align: center;
-            color: var(--text-primary);
-            word-break: break-word;
-            line-height: 1.4;
-            transition: all 0.2s ease;
+          font-size: 1.5rem;
         }
-
-        /* レスポンシブ対応 */
-        @media (max-width: 600px) {
-            .glass-container {
-                padding: 24px;
-                border-radius: 20px;
-            }
-
-            h1 {
-                font-size: 1.6rem;
-            }
-
-            button {
-                padding: 16px 24px;
-                font-size: 1.1rem;
-            }
-
-            #result {
-                font-size: 1.5rem;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <div class="glass-container">
-        <header>
-            <h1>Random Picker</h1>
-            <p class="subtitle">改行区切りで入力したテキストから、<br>ルーレット風にランダムで1つを選びます。</p>
-        </header>
+      <header>
+        <h1>Random Picker</h1>
+        <p class="subtitle">
+          改行区切りで入力したテキストから、<br />ルーレット風にランダムで1つを選びます。
+        </p>
+      </header>
 
-        <div class="input-group">
-            <textarea id="itemsInput" placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"></textarea>
-        </div>
+      <div class="input-group">
+        <textarea
+          id="itemsInput"
+          placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"
+        ></textarea>
+      </div>
 
-        <div class="button-group">
-            <button id="fullRandomBtn">完全ランダム</button>
-            <button id="exclusiveRandomBtn">排他ランダム</button>
-        </div>
+      <div class="button-group">
+        <button id="fullRandomBtn">完全ランダム</button>
+        <button id="exclusiveRandomBtn">排他ランダム</button>
+      </div>
 
-        <div id="resultContainer" class="result-container">
-            <div id="result"></div>
-        </div>
+      <div id="resultContainer" class="result-container">
+        <div id="result"></div>
+      </div>
     </div>
 
     <script>
-        // --- UI要素の参照 ---
-        // テスト時にここを書き換えて、外部から要素にアクセスできるようにする
-        const ui = {
-            inputArea: null,
-            fullRandomBtn: null,
-            exclusiveRandomBtn: null,
-            resultDisplay: null,
-            resultContainer: null
+      // --- UI要素の参照 ---
+      // テスト時にここを書き換えて、外部から要素にアクセスできるようにする
+      const ui = {
+        inputArea: null,
+        fullRandomBtn: null,
+        exclusiveRandomBtn: null,
+        resultDisplay: null,
+        resultContainer: null,
+      };
+
+      const initApp = () => {
+        // 初期化：DOM要素の取得
+        ui.inputArea = document.getElementById("itemsInput");
+        ui.fullRandomBtn = document.getElementById("fullRandomBtn");
+        ui.exclusiveRandomBtn = document.getElementById("exclusiveRandomBtn");
+        ui.resultDisplay = document.getElementById("result");
+        ui.resultContainer = document.getElementById("resultContainer");
+
+        // イベントリスナーの登録（一度だけ登録されるように配慮）
+        // テスト環境での重複登録を避けるため、既存のリスナーを考慮するか、
+        // またはテスト側で制御する。ここではシンプルに関数化。
+        ui.fullRandomBtn.onclick = () => {
+          const items = getItems(ui.inputArea.value);
+          showResult(ui.resultDisplay, pick(items));
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 初期化：DOM要素の取得
-            ui.inputArea = document.getElementById('itemsInput');
-            ui.fullRandomBtn = document.getElementById('fullRandomBtn');
-            ui.exclusiveRandomBtn = document.getElementById('exclusiveRandomBtn');
-            ui.resultDisplay = document.getElementById('result');
-            ui.resultContainer = document.getElementById('resultContainer');
+        ui.exclusiveRandomBtn.onclick = () => {
+          const items = getItems(ui.inputArea.value);
+          const currentResult = ui.resultDisplay.textContent;
+          const candidates = getExclusiveItems(items, currentResult);
+          showResult(ui.resultDisplay, pick(candidates));
+        };
+      };
 
-            // イベントリスナーの登録
-            ui.fullRandomBtn.addEventListener('click', () => {
-                const items = getItems(ui.inputArea.value);
-                showResult(ui.resultDisplay, pick(items));
-            });
+      document.addEventListener("DOMContentLoaded", initApp);
 
-            ui.exclusiveRandomBtn.addEventListener('click', () => {
-                const items = getItems(ui.inputArea.value);
-                const currentResult = ui.resultDisplay.textContent;
-                const candidates = getExclusiveItems(items, currentResult);
-                showResult(ui.resultDisplay, pick(candidates));
-            });
-        });
+      // --- ロジック（純粋関数：引数を受け取り、計算結果を返す） ---
 
-        // --- ロジック（純粋関数：引数を受け取り、計算結果を返す） ---
+      // テキストを配列化する
+      function getItems(rawText) {
+        return rawText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter((item) => item !== "");
+      }
 
-        // テキストを配列化する
-        function getItems(rawText) {
-            return rawText
-                .split('\n')
-                .map(item => item.trim())
-                .filter(item => item !== '');
-        }
+      // 除外リストを適用した集合を返す
+      function getExclusiveItems(items, excludeItem) {
+        return items.filter((item) => item !== excludeItem);
+      }
 
-        // 除外リストを適用した集合を返す
-        function getExclusiveItems(items, excludeItem) {
-            return items.filter(item => item !== excludeItem);
-        }
+      // 集合からランダムに1つ選ぶ
+      function pick(items) {
+        return items.length
+          ? items[Math.floor(Math.random() * items.length)]
+          : "";
+      }
 
-        // 集合からランダムに1つ選ぶ
-        function pick(items) {
-            return items.length ? items[Math.floor(Math.random() * items.length)] : "";
-        }
-
-        // 画面に表示する（DOM操作を関数に分離）
-        function showResult(element, text) {
-            element.textContent = text;
-        }
+      // 画面に表示する（DOM操作を関数に分離）
+      function showResult(element, text) {
+        element.textContent = text;
+      }
     </script>
-</body>
-
+  </body>
 </html>
