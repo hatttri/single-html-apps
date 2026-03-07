@@ -272,7 +272,6 @@
         fullRandomBtn: null,
         exclusiveRandomBtn: null,
         resultDisplay: null,
-        resultContainer: null,
       };
 
       const initApp = () => {
@@ -281,7 +280,6 @@
         ui.fullRandomBtn = document.getElementById("fullRandomBtn");
         ui.exclusiveRandomBtn = document.getElementById("exclusiveRandomBtn");
         ui.resultDisplay = document.getElementById("result");
-        ui.resultContainer = document.getElementById("resultContainer");
 
         // イベントリスナーの登録（一度だけ登録されるように配慮）
         // テスト環境での重複登録を避けるため、既存のリスナーを考慮するか、

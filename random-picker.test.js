@@ -88,65 +88,104 @@ describe("Random Picker Unit Tests", () => {
   });
 
   describe("getExclusiveItems 検証", () => {
-    test("配列なし", () => {
-      expect(window.getExclusiveItems([], "A")).toEqual([]);
+    test("除外対象なし", () => {
+      expect(window.getExclusiveItems(["A", "B"], "C")).toEqual(["A", "B"]);
     });
 
-    test("配列あり・対象なし", () => {
-      expect(window.getExclusiveItems(["A"], "B")).toEqual(["A"]);
-    });
-
-    test("配列あり・対象あり", () => {
-      expect(window.getExclusiveItems(["A", "B"], "A")).toEqual(["B"]);
+    test("除外対象あり", () => {
+      expect(window.getExclusiveItems(["A", "B", "C"], "B")).toEqual([
+        "A",
+        "C",
+      ]);
     });
   });
 
-  describe("共通ロジック検証", () => {
-    test("pick(items): 与えられた配列の中からいずれか1つの要素が選ばれる", () => {
+  describe("pick 検証", () => {
+    test("候補なし", () => {
+      expect(window.pick([])).toBe("");
+    });
+
+    test("候補あり", () => {
       const pool = ["A", "B", "C"];
       const result = window.pick(pool);
       expect(pool).toContain(result);
     });
+  });
 
-    test("pick(items): 配列が空の場合は空文字を返す", () => {
-      expect(window.pick([])).toBe("");
-    });
-
-    test("showResult(element, text): 指定した要素にテキストが反映される", () => {
+  describe("showResult 検証", () => {
+    test("指定した要素にテキストが反映される", () => {
       const dummyDiv = document.createElement("div");
       window.showResult(dummyDiv, "テスト結果");
       expect(dummyDiv.textContent).toBe("テスト結果");
     });
   });
 
-  describe("UI統合・初期化テスト", () => {
-    test("初期化処理: window.ui の各プロパティがDOM要素を正しく参照しているか", () => {
+  describe("初期化 検証", () => {
+    test("window.ui の各プロパティがDOM要素を正しく参照しているか", () => {
       expect(window.ui.inputArea.id).toBe("itemsInput");
-      expect(window.ui.resultDisplay.id).toBe("result");
       expect(window.ui.fullRandomBtn.id).toBe("fullRandomBtn");
       expect(window.ui.exclusiveRandomBtn.id).toBe("exclusiveRandomBtn");
+      expect(window.ui.resultDisplay.id).toBe("result");
     });
+  });
 
-    test("完全ランダムボタンクリックで結果が表示されるか", () => {
-      window.ui.inputArea.value = "TestItem";
+  describe("完全ランダムボタン 検証", () => {
+    test("候補なし・表示なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "";
       window.ui.fullRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("TestItem");
+      expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("排他ランダムボタンクリックで現在の結果以外のものが選ばれるか", () => {
-      window.ui.inputArea.value = "A\nB";
+    test("候補なし・表示あり", () => {
+      window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "A";
-
-      window.ui.exclusiveRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("B");
+      window.ui.fullRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("排他ランダムボタンクリック（候補が1つの場合）、結果は空になる", () => {
+    test("候補あり・表示なし", () => {
       window.ui.inputArea.value = "A";
-      window.ui.resultDisplay.textContent = "A";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.fullRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
 
+    test("候補あり・表示あり", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "B";
+      window.ui.fullRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+  });
+
+  describe("排他ランダムボタン 検証", () => {
+    test("候補なし・表示なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "";
       window.ui.exclusiveRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("候補なし・表示あり", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "A";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("候補あり・表示なし", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("候補あり・表示あり", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "A";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("B");
     });
   });
 });
