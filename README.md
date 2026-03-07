@@ -37,3 +37,24 @@ HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバ
    ```
 
 自動テストは JSDOM を使用し、ブラウザ環境をシミュレートして HTML 内のロジックや初期化処理を検証します。
+
+## E2Eテスト (Playwright)
+
+1. 依存関係を追加します。
+   ```powershell
+   npm install -D @playwright/test
+   ```
+2. ブラウザをインストールします。
+   ```powershell
+   npx playwright install chromium
+   ```
+3. E2Eテストを実行します。
+   ```powershell
+   npm run test:e2e
+   ```
+
+ヘッドありで確認したい場合:
+
+```powershell
+npm run test:e2e:headed
+```

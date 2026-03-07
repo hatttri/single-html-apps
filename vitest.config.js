@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    include: ["**/*.test.js"],
+    exclude: ["tests/e2e/**"],
     environmentOptions: {
       jsdom: {
         runScripts: "dangerously",
