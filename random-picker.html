@@ -265,25 +265,35 @@
     </div>
 
     <script>
+      // @ts-check
+
       // --- UI要素の参照 ---
-      // テスト時にここを書き換えて、外部から要素にアクセスできるようにする
+      /**
+       * @typedef {Object} UI
+       * @property {HTMLTextAreaElement} inputArea
+       * @property {HTMLButtonElement} fullRandomBtn
+       * @property {HTMLButtonElement} exclusiveRandomBtn
+       * @property {HTMLDivElement} resultDisplay
+       */
+
+      /** @type {UI} */
       const ui = {
-        inputArea: null,
-        fullRandomBtn: null,
-        exclusiveRandomBtn: null,
-        resultDisplay: null,
+        inputArea: /** @type {HTMLTextAreaElement} */ (
+          document.getElementById("itemsInput")
+        ),
+        fullRandomBtn: /** @type {HTMLButtonElement} */ (
+          document.getElementById("fullRandomBtn")
+        ),
+        exclusiveRandomBtn: /** @type {HTMLButtonElement} */ (
+          document.getElementById("exclusiveRandomBtn")
+        ),
+        resultDisplay: /** @type {HTMLDivElement} */ (
+          document.getElementById("result")
+        ),
       };
 
       const initApp = () => {
-        // 初期化：DOM要素の取得
-        ui.inputArea = document.getElementById("itemsInput");
-        ui.fullRandomBtn = document.getElementById("fullRandomBtn");
-        ui.exclusiveRandomBtn = document.getElementById("exclusiveRandomBtn");
-        ui.resultDisplay = document.getElementById("result");
-
         // イベントリスナーの登録（一度だけ登録されるように配慮）
-        // テスト環境での重複登録を避けるため、既存のリスナーを考慮するか、
-        // またはテスト側で制御する。ここではシンプルに関数化。
         ui.fullRandomBtn.onclick = () => {
           const items = getItems(ui.inputArea.value);
           showResult(ui.resultDisplay, pick(items));
@@ -301,7 +311,11 @@
 
       // --- ロジック（純粋関数：引数を受け取り、計算結果を返す） ---
 
-      // テキストを配列化する
+      /**
+       * テキストを配列化する
+       * @param {string} rawText - 入力テキスト
+       * @returns {string[]} 有効な項目の配列
+       */
       function getItems(rawText) {
         return rawText
           .split("\n")
@@ -309,19 +323,32 @@
           .filter((item) => item !== "");
       }
 
-      // 除外リストを適用した集合を返す
+      /**
+       * 除外リストを適用した集合を返す
+       * @param {string[]} items - 全アイテムの配列
+       * @param {string} excludeItem - 除外するアイテム
+       * @returns {string[]} 除外後の配列
+       */
       function getExclusiveItems(items, excludeItem) {
         return items.filter((item) => item !== excludeItem);
       }
 
-      // 集合からランダムに1つ選ぶ
+      /**
+       * 集合からランダムに1つ選ぶ
+       * @param {string[]} items - アイテムの配列
+       * @returns {string} 選ばられたアイテム（空の場合は空文字）
+       */
       function pick(items) {
         return items.length
           ? items[Math.floor(Math.random() * items.length)]
           : "";
       }
 
-      // 画面に表示する（DOM操作を関数に分離）
+      /**
+       * 画面に表示する（DOM操作を関数に分離）
+       * @param {HTMLDivElement} element - 表示先の要素
+       * @param {string} text - 表示するテキスト
+       */
       function showResult(element, text) {
         element.textContent = text;
       }
