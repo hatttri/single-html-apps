@@ -105,10 +105,17 @@ describe("Random Picker Unit Tests", () => {
       expect(window.pick([])).toBe("");
     });
 
-    test("候補あり", () => {
+    test("候補あり・試行回数100回", () => {
       const pool = ["A", "B", "C"];
-      const result = window.pick(pool);
-      expect(pool).toContain(result);
+      const expected = new Set(pool);
+      const seen = new Set();
+      const trials = 100;
+
+      for (let i = 0; i < trials; i += 1) {
+        seen.add(window.pick(pool));
+      }
+
+      expect(seen).toEqual(expected);
     });
   });
 
