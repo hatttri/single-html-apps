@@ -4,7 +4,7 @@ const { pathToFileURL } = require("node:url");
 const { test, expect } = require("@playwright/test");
 
 const appUrl = pathToFileURL(
-  path.resolve(__dirname, "..", "..", "random-picker.html"),
+  path.resolve(__dirname, "..", "..", "apps", "random-picker.html"),
 ).href;
 
 test("初期表示: 入力欄と表示欄が空", async ({ page }) => {

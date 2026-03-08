@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 const html = fs.readFileSync(
-  path.resolve(__dirname, "./random-picker.html"),
+  path.resolve(__dirname, "..", "..", "apps", "random-picker.html"),
   "utf8",
 );
 
