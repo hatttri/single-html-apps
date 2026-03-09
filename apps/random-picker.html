@@ -107,6 +107,53 @@
         gap: 8px;
       }
 
+      .input-header,
+      .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .input-label,
+      .result-label {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+
+      .icon-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      .icon-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: none;
+      }
+
+      .icon-button:hover {
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .icon-button svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
       textarea {
         width: 100%;
         height: 180px;
@@ -191,6 +238,12 @@
       }
 
       /* 結果表示エリア */
+      .result-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
       .result-container {
         display: flex;
         justify-content: center;
@@ -226,6 +279,16 @@
           font-size: 1.6rem;
         }
 
+        .input-header,
+        .result-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .icon-buttons {
+          align-self: flex-end;
+        }
+
         button {
           padding: 16px 24px;
           font-size: 1.1rem;
@@ -248,6 +311,38 @@
       </header>
 
       <div class="input-group">
+        <div class="input-header">
+          <p class="input-label">入力欄</p>
+          <div class="icon-buttons">
+            <button
+              id="inputCopyBtn"
+              class="icon-button"
+              type="button"
+              aria-label="入力欄をコピー"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path
+                  d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="inputOpenBtn"
+              class="icon-button"
+              type="button"
+              aria-label="入力欄のリンクを新しいタブで開く"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5h5v5"></path>
+                <path d="M10 14 19 5"></path>
+                <path
+                  d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
         <textarea
           id="itemsInput"
           placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"
@@ -255,12 +350,46 @@
       </div>
 
       <div class="button-group">
-        <button id="fullRandomBtn">完全ランダム</button>
-        <button id="exclusiveRandomBtn">排他ランダム</button>
+        <button id="fullRandomBtn" type="button">完全ランダム</button>
+        <button id="exclusiveRandomBtn" type="button">排他ランダム</button>
       </div>
 
-      <div id="resultContainer" class="result-container">
-        <div id="result"></div>
+      <div class="result-group">
+        <div class="result-header">
+          <p class="result-label">表示欄</p>
+          <div class="icon-buttons">
+            <button
+              id="resultCopyBtn"
+              class="icon-button"
+              type="button"
+              aria-label="表示欄をコピー"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path
+                  d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="resultOpenBtn"
+              class="icon-button"
+              type="button"
+              aria-label="表示欄のリンクを新しいタブで開く"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5h5v5"></path>
+                <path d="M10 14 19 5"></path>
+                <path
+                  d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="resultContainer" class="result-container">
+          <div id="result"></div>
+        </div>
       </div>
     </div>
 
@@ -271,15 +400,25 @@
       /**
        * @typedef {Object} UI
        * @property {HTMLTextAreaElement} inputArea
+       * @property {HTMLButtonElement} inputCopyBtn
+       * @property {HTMLButtonElement} inputOpenBtn
        * @property {HTMLButtonElement} fullRandomBtn
        * @property {HTMLButtonElement} exclusiveRandomBtn
        * @property {HTMLDivElement} resultDisplay
+       * @property {HTMLButtonElement} resultCopyBtn
+       * @property {HTMLButtonElement} resultOpenBtn
        */
 
       /** @type {UI} */
       const ui = {
         inputArea: /** @type {HTMLTextAreaElement} */ (
           document.getElementById("itemsInput")
+        ),
+        inputCopyBtn: /** @type {HTMLButtonElement} */ (
+          document.getElementById("inputCopyBtn")
+        ),
+        inputOpenBtn: /** @type {HTMLButtonElement} */ (
+          document.getElementById("inputOpenBtn")
         ),
         fullRandomBtn: /** @type {HTMLButtonElement} */ (
           document.getElementById("fullRandomBtn")
@@ -290,20 +429,42 @@
         resultDisplay: /** @type {HTMLDivElement} */ (
           document.getElementById("result")
         ),
+        resultCopyBtn: /** @type {HTMLButtonElement} */ (
+          document.getElementById("resultCopyBtn")
+        ),
+        resultOpenBtn: /** @type {HTMLButtonElement} */ (
+          document.getElementById("resultOpenBtn")
+        ),
       };
 
       const initApp = () => {
         // イベントリスナーの登録（一度だけ登録されるように配慮）
+        ui.inputCopyBtn.onclick = async () => {
+          await copyTextToClipboard(ui.inputArea.value);
+        };
+
+        ui.inputOpenBtn.onclick = () => {
+          openUrls(parseItems(ui.inputArea.value));
+        };
+
         ui.fullRandomBtn.onclick = () => {
-          const items = getItems(ui.inputArea.value);
-          showResult(ui.resultDisplay, pick(items));
+          const items = parseItems(ui.inputArea.value);
+          renderResult(ui.resultDisplay, pickRandomItem(items));
         };
 
         ui.exclusiveRandomBtn.onclick = () => {
-          const items = getItems(ui.inputArea.value);
-          const currentResult = ui.resultDisplay.textContent;
-          const candidates = getExclusiveItems(items, currentResult);
-          showResult(ui.resultDisplay, pick(candidates));
+          const items = parseItems(ui.inputArea.value);
+          const currentItems = parseItems(ui.resultDisplay.textContent ?? "");
+          const candidates = removeExcludedItems(items, currentItems);
+          renderResult(ui.resultDisplay, pickRandomItem(candidates));
+        };
+
+        ui.resultCopyBtn.onclick = async () => {
+          await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
+        };
+
+        ui.resultOpenBtn.onclick = () => {
+          openUrls(parseItems(ui.resultDisplay.textContent ?? ""));
         };
       };
 
@@ -312,45 +473,74 @@
       // --- ロジック（純粋関数：引数を受け取り、計算結果を返す） ---
 
       /**
-       * テキストを配列化する
-       * @param {string} rawText - 入力テキスト
+       * テキストをクリップボードにコピーする
+       * @param {string} value - コピー対象のテキスト
+       * @returns {Promise<void>} コピー完了を表す Promise
+       */
+      async function copyTextToClipboard(value) {
+        await navigator.clipboard.writeText(value);
+      }
+
+      /**
+       * 文字列配列を整形する
+       * @param {string[]} values - 整形前の文字列配列
        * @returns {string[]} 有効な項目の配列
        */
-      function getItems(rawText) {
-        return rawText
-          .split("\n")
-          .map((item) => item.trim())
-          .filter((item) => item !== "");
+      function normalizeItems(values) {
+        return values
+          .map((value) => value.trim())
+          .filter((value) => value !== "");
       }
 
       /**
-       * 除外リストを適用した集合を返す
-       * @param {string[]} items - 全アイテムの配列
-       * @param {string} excludeItem - 除外するアイテム
-       * @returns {string[]} 除外後の配列
+       * URL 配列を新しいタブで順に開く
+       * @param {string[]} urls - 開く URL 配列
+       * @returns {void}
        */
-      function getExclusiveItems(items, excludeItem) {
-        return items.filter((item) => item !== excludeItem);
+      function openUrls(urls) {
+        urls.forEach((url) => {
+          window.open(url, "_blank");
+        });
       }
 
       /**
-       * 集合からランダムに1つ選ぶ
+       * 行テキストを配列化する
+       * @param {string} sourceText - 行区切りテキスト
+       * @returns {string[]} 有効な項目の配列
+       */
+      function parseItems(sourceText) {
+        return normalizeItems(sourceText.split("\n"));
+      }
+
+      /**
+       * 配列からランダムに1つ選ぶ
        * @param {string[]} items - アイテムの配列
        * @returns {string} 選ばられたアイテム（空の場合は空文字）
        */
-      function pick(items) {
+      function pickRandomItem(items) {
         return items.length
           ? items[Math.floor(Math.random() * items.length)]
           : "";
       }
 
       /**
+       * 除外リストを適用した配列を返す
+       * @param {string[]} items - 全アイテムの配列
+       * @param {string[]} excludedItems - 除外するアイテムの配列
+       * @returns {string[]} 除外後の配列
+       */
+      function removeExcludedItems(items, excludedItems) {
+        const excludedItemSet = new Set(excludedItems);
+        return items.filter((item) => !excludedItemSet.has(item));
+      }
+
+      /**
        * 画面に表示する（DOM操作を関数に分離）
        * @param {HTMLDivElement} element - 表示先の要素
-       * @param {string} text - 表示するテキスト
+       * @param {string} value - 表示する値
        */
-      function showResult(element, text) {
-        element.textContent = text;
+      function renderResult(element, value) {
+        element.textContent = value;
       }
     </script>
   </body>

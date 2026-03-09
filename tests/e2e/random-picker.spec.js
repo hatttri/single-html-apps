@@ -7,11 +7,224 @@ const appUrl = pathToFileURL(
   path.resolve(__dirname, "..", "..", "apps", "random-picker.html"),
 ).href;
 
+/**
+ * @typedef {{ url: string, target: string | undefined }} OpenedUrl
+ */
+
+/**
+ * @typedef {Window & {
+ *   __copiedTexts: string[];
+ *   __openedUrls: OpenedUrl[];
+ * }} RandomPickerTestWindow
+ */
+
+/**
+ * ブラウザ API をテスト用スタブに差し替える
+ * @param {import("@playwright/test").Page} page
+ * @returns {Promise<void>}
+ */
+async function installBrowserApiStubs(page) {
+  await page.addInitScript(() => {
+    /** @type {RandomPickerTestWindow} */
+    const testWindow = /** @type {RandomPickerTestWindow} */ (
+      /** @type {unknown} */ (window)
+    );
+
+    testWindow.__copiedTexts = [];
+    testWindow.__openedUrls = [];
+
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        /**
+         * @param {string} text
+         * @returns {Promise<void>}
+         */
+        writeText(text) {
+          testWindow.__copiedTexts.push(text);
+          return Promise.resolve();
+        },
+      },
+    });
+
+    window.open = (url, target) => {
+      testWindow.__openedUrls.push({ url: String(url), target });
+      return null;
+    };
+  });
+}
+
+/**
+ * コピー履歴を取得する
+ * @param {import("@playwright/test").Page} page
+ * @returns {Promise<string[]>}
+ */
+function getCopiedTexts(page) {
+  return page.evaluate(() => {
+    /** @type {RandomPickerTestWindow} */
+    const testWindow = /** @type {RandomPickerTestWindow} */ (
+      /** @type {unknown} */ (window)
+    );
+    return testWindow.__copiedTexts;
+  });
+}
+
+/**
+ * 新しいタブ起動履歴を取得する
+ * @param {import("@playwright/test").Page} page
+ * @returns {Promise<OpenedUrl[]>}
+ */
+function getOpenedUrls(page) {
+  return page.evaluate(() => {
+    /** @type {RandomPickerTestWindow} */
+    const testWindow = /** @type {RandomPickerTestWindow} */ (
+      /** @type {unknown} */ (window)
+    );
+    return testWindow.__openedUrls;
+  });
+}
+
 test("初期表示: 入力欄と表示欄が空", async ({ page }) => {
   await page.goto(appUrl);
 
   await expect(page.locator("#itemsInput")).toHaveValue("");
   await expect(page.locator("#result")).toHaveText("");
+});
+
+test.describe("入力欄コピー", () => {
+  test("入力あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page
+      .locator("#itemsInput")
+      .fill("https://example.com\nhttps://example.org");
+
+    await page.getByRole("button", { name: "入力欄をコピー" }).click();
+
+    await expect
+      .poll(() => getCopiedTexts(page))
+      .toEqual(["https://example.com\nhttps://example.org"]);
+  });
+});
+
+test.describe("入力欄リンク起動: 8パターン", () => {
+  test("単一行／空白なし／空行なし", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill("https://example.com");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([{ url: "https://example.com", target: "_blank" }]);
+  });
+
+  test("単一行／空白なし／空行あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill("");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect.poll(() => getOpenedUrls(page)).toEqual([]);
+  });
+
+  test("単一行／空白あり／空行なし", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill(" https://example.com ");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([{ url: "https://example.com", target: "_blank" }]);
+  });
+
+  test("単一行／空白あり／空行あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill("  ");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect.poll(() => getOpenedUrls(page)).toEqual([]);
+  });
+
+  test("複数行／空白なし／空行なし", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page
+      .locator("#itemsInput")
+      .fill("https://example.com\nhttps://example.org");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([
+        { url: "https://example.com", target: "_blank" },
+        { url: "https://example.org", target: "_blank" },
+      ]);
+  });
+
+  test("複数行／空白なし／空行あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill("https://example.com\n");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([{ url: "https://example.com", target: "_blank" }]);
+  });
+
+  test("複数行／空白あり／空行なし", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page
+      .locator("#itemsInput")
+      .fill(" https://example.com \n https://example.org ");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([
+        { url: "https://example.com", target: "_blank" },
+        { url: "https://example.org", target: "_blank" },
+      ]);
+  });
+
+  test("複数行／空白あり／空行あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill(" https://example.com \n  ");
+
+    await page
+      .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([{ url: "https://example.com", target: "_blank" }]);
+  });
 });
 
 test.describe("完全ランダム: 8パターン", () => {
@@ -249,5 +462,57 @@ test.describe("ランダムボタン: 3択／試行100回", () => {
     }
 
     expect(seen).toEqual(expected);
+  });
+});
+
+test.describe("表示欄コピー: 2パターン", () => {
+  test("表示なし", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+
+    await page.getByRole("button", { name: "表示欄をコピー" }).click();
+
+    await expect.poll(() => getCopiedTexts(page)).toEqual([""]);
+  });
+
+  test("表示あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#result").evaluate((el) => {
+      el.textContent = "表示テキスト";
+    });
+
+    await page.getByRole("button", { name: "表示欄をコピー" }).click();
+
+    await expect.poll(() => getCopiedTexts(page)).toEqual(["表示テキスト"]);
+  });
+});
+
+test.describe("表示欄リンク起動: 2パターン", () => {
+  test("表示なし", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+
+    await page
+      .getByRole("button", { name: "表示欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect.poll(() => getOpenedUrls(page)).toEqual([]);
+  });
+
+  test("表示あり", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#result").evaluate((el) => {
+      el.textContent = "https://example.com/result";
+    });
+
+    await page
+      .getByRole("button", { name: "表示欄のリンクを新しいタブで開く" })
+      .click();
+
+    await expect
+      .poll(() => getOpenedUrls(page))
+      .toEqual([{ url: "https://example.com/result", target: "_blank" }]);
   });
 });
