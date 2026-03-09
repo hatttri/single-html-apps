@@ -54,35 +54,35 @@ describe("Random Picker Unit Tests", () => {
     // 2. 空白 (trim)  : あり ・ なし
     // 3. 空行 (filter): あり ・ なし
 
-    test("単一行・空白なし・空行なし", () => {
+    test("単一行／空白なし／空行なし", () => {
       expect(window.getItems("A")).toEqual(["A"]);
     });
 
-    test("単一行・空白なし・空行あり", () => {
+    test("単一行／空白なし／空行あり", () => {
       expect(window.getItems("")).toEqual([]);
     });
 
-    test("単一行・空白あり・空行なし", () => {
+    test("単一行／空白あり／空行なし", () => {
       expect(window.getItems(" A ")).toEqual(["A"]);
     });
 
-    test("単一行・空白あり・空行あり", () => {
+    test("単一行／空白あり／空行あり", () => {
       expect(window.getItems("  ")).toEqual([]);
     });
 
-    test("複数行・空白なし・空行なし", () => {
+    test("複数行／空白なし／空行なし", () => {
       expect(window.getItems("A\nB")).toEqual(["A", "B"]);
     });
 
-    test("複数行・空白なし・空行あり", () => {
+    test("複数行／空白なし／空行あり", () => {
       expect(window.getItems("A\n")).toEqual(["A"]);
     });
 
-    test("複数行・空白あり・空行なし", () => {
+    test("複数行／空白あり／空行なし", () => {
       expect(window.getItems(" A \nB")).toEqual(["A", "B"]);
     });
 
-    test("複数行・空白あり・空行あり", () => {
+    test("複数行／空白あり／空行あり", () => {
       expect(window.getItems(" A \n  ")).toEqual(["A"]);
     });
   });
@@ -105,7 +105,7 @@ describe("Random Picker Unit Tests", () => {
       expect(window.pick([])).toBe("");
     });
 
-    test("候補あり・試行回数100回", () => {
+    test("候補あり／試行100回", () => {
       const pool = ["A", "B", "C"];
       const expected = new Set(pool);
       const seen = new Set();
@@ -136,63 +136,99 @@ describe("Random Picker Unit Tests", () => {
     });
   });
 
-  describe("完全ランダムボタン 検証", () => {
-    test("候補なし・表示なし", () => {
+  describe("完全ランダムボタン 検証: 8パターン", () => {
+    // 入力なし／表示なし／入力文字列内に表示文字列なし（論理的に存在しないため未実装）
+
+    test("入力なし／表示なし／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "";
       window.ui.fullRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("候補なし・表示あり", () => {
+    test("入力なし／表示あり／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "Z";
+      window.ui.fullRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    // 入力なし／表示あり／入力文字列内に表示文字列あり（論理的に存在しないため未実装）
+
+    test("入力あり／表示なし／入力文字列内に表示文字列なし", () => {
+      window.ui.inputArea.value = "A\nB\nC";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.fullRandomBtn.click();
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("入力あり／表示なし／入力文字列内に表示文字列あり", () => {
+      window.ui.inputArea.value = "A\n\nB\nC";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.fullRandomBtn.click();
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("入力あり／表示あり／入力文字列内に表示文字列なし", () => {
+      window.ui.inputArea.value = "A\nB\nC";
+      window.ui.resultDisplay.textContent = "Z";
+      window.ui.fullRandomBtn.click();
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("入力あり／表示あり／入力文字列内に表示文字列あり", () => {
+      window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "A";
       window.ui.fullRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("");
-    });
-
-    test("候補あり・表示なし", () => {
-      window.ui.inputArea.value = "A";
-      window.ui.resultDisplay.textContent = "";
-      window.ui.fullRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("A");
-    });
-
-    test("候補あり・表示あり", () => {
-      window.ui.inputArea.value = "A";
-      window.ui.resultDisplay.textContent = "B";
-      window.ui.fullRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("A");
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
   });
 
-  describe("排他ランダムボタン 検証", () => {
-    test("候補なし・表示なし", () => {
+  describe("排他ランダムボタン 検証: 8パターン", () => {
+    // 入力なし／表示なし／入力文字列内に表示文字列なし（論理的に存在しないため未実装）
+
+    test("入力なし／表示なし／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "";
       window.ui.exclusiveRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("候補なし・表示あり", () => {
-      window.ui.inputArea.value = "A";
-      window.ui.resultDisplay.textContent = "A";
+    test("入力なし／表示あり／入力文字列内に表示文字列なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "Z";
       window.ui.exclusiveRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("候補あり・表示なし", () => {
-      window.ui.inputArea.value = "A";
+    // 入力なし／表示あり／入力文字列内に表示文字列あり（論理的に存在しないため未実装）
+
+    test("入力あり／表示なし／入力文字列内に表示文字列なし", () => {
+      window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "";
       window.ui.exclusiveRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("A");
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("候補あり・表示あり", () => {
-      window.ui.inputArea.value = "A\nB";
+    test("入力あり／表示なし／入力文字列内に表示文字列あり", () => {
+      window.ui.inputArea.value = "A\n\nB\nC";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.exclusiveRandomBtn.click();
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("入力あり／表示あり／入力文字列内に表示文字列なし", () => {
+      window.ui.inputArea.value = "A\nB\nC";
+      window.ui.resultDisplay.textContent = "Z";
+      window.ui.exclusiveRandomBtn.click();
+      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("入力あり／表示あり／入力文字列内に表示文字列あり", () => {
+      window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "A";
       window.ui.exclusiveRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("B");
+      expect(["B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
   });
 });
