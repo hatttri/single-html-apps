@@ -2,10 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "fs";
 import path from "path";
 
-const html = fs.readFileSync(
-  path.resolve(__dirname, "..", "..", "apps", "random-picker.html"),
-  "utf8",
-);
+const html = fs.readFileSync(path.resolve(__dirname, "index.html"), "utf8");
 
 describe("Random Picker Unit Tests", () => {
   beforeEach(() => {

@@ -10,21 +10,23 @@
 
 ## 2. ディレクトリ規約
 
-- アプリ本体: `apps/*.html`
-- ユニットテスト: `tests/unit/*.test.js`
-- E2Eテスト: `tests/e2e/*.spec.js`
+- アプリ単位のディレクトリ: `apps/<app-name>/`
+- アプリ本体: `apps/<app-name>/index.html`
+- ユニットテスト: `apps/<app-name>/index.unit.test.js`
+- E2Eテスト: `apps/<app-name>/index.e2e.spec.js`
 - 設定ファイル: ルート（`playwright.config.js`, `vitest.config.js` など）
 
 ## 3. ファイル命名規約
 
-- アプリ: `<app-name>.html`（例: `random-picker.html`）
-- ユニットテスト: `<app-name>.test.js`
-- E2Eテスト: `<app-name>.spec.js`
+- アプリディレクトリ: `<app-name>`（例: `random-picker`）
+- アプリ本体: `index.html`
+- ユニットテスト: `index.unit.test.js`
+- E2Eテスト: `index.e2e.spec.js`
 - `<app-name>` は kebab-case を使う
 
 ## 4. 実装規約（HTMLアプリ）
 
-- 1アプリ = 1HTMLファイル（HTML/CSS/JSを同梱）
+- 1アプリ = 1ディレクトリ配下の `index.html` で完結させる
 - JSは純粋関数を優先し、副作用（DOM操作）は分離する
 - 純粋関数は実装コード内でアルファベット順に並べる
 - 純粋関数の命名は画面上の使われ方ではなく、入力と処理内容ベースで行う
@@ -108,11 +110,12 @@
 
 ## 9. 将来アプリ追加時の最小手順
 
-1. `apps/<app-name>.html` を追加
-2. `tests/unit/<app-name>.test.js` を追加
-3. `tests/e2e/<app-name>.spec.js` を追加
-4. `README.md` のアプリ一覧を更新
-5. `npm run check:all` が通ることを確認
+1. `apps/<app-name>/` を追加
+2. `apps/<app-name>/index.html` を追加
+3. `apps/<app-name>/index.unit.test.js` を追加
+4. `apps/<app-name>/index.e2e.spec.js` を追加
+5. `README.md` のアプリ一覧を更新
+6. `npm run check:all` が通ることを確認
 
 ## 10. 運用改善の自動反映
 

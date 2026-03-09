@@ -3,9 +3,7 @@ const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { test, expect } = require("@playwright/test");
 
-const appUrl = pathToFileURL(
-  path.resolve(__dirname, "..", "..", "apps", "random-picker.html"),
-).href;
+const appUrl = pathToFileURL(path.resolve(__dirname, "index.html")).href;
 
 /**
  * @typedef {{ url: string, target: string | undefined }} OpenedUrl
