@@ -202,60 +202,240 @@ describe("Random Picker Integration Tests", () => {
   });
 
   // パターン整理
-  // 01. 入力なし／あり
-  // 02. 表示なし／あり
-  // 03. 入力文字列内に表示文字列なし／あり
+  // 01. 入力行数＝１行／≧２行
+  // 02. 入力無効行なし／あり
+  // 03. 表示行数＝１行／≧２行
+  // 04. 表示無効行なし／あり
+  // 05. 共通行なし／あり
   //
   // パターン一覧
-  // × 01 入力なし／表示なし／入力文字列内に表示文字列なし
-  // ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
-  // ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
-  // × 04 入力なし／表示あり／入力文字列内に表示文字列あり
-  // ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
-  // ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
-  // ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
-  // ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+  // ○ 01 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行なし 入力=["A"]／表示=["X"]
+  // ○ 02 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行あり 入力=["A"]／表示=["A"]
+  // ○ 03 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行あり／共通行なし 入力=["A"]／表示=[""]
+  // × 04 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行あり／共通行あり
+  // ○ 05 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行なし 入力=["A"]／表示=["X","Y"]
+  // ○ 06 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行あり 入力=["A"]／表示=["A","X"]
+  // ○ 07 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行なし 入力=["A"]／表示=["X",""]
+  // ○ 08 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行あり 入力=["A"]／表示=["A",""]
+  // ○ 09 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行なし 入力=[""]／表示=["X"]
+  // × 10 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行あり
+  // ○ 11 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行なし 入力=[""]／表示=[" "]
+  // ○ 12 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行あり 入力=[""]／表示=[""]
+  // ○ 13 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行なし 入力=[""]／表示=["X","Y"]
+  // × 14 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行あり
+  // ○ 15 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行なし 入力=[""]／表示=["X"," "]
+  // ○ 16 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行あり 入力=[""]／表示=["X",""]
+  // ○ 17 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行なし 入力=["A","B"]／表示=["X"]
+  // ○ 18 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行あり 入力=["A","B"]／表示=["A"]
+  // ○ 19 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行あり／共通行なし 入力=["A","B"]／表示=[""]
+  // × 20 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行あり／共通行あり
+  // ○ 21 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行なし 入力=["A","B"]／表示=["X","Y"]
+  // ○ 22 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行あり 入力=["A","B"]／表示=["A","X"]
+  // ○ 23 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行なし 入力=["A","B"]／表示=["X",""]
+  // ○ 24 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行あり 入力=["A","B"]／表示=["A",""]
+  // ○ 25 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行なし 入力=["A",""]／表示=["X"]
+  // ○ 26 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行あり 入力=["A",""]／表示=["A"]
+  // ○ 27 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行なし 入力=["A",""]／表示=[" "]
+  // ○ 28 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行あり 入力=["A",""]／表示=[""]
+  // ○ 29 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行なし 入力=["A",""]／表示=["X","Y"]
+  // ○ 30 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行あり 入力=["A",""]／表示=["A","X"]
+  // ○ 31 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行なし 入力=["A",""]／表示=["X"," "]
+  // ○ 32 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行あり 入力=["A",""]／表示=["A",""]
   describe("ui.exclusiveRandomBtn.onclick", () => {
-    test("02 入力なし／表示なし／入力文字列内に表示文字列あり", () => {
-      window.ui.inputArea.value = "";
-      window.ui.resultDisplay.textContent = "";
+    test("01 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "X";
       window.ui.exclusiveRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("");
+      expect(window.ui.resultDisplay.textContent).toBe("A");
     });
 
-    test("03 入力なし／表示あり／入力文字列内に表示文字列なし", () => {
-      window.ui.inputArea.value = "";
-      window.ui.resultDisplay.textContent = "Z";
-      window.ui.exclusiveRandomBtn.click();
-      expect(window.ui.resultDisplay.textContent).toBe("");
-    });
-
-    test("05 入力あり／表示なし／入力文字列内に表示文字列なし", () => {
-      window.ui.inputArea.value = "A\nB\nC";
-      window.ui.resultDisplay.textContent = "";
-      window.ui.exclusiveRandomBtn.click();
-      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
-    });
-
-    test("06 入力あり／表示なし／入力文字列内に表示文字列あり", () => {
-      window.ui.inputArea.value = "A\n\nB\nC";
-      window.ui.resultDisplay.textContent = "";
-      window.ui.exclusiveRandomBtn.click();
-      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
-    });
-
-    test("07 入力あり／表示あり／入力文字列内に表示文字列なし", () => {
-      window.ui.inputArea.value = "A\nB\nC";
-      window.ui.resultDisplay.textContent = "Z";
-      window.ui.exclusiveRandomBtn.click();
-      expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
-    });
-
-    test("08 入力あり／表示あり／入力文字列内に表示文字列あり", () => {
-      window.ui.inputArea.value = "A\nB\nC";
+    test("02 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行あり", () => {
+      window.ui.inputArea.value = "A";
       window.ui.resultDisplay.textContent = "A";
       window.ui.exclusiveRandomBtn.click();
-      expect(["B", "C"]).toContain(window.ui.resultDisplay.textContent);
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("03 入力行数＝１行／入力無効行なし／表示行数＝１行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("05 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "X\nY";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("06 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行あり", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "A\nX";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("07 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "X\n";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("08 入力行数＝１行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行あり", () => {
+      window.ui.inputArea.value = "A";
+      window.ui.resultDisplay.textContent = "A\n";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("09 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "X";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("11 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = " ";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("12 入力行数＝１行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行あり", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("13 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "X\nY";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("15 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "X\n ";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("16 入力行数＝１行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行あり", () => {
+      window.ui.inputArea.value = "";
+      window.ui.resultDisplay.textContent = "X\n";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("17 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "X";
+      window.ui.exclusiveRandomBtn.click();
+      expect(["A", "B"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("18 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行なし／共通行あり", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "A";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("B");
+    });
+
+    test("19 入力行数≧２行／入力無効行なし／表示行数＝１行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.exclusiveRandomBtn.click();
+      expect(["A", "B"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("21 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "X\nY";
+      window.ui.exclusiveRandomBtn.click();
+      expect(["A", "B"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("22 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行なし／共通行あり", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "A\nX";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("B");
+    });
+
+    test("23 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "X\n";
+      window.ui.exclusiveRandomBtn.click();
+      expect(["A", "B"]).toContain(window.ui.resultDisplay.textContent);
+    });
+
+    test("24 入力行数≧２行／入力無効行なし／表示行数≧２行／表示無効行あり／共通行あり", () => {
+      window.ui.inputArea.value = "A\nB";
+      window.ui.resultDisplay.textContent = "A\n";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("B");
+    });
+
+    test("25 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "X";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("26 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行なし／共通行あり", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "A";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("27 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = " ";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("28 入力行数≧２行／入力無効行あり／表示行数＝１行／表示無効行あり／共通行あり", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("29 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行なし", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "X\nY";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("30 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行なし／共通行あり", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "A\nX";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
+    });
+
+    test("31 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行なし", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "X\n ";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("A");
+    });
+
+    test("32 入力行数≧２行／入力無効行あり／表示行数≧２行／表示無効行あり／共通行あり", () => {
+      window.ui.inputArea.value = "A\n";
+      window.ui.resultDisplay.textContent = "A\n";
+      window.ui.exclusiveRandomBtn.click();
+      expect(window.ui.resultDisplay.textContent).toBe("");
     });
   });
 

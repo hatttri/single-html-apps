@@ -49,7 +49,7 @@ describe("Random Picker Unit Tests", () => {
   });
 
   // パターン整理
-  // 01. 文字数＝０文字／≧１文字
+  // 01. 文字数／＝０文字／≧１文字
   //
   // パターン一覧
   // ○ 01 文字数＝０文字
@@ -79,69 +79,48 @@ describe("Random Picker Unit Tests", () => {
       expect(writeText).toHaveBeenCalledWith("A");
     });
   });
+
   // パターン整理
-  // 01. 要素数＝０件／＝１件／≧２件
-  // 02. 空白なし／あり
-  // 03. 空行なし／あり
+  // 01. 要素数／＝０件／≧１件
+  // 02. 先頭末尾空白／なし／あり
+  // 03. 空白行／なし／あり
   //
   // パターン一覧
   // ○ 01 要素数＝０件
-  // ○ 02 要素数＝１件／空白なし／空行なし
-  // ○ 03 要素数＝１件／空白なし／空行あり
-  // ○ 04 要素数＝１件／空白あり／空行なし
-  // ○ 05 要素数＝１件／空白あり／空行あり
-  // ○ 06 要素数≧２件／空白なし／空行なし
-  // ○ 07 要素数≧２件／空白なし／空行あり
-  // ○ 08 要素数≧２件／空白あり／空行なし
-  // ○ 09 要素数≧２件／空白あり／空行あり
+  // ○ 02 要素数≧１件／先頭末尾空白なし／空白行なし
+  // ○ 03 要素数≧１件／先頭末尾空白なし／空白行あり
+  // ○ 04 要素数≧１件／先頭末尾空白あり／空白行なし
+  // ○ 05 要素数≧１件／先頭末尾空白あり／空白行あり
   describe("normalizeItems", () => {
     test("01 要素数＝０件", () => {
       expect(window.normalizeItems([])).toEqual([]);
     });
 
-    test("02 要素数＝１件／空白なし／空行なし", () => {
+    test("02 要素数≧１件／先頭末尾空白なし／空白行なし", () => {
       expect(window.normalizeItems(["A"])).toEqual(["A"]);
     });
 
-    test("03 要素数＝１件／空白なし／空行あり", () => {
-      expect(window.normalizeItems([""])).toEqual([]);
-    });
-
-    test("04 要素数＝１件／空白あり／空行なし", () => {
-      expect(window.normalizeItems([" A "])).toEqual(["A"]);
-    });
-
-    test("05 要素数＝１件／空白あり／空行あり", () => {
-      expect(window.normalizeItems(["  "])).toEqual([]);
-    });
-
-    test("06 要素数≧２件／空白なし／空行なし", () => {
-      expect(window.normalizeItems(["A", "B"])).toEqual(["A", "B"]);
-    });
-
-    test("07 要素数≧２件／空白なし／空行あり", () => {
+    test("03 要素数≧１件／先頭末尾空白なし／空白行あり", () => {
       expect(window.normalizeItems(["A", ""])).toEqual(["A"]);
     });
 
-    test("08 要素数≧２件／空白あり／空行なし", () => {
-      expect(window.normalizeItems([" A ", " B "])).toEqual(["A", "B"]);
+    test("04 要素数≧１件／先頭末尾空白あり／空白行なし", () => {
+      expect(window.normalizeItems([" A "])).toEqual(["A"]);
     });
 
-    test("09 要素数≧２件／空白あり／空行あり", () => {
+    test("05 要素数≧１件／先頭末尾空白あり／空白行あり", () => {
       expect(window.normalizeItems([" A ", "  "])).toEqual(["A"]);
     });
   });
 
   // パターン整理
-  // 01. 要素数＝０件／＝１件／≧２件
-  // 02. 文字数＝０文字／≧１文字
+  // 01. 要素数／＝０件／≧１件
+  // 02. 文字数／＝０文字／≧１文字
   //
   // パターン一覧
   // ○ 01 要素数＝０件
-  // ○ 02 要素数＝１件／文字数＝０文字
-  // ○ 03 要素数＝１件／文字数≧１文字
-  // ○ 04 要素数≧２件／文字数＝０文字
-  // ○ 05 要素数≧２件／文字数≧１文字
+  // ○ 02 要素数≧１件／文字数＝０文字
+  // ○ 03 要素数≧１件／文字数≧１文字
   describe("openUrls", () => {
     test("01 要素数＝０件", () => {
       const open = vi.fn();
@@ -152,27 +131,7 @@ describe("Random Picker Unit Tests", () => {
       expect(open).not.toHaveBeenCalled();
     });
 
-    test("02 要素数＝１件／文字数＝０文字", () => {
-      const open = vi.fn();
-      window.open = open;
-
-      window.openUrls([""]);
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("", "_blank");
-    });
-
-    test("03 要素数＝１件／文字数≧１文字", () => {
-      const open = vi.fn();
-      window.open = open;
-
-      window.openUrls(["a"]);
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("a", "_blank");
-    });
-
-    test("04 要素数≧２件／文字数＝０文字", () => {
+    test("02 要素数≧１件／文字数＝０文字", () => {
       const open = vi.fn();
       window.open = open;
 
@@ -183,7 +142,7 @@ describe("Random Picker Unit Tests", () => {
       expect(open).toHaveBeenNthCalledWith(2, "", "_blank");
     });
 
-    test("05 要素数≧２件／文字数≧１文字", () => {
+    test("03 要素数≧１件／文字数≧１文字", () => {
       const open = vi.fn();
       window.open = open;
 
