@@ -41,7 +41,7 @@ describe("Random Picker Integration Tests", () => {
   });
 
   describe("initApp", () => {
-    test("window.ui の各プロパティがDOM要素を正しく参照しているか", () => {
+    test("ui", () => {
       expect(window.ui.inputArea.id).toBe("itemsInput");
       expect(window.ui.inputCopyBtn.id).toBe("inputCopyBtn");
       expect(window.ui.inputOpenBtn.id).toBe("inputOpenBtn");
@@ -53,8 +53,27 @@ describe("Random Picker Integration Tests", () => {
     });
   });
 
+  // パターン整理
+  // 01. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 文字数＝０文字
+  // ○ 02 文字数≧１文字
   describe("ui.inputCopyBtn.onclick", () => {
-    test("入力あり", async () => {
+    test("01 文字数＝０文字", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(window.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
+
+      window.ui.inputArea.value = "";
+      await window.ui.inputCopyBtn.click();
+
+      expect(writeText).toHaveBeenCalledWith("");
+    });
+
+    test("02 文字数≧１文字", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
@@ -68,29 +87,17 @@ describe("Random Picker Integration Tests", () => {
     });
   });
 
-  describe("ui.inputOpenBtn.onclick: 8パターン", () => {
-    test("単一行／空白なし／空行なし", () => {
-      const open = vi.fn();
-      window.open = open;
-      window.ui.inputArea.value = "https://example.com";
-
-      window.ui.inputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
-    });
-
-    test("単一行／空白なし／空行あり", () => {
-      const open = vi.fn();
-      window.open = open;
-      window.ui.inputArea.value = "";
-
-      window.ui.inputOpenBtn.click();
-
-      expect(open).not.toHaveBeenCalled();
-    });
-
-    test("単一行／空白あり／空行なし", () => {
+  // パターン整理
+  // 01. 行数＝１行／≧２行
+  // 02. 無効行なし／あり
+  //
+  // パターン一覧
+  // ○ 01 行数＝１行／無効行なし
+  // ○ 02 行数＝１行／無効行あり
+  // ○ 03 行数≧２行／無効行なし
+  // ○ 04 行数≧２行／無効行あり
+  describe("ui.inputOpenBtn.onclick", () => {
+    test("01 行数＝１行／無効行なし", () => {
       const open = vi.fn();
       window.open = open;
       window.ui.inputArea.value = " https://example.com ";
@@ -101,7 +108,7 @@ describe("Random Picker Integration Tests", () => {
       expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
     });
 
-    test("単一行／空白あり／空行あり", () => {
+    test("02 行数＝１行／無効行あり", () => {
       const open = vi.fn();
       window.open = open;
       window.ui.inputArea.value = "  ";
@@ -111,30 +118,7 @@ describe("Random Picker Integration Tests", () => {
       expect(open).not.toHaveBeenCalled();
     });
 
-    test("複数行／空白なし／空行なし", () => {
-      const open = vi.fn();
-      window.open = open;
-      window.ui.inputArea.value = "https://example.com\nhttps://example.org";
-
-      window.ui.inputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(2);
-      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
-      expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
-    });
-
-    test("複数行／空白なし／空行あり", () => {
-      const open = vi.fn();
-      window.open = open;
-      window.ui.inputArea.value = "https://example.com\n";
-
-      window.ui.inputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
-    });
-
-    test("複数行／空白あり／空行なし", () => {
+    test("03 行数≧２行／無効行なし", () => {
       const open = vi.fn();
       window.open = open;
       window.ui.inputArea.value =
@@ -147,7 +131,7 @@ describe("Random Picker Integration Tests", () => {
       expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
     });
 
-    test("複数行／空白あり／空行あり", () => {
+    test("04 行数≧２行／無効行あり", () => {
       const open = vi.fn();
       window.open = open;
       window.ui.inputArea.value = " https://example.com \n  ";
@@ -159,47 +143,57 @@ describe("Random Picker Integration Tests", () => {
     });
   });
 
-  describe("ui.fullRandomBtn.onclick: 8パターン", () => {
-    // 入力なし／表示なし／入力文字列内に表示文字列なし（論理的に存在しないため未実装）
-
-    test("入力なし／表示なし／入力文字列内に表示文字列あり", () => {
+  // パターン整理
+  // 01. 入力なし／あり
+  // 02. 表示なし／あり
+  // 03. 入力文字列内に表示文字列なし／あり
+  //
+  // パターン一覧
+  // × 01 入力なし／表示なし／入力文字列内に表示文字列なし
+  // ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
+  // ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
+  // × 04 入力なし／表示あり／入力文字列内に表示文字列あり
+  // ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
+  // ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
+  // ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
+  // ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+  describe("ui.fullRandomBtn.onclick", () => {
+    test("02 入力なし／表示なし／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "";
       window.ui.fullRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("入力なし／表示あり／入力文字列内に表示文字列なし", () => {
+    test("03 入力なし／表示あり／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "Z";
       window.ui.fullRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    // 入力なし／表示あり／入力文字列内に表示文字列あり（論理的に存在しないため未実装）
-
-    test("入力あり／表示なし／入力文字列内に表示文字列なし", () => {
+    test("05 入力あり／表示なし／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "";
       window.ui.fullRandomBtn.click();
       expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("入力あり／表示なし／入力文字列内に表示文字列あり", () => {
+    test("06 入力あり／表示なし／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "A\n\nB\nC";
       window.ui.resultDisplay.textContent = "";
       window.ui.fullRandomBtn.click();
       expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("入力あり／表示あり／入力文字列内に表示文字列なし", () => {
+    test("07 入力あり／表示あり／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "Z";
       window.ui.fullRandomBtn.click();
       expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("入力あり／表示あり／入力文字列内に表示文字列あり", () => {
+    test("08 入力あり／表示あり／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "A";
       window.ui.fullRandomBtn.click();
@@ -207,47 +201,57 @@ describe("Random Picker Integration Tests", () => {
     });
   });
 
-  describe("ui.exclusiveRandomBtn.onclick: 8パターン", () => {
-    // 入力なし／表示なし／入力文字列内に表示文字列なし（論理的に存在しないため未実装）
-
-    test("入力なし／表示なし／入力文字列内に表示文字列あり", () => {
+  // パターン整理
+  // 01. 入力なし／あり
+  // 02. 表示なし／あり
+  // 03. 入力文字列内に表示文字列なし／あり
+  //
+  // パターン一覧
+  // × 01 入力なし／表示なし／入力文字列内に表示文字列なし
+  // ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
+  // ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
+  // × 04 入力なし／表示あり／入力文字列内に表示文字列あり
+  // ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
+  // ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
+  // ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
+  // ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+  describe("ui.exclusiveRandomBtn.onclick", () => {
+    test("02 入力なし／表示なし／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "";
       window.ui.exclusiveRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    test("入力なし／表示あり／入力文字列内に表示文字列なし", () => {
+    test("03 入力なし／表示あり／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "";
       window.ui.resultDisplay.textContent = "Z";
       window.ui.exclusiveRandomBtn.click();
       expect(window.ui.resultDisplay.textContent).toBe("");
     });
 
-    // 入力なし／表示あり／入力文字列内に表示文字列あり（論理的に存在しないため未実装）
-
-    test("入力あり／表示なし／入力文字列内に表示文字列なし", () => {
+    test("05 入力あり／表示なし／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "";
       window.ui.exclusiveRandomBtn.click();
       expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("入力あり／表示なし／入力文字列内に表示文字列あり", () => {
+    test("06 入力あり／表示なし／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "A\n\nB\nC";
       window.ui.resultDisplay.textContent = "";
       window.ui.exclusiveRandomBtn.click();
       expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("入力あり／表示あり／入力文字列内に表示文字列なし", () => {
+    test("07 入力あり／表示あり／入力文字列内に表示文字列なし", () => {
       window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "Z";
       window.ui.exclusiveRandomBtn.click();
       expect(["A", "B", "C"]).toContain(window.ui.resultDisplay.textContent);
     });
 
-    test("入力あり／表示あり／入力文字列内に表示文字列あり", () => {
+    test("08 入力あり／表示あり／入力文字列内に表示文字列あり", () => {
       window.ui.inputArea.value = "A\nB\nC";
       window.ui.resultDisplay.textContent = "A";
       window.ui.exclusiveRandomBtn.click();
@@ -255,8 +259,14 @@ describe("Random Picker Integration Tests", () => {
     });
   });
 
-  describe("ui.resultCopyBtn.onclick: 2パターン", () => {
-    test("表示なし", async () => {
+  // パターン整理
+  // 01. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 文字数＝０文字
+  // ○ 02 文字数≧１文字
+  describe("ui.resultCopyBtn.onclick", () => {
+    test("01 文字数＝０文字", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
@@ -269,7 +279,7 @@ describe("Random Picker Integration Tests", () => {
       expect(writeText).toHaveBeenCalledWith("");
     });
 
-    test("表示あり", async () => {
+    test("02 文字数≧１文字", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
@@ -283,21 +293,62 @@ describe("Random Picker Integration Tests", () => {
     });
   });
 
-  describe("ui.resultOpenBtn.onclick: 2パターン", () => {
-    test("表示なし", () => {
+  // パターン整理
+  // 01. 行数＝１行／≧２行
+  // 02. 無効行なし／あり
+  //
+  // パターン一覧
+  // ○ 01 行数＝１行／無効行なし
+  // ○ 02 行数＝１行／無効行あり
+  // ○ 03 行数≧２行／無効行なし
+  // ○ 04 行数≧２行／無効行あり
+  describe("ui.resultOpenBtn.onclick", () => {
+    test("01 行数＝１行／無効行なし", () => {
       const open = vi.fn();
       window.open = open;
-      window.ui.resultDisplay.textContent = "";
+      window.ui.resultDisplay.textContent = " https://example.com/result ";
+
+      window.ui.resultOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledWith("https://example.com/result", "_blank");
+    });
+
+    test("02 行数＝１行／無効行あり", () => {
+      const open = vi.fn();
+      window.open = open;
+      window.ui.resultDisplay.textContent = "  ";
 
       window.ui.resultOpenBtn.click();
 
       expect(open).not.toHaveBeenCalled();
     });
 
-    test("表示あり", () => {
+    test("03 行数≧２行／無効行なし", () => {
       const open = vi.fn();
       window.open = open;
-      window.ui.resultDisplay.textContent = "https://example.com/result";
+      window.ui.resultDisplay.textContent =
+        " https://example.com/result \n https://example.org/result ";
+
+      window.ui.resultOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(
+        1,
+        "https://example.com/result",
+        "_blank",
+      );
+      expect(open).toHaveBeenNthCalledWith(
+        2,
+        "https://example.org/result",
+        "_blank",
+      );
+    });
+
+    test("04 行数≧２行／無効行あり", () => {
+      const open = vi.fn();
+      window.open = open;
+      window.ui.resultDisplay.textContent = " https://example.com/result \n  ";
 
       window.ui.resultOpenBtn.click();
 

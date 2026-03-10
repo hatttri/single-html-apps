@@ -418,7 +418,3 @@ describe("Random Picker Unit Tests", () => {
     });
   });
 });
-
-
-
-

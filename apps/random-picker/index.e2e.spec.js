@@ -225,10 +225,24 @@ test.describe("入力欄リンク起動: 8パターン", () => {
   });
 });
 
-test.describe("完全ランダム: 8パターン", () => {
-  // 入力なし／表示なし／入力文字列内に表示文字列なし（論理的に存在しないため未実装）
-
-  test("入力なし／表示なし／入力文字列内に表示文字列あり", async ({ page }) => {
+// パターン整理
+// 01. 入力なし／あり
+// 02. 表示なし／あり
+// 03. 入力文字列内に表示文字列なし／あり
+//
+// パターン一覧
+// × 01 入力なし／表示なし／入力文字列内に表示文字列なし
+// ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
+// ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
+// × 04 入力なし／表示あり／入力文字列内に表示文字列あり
+// ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
+// ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
+// ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
+// ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+test.describe("完全ランダムボタンクリック", () => {
+  test("02 入力なし／表示なし／入力文字列内に表示文字列あり", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
 
     await page.goto(appUrl);
@@ -241,7 +255,9 @@ test.describe("完全ランダム: 8パターン", () => {
     await expect(page.locator("#result")).toHaveText("");
   });
 
-  test("入力なし／表示あり／入力文字列内に表示文字列なし", async ({ page }) => {
+  test("03 入力なし／表示あり／入力文字列内に表示文字列なし", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
 
     await page.goto(appUrl);
@@ -254,9 +270,9 @@ test.describe("完全ランダム: 8パターン", () => {
     await expect(page.locator("#result")).toHaveText("");
   });
 
-  // 入力なし／表示あり／入力文字列内に表示文字列あり（論理的に存在しないため未実装）
-
-  test("入力あり／表示なし／入力文字列内に表示文字列なし", async ({ page }) => {
+  test("05 入力あり／表示なし／入力文字列内に表示文字列なし", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -271,7 +287,9 @@ test.describe("完全ランダム: 8パターン", () => {
     expect(items).toContain(result);
   });
 
-  test("入力あり／表示なし／入力文字列内に表示文字列あり", async ({ page }) => {
+  test("06 入力あり／表示なし／入力文字列内に表示文字列あり", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -286,7 +304,9 @@ test.describe("完全ランダム: 8パターン", () => {
     expect(items).toContain(result);
   });
 
-  test("入力あり／表示あり／入力文字列内に表示文字列なし", async ({ page }) => {
+  test("07 入力あり／表示あり／入力文字列内に表示文字列なし", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -301,7 +321,9 @@ test.describe("完全ランダム: 8パターン", () => {
     expect(items).toContain(result);
   });
 
-  test("入力あり／表示あり／入力文字列内に表示文字列あり", async ({ page }) => {
+  test("08 入力あり／表示あり／入力文字列内に表示文字列あり", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -317,10 +339,24 @@ test.describe("完全ランダム: 8パターン", () => {
   });
 });
 
-test.describe("排他ランダム: 8パターン", () => {
-  // 入力なし／表示なし／入力文字列内に表示文字列なし（論理的に存在しないため未実装）
-
-  test("入力なし／表示なし／入力文字列内に表示文字列あり", async ({ page }) => {
+// パターン整理
+// 01. 入力なし／あり
+// 02. 表示なし／あり
+// 03. 入力文字列内に表示文字列なし／あり
+//
+// パターン一覧
+// × 01 入力なし／表示なし／入力文字列内に表示文字列なし
+// ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
+// ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
+// × 04 入力なし／表示あり／入力文字列内に表示文字列あり
+// ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
+// ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
+// ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
+// ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+test.describe("排他ランダムボタンクリック", () => {
+  test("02 入力なし／表示なし／入力文字列内に表示文字列あり", async ({
+    page,
+  }) => {
     const buttonId = "#exclusiveRandomBtn";
 
     await page.goto(appUrl);
@@ -333,7 +369,9 @@ test.describe("排他ランダム: 8パターン", () => {
     await expect(page.locator("#result")).toHaveText("");
   });
 
-  test("入力なし／表示あり／入力文字列内に表示文字列なし", async ({ page }) => {
+  test("03 入力なし／表示あり／入力文字列内に表示文字列なし", async ({
+    page,
+  }) => {
     const buttonId = "#exclusiveRandomBtn";
 
     await page.goto(appUrl);
@@ -346,9 +384,9 @@ test.describe("排他ランダム: 8パターン", () => {
     await expect(page.locator("#result")).toHaveText("");
   });
 
-  // 入力なし／表示あり／入力文字列内に表示文字列あり（論理的に存在しないため未実装）
-
-  test("入力あり／表示なし／入力文字列内に表示文字列なし", async ({ page }) => {
+  test("05 入力あり／表示なし／入力文字列内に表示文字列なし", async ({
+    page,
+  }) => {
     const buttonId = "#exclusiveRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -363,7 +401,9 @@ test.describe("排他ランダム: 8パターン", () => {
     expect(items).toContain(result);
   });
 
-  test("入力あり／表示なし／入力文字列内に表示文字列あり", async ({ page }) => {
+  test("06 入力あり／表示なし／入力文字列内に表示文字列あり", async ({
+    page,
+  }) => {
     const buttonId = "#exclusiveRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -378,7 +418,9 @@ test.describe("排他ランダム: 8パターン", () => {
     expect(items).toContain(result);
   });
 
-  test("入力あり／表示あり／入力文字列内に表示文字列なし", async ({ page }) => {
+  test("07 入力あり／表示あり／入力文字列内に表示文字列なし", async ({
+    page,
+  }) => {
     const buttonId = "#exclusiveRandomBtn";
     const items = ["A", "B", "C"];
 
@@ -393,7 +435,9 @@ test.describe("排他ランダム: 8パターン", () => {
     expect(items).toContain(result);
   });
 
-  test("入力あり／表示あり／入力文字列内に表示文字列あり", async ({ page }) => {
+  test("08 入力あり／表示あり／入力文字列内に表示文字列あり", async ({
+    page,
+  }) => {
     const buttonId = "#exclusiveRandomBtn";
     const items = ["A", "B", "C"];
     const expectedItems = items.filter((item) => item !== "A");
