@@ -82,15 +82,37 @@ function getOpenedUrls(page) {
   });
 }
 
-test("初期表示: 入力欄と表示欄が空", async ({ page }) => {
+// パターン整理
+// 01. 入力欄＝空
+// 02. 表示欄＝空
+//
+// パターン一覧
+// ○ 01 入力欄＝空／表示欄＝空
+test("01 入力欄＝空／表示欄＝空", async ({ page }) => {
   await page.goto(appUrl);
 
   await expect(page.locator("#itemsInput")).toHaveValue("");
   await expect(page.locator("#result")).toHaveText("");
 });
 
+// パターン整理
+// 01. 文字数＝０文字／≧１文字
+//
+// パターン一覧
+// ○ 01 文字数＝０文字
+// ○ 02 文字数≧１文字
 test.describe("入力欄コピー", () => {
-  test("入力あり", async ({ page }) => {
+  test("01 文字数＝０文字", async ({ page }) => {
+    await installBrowserApiStubs(page);
+    await page.goto(appUrl);
+    await page.locator("#itemsInput").fill("");
+
+    await page.getByRole("button", { name: "入力欄をコピー" }).click();
+
+    await expect.poll(() => getCopiedTexts(page)).toEqual([""]);
+  });
+
+  test("02 文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page
@@ -105,8 +127,22 @@ test.describe("入力欄コピー", () => {
   });
 });
 
-test.describe("入力欄リンク起動: 8パターン", () => {
-  test("単一行／空白なし／空行なし", async ({ page }) => {
+// パターン整理
+// 01. 行数＝１行／≧２行
+// 02. 前後空白なし／あり
+// 03. 無効行なし／あり
+//
+// パターン一覧
+// ○ 01 行数＝１行／前後空白なし／無効行なし
+// ○ 02 行数＝１行／前後空白なし／無効行あり
+// ○ 03 行数＝１行／前後空白あり／無効行なし
+// ○ 04 行数＝１行／前後空白あり／無効行あり
+// ○ 05 行数≧２行／前後空白なし／無効行なし
+// ○ 06 行数≧２行／前後空白なし／無効行あり
+// ○ 07 行数≧２行／前後空白あり／無効行なし
+// ○ 08 行数≧２行／前後空白あり／無効行あり
+test.describe("入力欄リンク起動", () => {
+  test("01 行数＝１行／前後空白なし／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("https://example.com");
@@ -120,7 +156,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
       .toEqual([{ url: "https://example.com", target: "_blank" }]);
   });
 
-  test("単一行／空白なし／空行あり", async ({ page }) => {
+  test("02 行数＝１行／前後空白なし／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("");
@@ -132,7 +168,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
     await expect.poll(() => getOpenedUrls(page)).toEqual([]);
   });
 
-  test("単一行／空白あり／空行なし", async ({ page }) => {
+  test("03 行数＝１行／前後空白あり／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill(" https://example.com ");
@@ -146,7 +182,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
       .toEqual([{ url: "https://example.com", target: "_blank" }]);
   });
 
-  test("単一行／空白あり／空行あり", async ({ page }) => {
+  test("04 行数＝１行／前後空白あり／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("  ");
@@ -158,7 +194,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
     await expect.poll(() => getOpenedUrls(page)).toEqual([]);
   });
 
-  test("複数行／空白なし／空行なし", async ({ page }) => {
+  test("05 行数≧２行／前後空白なし／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page
@@ -177,7 +213,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
       ]);
   });
 
-  test("複数行／空白なし／空行あり", async ({ page }) => {
+  test("06 行数≧２行／前後空白なし／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("https://example.com\n");
@@ -191,7 +227,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
       .toEqual([{ url: "https://example.com", target: "_blank" }]);
   });
 
-  test("複数行／空白あり／空行なし", async ({ page }) => {
+  test("07 行数≧２行／前後空白あり／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page
@@ -210,7 +246,7 @@ test.describe("入力欄リンク起動: 8パターン", () => {
       ]);
   });
 
-  test("複数行／空白あり／空行あり", async ({ page }) => {
+  test("08 行数≧２行／前後空白あり／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill(" https://example.com \n  ");
@@ -454,8 +490,18 @@ test.describe("排他ランダムボタンクリック", () => {
   });
 });
 
-test.describe("ランダムボタン: 3択／試行100回", () => {
-  test("完全ランダムで全候補が1回以上出る", async ({ page }) => {
+// パターン整理
+// 01. ボタン＝完全ランダム／排他ランダム
+// 02. 全候補が１回以上出る
+// 03. 前回と同じ値を許容する／しない
+//
+// パターン一覧
+// ○ 01 ボタン＝完全ランダム／全候補が１回以上出る／前回と同じ値を許容する
+// ○ 02 ボタン＝排他ランダム／全候補が１回以上出る／前回と同じ値を許容しない
+test.describe("ランダムボタン（３択／試行１００回）", () => {
+  test("01 ボタン＝完全ランダム／全候補が１回以上出る／前回と同じ値を許容する", async ({
+    page,
+  }) => {
     const buttonId = "#fullRandomBtn";
     const items = ["A", "B", "C"];
     const expected = new Set(items);
@@ -476,7 +522,7 @@ test.describe("ランダムボタン: 3択／試行100回", () => {
     expect(seen).toEqual(expected);
   });
 
-  test("排他ランダムで全候補が1回以上出る／前回と異なる値になる", async ({
+  test("02 ボタン＝排他ランダム／全候補が１回以上出る／前回と同じ値を許容しない", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
@@ -507,8 +553,14 @@ test.describe("ランダムボタン: 3択／試行100回", () => {
   });
 });
 
-test.describe("表示欄コピー: 2パターン", () => {
-  test("表示なし", async ({ page }) => {
+// パターン整理
+// 01. 文字数＝０文字／≧１文字
+//
+// パターン一覧
+// ○ 01 文字数＝０文字
+// ○ 02 文字数≧１文字
+test.describe("表示欄コピー", () => {
+  test("01 文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
 
@@ -517,7 +569,7 @@ test.describe("表示欄コピー: 2パターン", () => {
     await expect.poll(() => getCopiedTexts(page)).toEqual([""]);
   });
 
-  test("表示あり", async ({ page }) => {
+  test("02 文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#result").evaluate((el) => {
@@ -530,8 +582,14 @@ test.describe("表示欄コピー: 2パターン", () => {
   });
 });
 
-test.describe("表示欄リンク起動: 2パターン", () => {
-  test("表示なし", async ({ page }) => {
+// パターン整理
+// 01. 文字数＝０文字／≧１文字
+//
+// パターン一覧
+// ○ 01 文字数＝０文字
+// ○ 02 文字数≧１文字
+test.describe("表示欄リンク起動", () => {
+  test("01 文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
 
@@ -542,7 +600,7 @@ test.describe("表示欄リンク起動: 2パターン", () => {
     await expect.poll(() => getOpenedUrls(page)).toEqual([]);
   });
 
-  test("表示あり", async ({ page }) => {
+  test("02 文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#result").evaluate((el) => {
