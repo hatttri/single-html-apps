@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    include: ["apps/**/*.unit.test.js"],
+    include: ["apps/**/*.unit.test.js", "apps/**/*.integration.test.js"],
     exclude: ["apps/**/*.e2e.spec.js"],
     environmentOptions: {
       jsdom: {
