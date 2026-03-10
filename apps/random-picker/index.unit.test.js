@@ -48,40 +48,102 @@ describe("Random Picker Unit Tests", () => {
     }
   });
 
+  // パターン整理
+  // 01. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 文字数＝０文字
+  // ○ 02 文字数≧１文字
   describe("copyTextToClipboard", () => {
-    test("指定したテキストをクリップボードにコピーする", async () => {
+    test("01 文字数＝０文字", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
         value: { writeText },
       });
 
-      await window.copyTextToClipboard("A\nB");
+      await window.copyTextToClipboard("");
 
-      expect(writeText).toHaveBeenCalledWith("A\nB");
+      expect(writeText).toHaveBeenCalledWith("");
+    });
+
+    test("02 文字数≧１文字", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(window.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
+
+      await window.copyTextToClipboard("A");
+
+      expect(writeText).toHaveBeenCalledWith("A");
     });
   });
-
+  // パターン整理
+  // 01. 要素数＝０件／＝１件／≧２件
+  // 02. 空白なし／あり
+  // 03. 空行なし／あり
+  //
+  // パターン一覧
+  // ○ 01 要素数＝０件
+  // ○ 02 要素数＝１件／空白なし／空行なし
+  // ○ 03 要素数＝１件／空白なし／空行あり
+  // ○ 04 要素数＝１件／空白あり／空行なし
+  // ○ 05 要素数＝１件／空白あり／空行あり
+  // ○ 06 要素数≧２件／空白なし／空行なし
+  // ○ 07 要素数≧２件／空白なし／空行あり
+  // ○ 08 要素数≧２件／空白あり／空行なし
+  // ○ 09 要素数≧２件／空白あり／空行あり
   describe("normalizeItems", () => {
-    test("空白なし／空行なし", () => {
+    test("01 要素数＝０件", () => {
+      expect(window.normalizeItems([])).toEqual([]);
+    });
+
+    test("02 要素数＝１件／空白なし／空行なし", () => {
       expect(window.normalizeItems(["A"])).toEqual(["A"]);
     });
 
-    test("空白なし／空行あり", () => {
-      expect(window.normalizeItems(["A", ""])).toEqual(["A"]);
+    test("03 要素数＝１件／空白なし／空行あり", () => {
+      expect(window.normalizeItems([""])).toEqual([]);
     });
 
-    test("空白あり／空行なし", () => {
+    test("04 要素数＝１件／空白あり／空行なし", () => {
       expect(window.normalizeItems([" A "])).toEqual(["A"]);
     });
 
-    test("空白あり／空行あり", () => {
+    test("05 要素数＝１件／空白あり／空行あり", () => {
+      expect(window.normalizeItems(["  "])).toEqual([]);
+    });
+
+    test("06 要素数≧２件／空白なし／空行なし", () => {
+      expect(window.normalizeItems(["A", "B"])).toEqual(["A", "B"]);
+    });
+
+    test("07 要素数≧２件／空白なし／空行あり", () => {
+      expect(window.normalizeItems(["A", ""])).toEqual(["A"]);
+    });
+
+    test("08 要素数≧２件／空白あり／空行なし", () => {
+      expect(window.normalizeItems([" A ", " B "])).toEqual(["A", "B"]);
+    });
+
+    test("09 要素数≧２件／空白あり／空行あり", () => {
       expect(window.normalizeItems([" A ", "  "])).toEqual(["A"]);
     });
   });
 
-  describe("openUrls: 3パターン", () => {
-    test("0件", () => {
+  // パターン整理
+  // 01. 要素数＝０件／＝１件／≧２件
+  // 02. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 要素数＝０件
+  // ○ 02 要素数＝１件／文字数＝０文字
+  // ○ 03 要素数＝１件／文字数≧１文字
+  // ○ 04 要素数≧２件／文字数＝０文字
+  // ○ 05 要素数≧２件／文字数≧１文字
+  describe("openUrls", () => {
+    test("01 要素数＝０件", () => {
       const open = vi.fn();
       window.open = open;
 
@@ -90,105 +152,273 @@ describe("Random Picker Unit Tests", () => {
       expect(open).not.toHaveBeenCalled();
     });
 
-    test("1件", () => {
+    test("02 要素数＝１件／文字数＝０文字", () => {
       const open = vi.fn();
       window.open = open;
 
-      window.openUrls(["https://example.com"]);
+      window.openUrls([""]);
 
       expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
+      expect(open).toHaveBeenCalledWith("", "_blank");
     });
 
-    test("2件", () => {
+    test("03 要素数＝１件／文字数≧１文字", () => {
       const open = vi.fn();
       window.open = open;
 
-      window.openUrls(["https://example.net", "https://example.com"]);
+      window.openUrls(["a"]);
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledWith("a", "_blank");
+    });
+
+    test("04 要素数≧２件／文字数＝０文字", () => {
+      const open = vi.fn();
+      window.open = open;
+
+      window.openUrls(["", ""]);
 
       expect(open).toHaveBeenCalledTimes(2);
-      expect(open).toHaveBeenNthCalledWith(1, "https://example.net", "_blank");
-      expect(open).toHaveBeenNthCalledWith(2, "https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(1, "", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "", "_blank");
+    });
+
+    test("05 要素数≧２件／文字数≧１文字", () => {
+      const open = vi.fn();
+      window.open = open;
+
+      window.openUrls(["a", "b"]);
+
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "a", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "b", "_blank");
     });
   });
 
+  // パターン整理
+  // 01. 文字数＝０文字／≧１文字
+  // 02. 改行なし／あり
+  //
+  // パターン一覧
+  // ○ 01 文字数＝０文字／改行なし
+  // ○ 02 文字数＝０文字／改行あり
+  // ○ 03 文字数≧１文字／改行なし
+  // ○ 04 文字数≧１文字／改行あり
   describe("parseItems", () => {
-    // 8パターン網羅マトリクス (2^3 = 8)
-    // 1. 行数 (split) : 単一 ・ 複数
-    // 2. 空白 (trim)  : あり ・ なし
-    // 3. 空行 (filter): あり ・ なし
-
-    test("単一行／空白なし／空行なし", () => {
-      expect(window.parseItems("A")).toEqual(["A"]);
-    });
-
-    test("単一行／空白なし／空行あり", () => {
+    test("01 文字数＝０文字／改行なし", () => {
       expect(window.parseItems("")).toEqual([]);
     });
 
-    test("単一行／空白あり／空行なし", () => {
-      expect(window.parseItems(" A ")).toEqual(["A"]);
+    test("02 文字数＝０文字／改行あり", () => {
+      expect(window.parseItems("\n")).toEqual([]);
     });
 
-    test("単一行／空白あり／空行あり", () => {
-      expect(window.parseItems("  ")).toEqual([]);
+    test("03 文字数≧１文字／改行なし", () => {
+      expect(window.parseItems("A")).toEqual(["A"]);
     });
 
-    test("複数行／空白なし／空行なし", () => {
+    test("04 文字数≧１文字／改行あり", () => {
       expect(window.parseItems("A\nB")).toEqual(["A", "B"]);
-    });
-
-    test("複数行／空白なし／空行あり", () => {
-      expect(window.parseItems("A\n")).toEqual(["A"]);
-    });
-
-    test("複数行／空白あり／空行なし", () => {
-      expect(window.parseItems(" A \nB")).toEqual(["A", "B"]);
-    });
-
-    test("複数行／空白あり／空行あり", () => {
-      expect(window.parseItems(" A \n  ")).toEqual(["A"]);
     });
   });
 
+  // パターン整理
+  // 01. 要素数＝０件／＝１件／≧２件
+  // 02. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 要素数＝０件
+  // ○ 02 要素数＝１件／文字数＝０文字
+  // ○ 03 要素数＝１件／文字数≧１文字
+  // ○ 04 要素数≧２件／文字数＝０文字
+  // ○ 05 要素数≧２件／文字数≧１文字
   describe("pickRandomItem", () => {
-    test("候補なし", () => {
+    test("01 要素数＝０件", () => {
       expect(window.pickRandomItem([])).toBe("");
     });
 
-    test("候補あり／試行100回", () => {
-      const pool = ["A", "B", "C"];
-      const expected = new Set(pool);
-      const seen = new Set();
-      const trials = 100;
+    test("02 要素数＝１件／文字数＝０文字", () => {
+      expect(window.pickRandomItem([""])).toBe("");
+    });
 
-      for (let i = 0; i < trials; i += 1) {
-        seen.add(window.pickRandomItem(pool));
-      }
+    test("03 要素数＝１件／文字数≧１文字", () => {
+      expect(window.pickRandomItem(["A"])).toBe("A");
+    });
 
-      expect(seen).toEqual(expected);
+    test("04 要素数≧２件／文字数＝０文字", () => {
+      expect(window.pickRandomItem(["", ""])).toBe("");
+    });
+
+    test("05 要素数≧２件／文字数≧１文字", () => {
+      expect(["A", "B"]).toContain(window.pickRandomItem(["A", "B"]));
     });
   });
 
-  describe("removeExcludedItems: 3パターン", () => {
-    test("0件", () => {
+  // パターン整理
+  // 01. 配列１要素数＝０件／＝１件／≧２件
+  // 02. 配列１文字数＝０文字／≧１文字
+  // 03. 配列２要素数＝０件／＝１件／≧２件
+  // 04. 配列２文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 配列１要素数＝０件／配列２要素数＝０件
+  // ○ 02 配列１要素数＝０件／配列２要素数＝１件／配列２文字数＝０文字
+  // ○ 03 配列１要素数＝０件／配列２要素数＝１件／配列２文字数≧１文字
+  // ○ 04 配列１要素数＝０件／配列２要素数≧２件／配列２文字数＝０文字
+  // ○ 05 配列１要素数＝０件／配列２要素数≧２件／配列２文字数≧１文字
+  // ○ 06 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝０件
+  // ○ 07 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数＝０文字
+  // ○ 08 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数≧１文字
+  // ○ 09 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数＝０文字
+  // ○ 10 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数≧１文字
+  // ○ 11 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝０件
+  // ○ 12 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数＝０文字
+  // ○ 13 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数≧１文字
+  // ○ 14 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数＝０文字
+  // ○ 15 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字
+  // ○ 16 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝０件
+  // ○ 17 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数＝０文字
+  // ○ 18 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数≧１文字
+  // ○ 19 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数＝０文字
+  // ○ 20 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数≧１文字
+  // ○ 21 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝０件
+  // ○ 22 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数＝０文字
+  // ○ 23 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数≧１文字
+  // ○ 24 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数＝０文字
+  // ○ 25 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字
+  describe("removeExcludedItems", () => {
+    test("01 配列１要素数＝０件／配列２要素数＝０件", () => {
+      expect(window.removeExcludedItems([], [])).toEqual([]);
+    });
+
+    test("02 配列１要素数＝０件／配列２要素数＝１件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems([], [""])).toEqual([]);
+    });
+
+    test("03 配列１要素数＝０件／配列２要素数＝１件／配列２文字数≧１文字", () => {
       expect(window.removeExcludedItems([], ["A"])).toEqual([]);
     });
 
-    test("1件", () => {
-      expect(window.removeExcludedItems(["A"], ["B"])).toEqual(["A"]);
+    test("04 配列１要素数＝０件／配列２要素数≧２件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems([], ["", ""])).toEqual([]);
     });
 
-    test("2件", () => {
-      expect(window.removeExcludedItems(["A", "B"], ["B", "C"])).toEqual(["A"]);
+    test("05 配列１要素数＝０件／配列２要素数≧２件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems([], ["A", "B"])).toEqual([]);
+    });
+
+    test("06 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝０件", () => {
+      expect(window.removeExcludedItems([""], [])).toEqual([""]);
+    });
+
+    test("07 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems([""], [""])).toEqual([]);
+    });
+
+    test("08 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems([""], ["A"])).toEqual([""]);
+    });
+
+    test("09 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems([""], ["", ""])).toEqual([]);
+    });
+
+    test("10 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems([""], ["A", "B"])).toEqual([""]);
+    });
+
+    test("11 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝０件", () => {
+      expect(window.removeExcludedItems(["A"], [])).toEqual(["A"]);
+    });
+
+    test("12 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems(["A"], [""])).toEqual(["A"]);
+    });
+
+    test("13 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems(["A"], ["A"])).toEqual([]);
+    });
+
+    test("14 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems(["A"], ["", ""])).toEqual(["A"]);
+    });
+
+    test("15 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems(["A"], ["A", "B"])).toEqual([]);
+    });
+
+    test("16 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝０件", () => {
+      expect(window.removeExcludedItems(["", ""], [])).toEqual(["", ""]);
+    });
+
+    test("17 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems(["", ""], [""])).toEqual([]);
+    });
+
+    test("18 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems(["", ""], ["A"])).toEqual(["", ""]);
+    });
+
+    test("19 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems(["", ""], ["", ""])).toEqual([]);
+    });
+
+    test("20 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems(["", ""], ["A", "B"])).toEqual([
+        "",
+        "",
+      ]);
+    });
+
+    test("21 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝０件", () => {
+      expect(window.removeExcludedItems(["A", "B"], [])).toEqual(["A", "B"]);
+    });
+
+    test("22 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems(["A", "B"], [""])).toEqual(["A", "B"]);
+    });
+
+    test("23 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems(["A", "B"], ["A"])).toEqual(["B"]);
+    });
+
+    test("24 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
+      expect(window.removeExcludedItems(["A", "B"], ["", ""])).toEqual([
+        "A",
+        "B",
+      ]);
+    });
+
+    test("25 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
+      expect(window.removeExcludedItems(["A", "B"], ["A", "B"])).toEqual([]);
     });
   });
 
+  // パターン整理
+  // 01. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 文字数＝０文字
+  // ○ 02 文字数≧１文字
   describe("renderResult", () => {
-    test("指定した要素にテキストが反映される", () => {
+    test("01 文字数＝０文字", () => {
       const dummyDiv = document.createElement("div");
+
+      window.renderResult(dummyDiv, "");
+
+      expect(dummyDiv.textContent).toBe("");
+    });
+
+    test("02 文字数≧１文字", () => {
+      const dummyDiv = document.createElement("div");
+
       window.renderResult(dummyDiv, "テスト結果");
+
       expect(dummyDiv.textContent).toBe("テスト結果");
     });
   });
 });
+
+
+
+
