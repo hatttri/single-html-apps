@@ -3,7 +3,9 @@ const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { test, expect } = require("@playwright/test");
 
-const appUrl = pathToFileURL(path.resolve(__dirname, "index.html")).href;
+const appUrl = pathToFileURL(
+  path.resolve(__dirname, "../generated/index.html"),
+).href;
 
 /**
  * @typedef {{ url: string, target: string | undefined }} OpenedUrl

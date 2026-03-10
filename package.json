@@ -4,11 +4,12 @@
   "description": "ブラウザ上で動作する単一ファイルのHTMLアプリケーション（ゲーム、ツールなど）をまとめたリポジトリです。 HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバー環境なしでローカルですぐに実行・確認できます。",
   "main": "index.js",
   "scripts": {
+    "build:random-picker": "node apps/random-picker/build/build.js",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
+    "test:e2e": "npm run build:random-picker && playwright test",
+    "test:e2e:headed": "npm run build:random-picker && playwright test --headed",
     "check:all": "npm run format && npm test && npm run test:e2e"
   },
   "repository": {
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.3.5",
+    "esbuild": "^0.27.0",
     "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
     "vitest": "^4.0.18"

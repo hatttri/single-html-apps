@@ -11,14 +11,14 @@ HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバ
 
 ## アプリ一覧
 
-| アプリ名                                                                        | 説明                                                      |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [Random Picker](https://hatttri.github.io/single-html-apps/apps/random-picker/) | 改行区切りで入力したテキストからランダムで1つを選ぶツール |
+| アプリ名                                                                                  | 説明                                                      |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [Random Picker](https://hatttri.github.io/single-html-apps/apps/random-picker/generated/) | 改行区切りで入力したテキストからランダムで1つを選ぶツール |
 
 ## 使い方
 
 1. このリポジトリをクローンまたはダウンロードします。
-2. `apps/<app-name>/index.html` をブラウザ（Chrome, Edge, Safari, Firefoxなど）で開いてください。
+2. `apps/<app-name>/generated/index.html` をブラウザ（Chrome, Edge, Safari, Firefoxなど）で開いてください。
 
 ## 開発とテスト
 
@@ -36,7 +36,7 @@ HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバ
    npm test
    ```
 
-自動テストは JSDOM を使用し、ブラウザ環境をシミュレートして HTML 内のロジックや初期化処理を検証します。
+自動テストは JSDOM を使用し、`src/` のロジックと `generated/index.html` の挙動を検証します。
 
 ## E2Eテスト (Playwright)
 

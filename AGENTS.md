@@ -11,22 +11,33 @@
 ## 2. ディレクトリ規約
 
 - アプリ単位のディレクトリ: `apps/<app-name>/`
-- アプリ本体: `apps/<app-name>/index.html`
-- ユニットテスト: `apps/<app-name>/index.unit.test.js`
-- E2Eテスト: `apps/<app-name>/index.e2e.spec.js`
+- 編集元HTML: `apps/<app-name>/src/index.html`
+- 編集元CSS: `apps/<app-name>/src/style.css`
+- 編集元JS: `apps/<app-name>/src/script.js`
+- ユニットテスト: `apps/<app-name>/tests/unit.test.js`
+- インテグレーションテスト: `apps/<app-name>/tests/integration.test.js`
+- E2Eテスト: `apps/<app-name>/tests/e2e.spec.js`
+- アプリ専用ビルドスクリプト: `apps/<app-name>/build/build.js`
+- 生成物HTML: `apps/<app-name>/generated/index.html`
 - 設定ファイル: ルート（`playwright.config.js`, `vitest.config.js` など）
 
 ## 3. ファイル命名規約
 
 - アプリディレクトリ: `<app-name>`（例: `random-picker`）
-- アプリ本体: `index.html`
-- ユニットテスト: `index.unit.test.js`
-- E2Eテスト: `index.e2e.spec.js`
+- 編集元HTML: `src/index.html`
+- 編集元CSS: `src/style.css`
+- 編集元JS: `src/script.js`
+- ユニットテスト: `tests/unit.test.js`
+- インテグレーションテスト: `tests/integration.test.js`
+- E2Eテスト: `tests/e2e.spec.js`
+- ビルドスクリプト: `build/build.js`
+- 生成物HTML: `generated/index.html`
 - `<app-name>` は kebab-case を使う
 
 ## 4. 実装規約（HTMLアプリ）
 
-- 1アプリ = 1ディレクトリ配下の `index.html` で完結させる
+- 1アプリ = 1ディレクトリ配下の `src/` を編集元、`generated/index.html` を生成物として管理する
+- `generated/index.html` は手修正せず、必ず `src/` を更新して `build/build.js` で再生成する
 - JSは純粋関数を優先し、副作用（DOM操作）は分離する
 - 純粋関数は実装コード内でアルファベット順に並べる
 - 純粋関数の命名は画面上の使われ方ではなく、入力と処理内容ベースで行う
@@ -116,12 +127,14 @@
 
 ## 9. 将来アプリ追加時の最小手順
 
-1. `apps/<app-name>/` を追加
-2. `apps/<app-name>/index.html` を追加
-3. `apps/<app-name>/index.unit.test.js` を追加
-4. `apps/<app-name>/index.e2e.spec.js` を追加
-5. `README.md` のアプリ一覧を更新
-6. `npm run check:all` が通ることを確認
+1. `apps/<app-name>/src/` を追加
+2. `apps/<app-name>/src/index.html` を追加
+3. `apps/<app-name>/src/style.css` を追加
+4. `apps/<app-name>/src/script.js` を追加
+5. `apps/<app-name>/tests/` と `apps/<app-name>/build/build.js` を追加
+6. `apps/<app-name>/generated/index.html` を生成
+7. `README.md` のアプリ一覧を更新
+8. `npm run check:all` が通ることを確認
 
 ## 10. 運用改善の自動反映
 

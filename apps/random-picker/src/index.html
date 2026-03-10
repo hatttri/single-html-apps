@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Picker</title>
+    <style>
+      /* __INLINE_STYLE__ */
+    </style>
+  </head>
+
+  <body>
+    <div class="glass-container">
+      <header>
+        <h1>Random Picker</h1>
+        <p class="subtitle">
+          改行区切りで入力したテキストから、<br />ルーレット風にランダムで1つを選びます。
+        </p>
+      </header>
+
+      <div class="input-group">
+        <div class="input-header">
+          <p class="input-label">入力欄</p>
+          <div class="icon-buttons">
+            <button
+              id="inputCopyBtn"
+              class="icon-button"
+              type="button"
+              aria-label="入力欄をコピー"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path
+                  d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="inputOpenBtn"
+              class="icon-button"
+              type="button"
+              aria-label="入力欄のリンクを新しいタブで開く"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5h5v5"></path>
+                <path d="M10 14 19 5"></path>
+                <path
+                  d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <textarea
+          id="itemsInput"
+          placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"
+        ></textarea>
+      </div>
+
+      <div class="button-group">
+        <button id="fullRandomBtn" type="button">完全ランダム</button>
+        <button id="exclusiveRandomBtn" type="button">排他ランダム</button>
+      </div>
+
+      <div class="result-group">
+        <div class="result-header">
+          <p class="result-label">表示欄</p>
+          <div class="icon-buttons">
+            <button
+              id="resultCopyBtn"
+              class="icon-button"
+              type="button"
+              aria-label="表示欄をコピー"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path
+                  d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="resultOpenBtn"
+              class="icon-button"
+              type="button"
+              aria-label="表示欄のリンクを新しいタブで開く"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 5h5v5"></path>
+                <path d="M10 14 19 5"></path>
+                <path
+                  d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="resultContainer" class="result-container">
+          <div id="result"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* __INLINE_SCRIPT__ */
+    </script>
+  </body>
+</html>

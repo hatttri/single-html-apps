@@ -1,53 +1,15 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
-import fs from "fs";
-import path from "path";
-
-const html = fs.readFileSync(path.resolve(__dirname, "index.html"), "utf8");
+import { describe, expect, test, vi } from "vitest";
+import {
+  copyTextToClipboard,
+  normalizeItems,
+  openUrls,
+  parseItems,
+  pickRandomItem,
+  removeExcludedItems,
+  renderResult,
+} from "../src/script.js";
 
 describe("Random Picker Unit Tests", () => {
-  beforeEach(() => {
-    // DOMのセットアップ
-    document.body.innerHTML = html;
-
-    // scriptタグの中身を抽出して実行
-    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
-    if (scriptMatch) {
-      let scriptContent = scriptMatch[1];
-
-      // 前のテストの残骸を掃除
-      delete window.ui;
-
-      // uiオブジェクトをwindowに紐付けて、テストからアクセス可能にする
-      // 'const ui = {' を 'window.ui = {' に置換する
-      scriptContent = scriptContent.replace("const ui = {", "window.ui = {");
-
-      // 関数を明示的に window に紐付ける
-      scriptContent += `
-        window.copyTextToClipboard = copyTextToClipboard;
-        window.normalizeItems = normalizeItems;
-        window.openUrls = openUrls;
-        window.parseItems = parseItems;
-        window.pickRandomItem = pickRandomItem;
-        window.removeExcludedItems = removeExcludedItems;
-        window.renderResult = renderResult;
-        window.initApp = initApp;
-      `;
-
-      // 実行環境（window, document）を渡してスクリプトを実行
-      try {
-        const execute = new Function("window", "document", scriptContent);
-        execute(window, document);
-      } catch (e) {
-        console.error("Script execution error:", e);
-      }
-    }
-
-    // 初期化関数を直接呼ぶ（リスナーの重複を防ぐため）
-    if (window.initApp) {
-      window.initApp();
-    }
-  });
-
   // パターン整理
   // 01. 文字数／＝０文字／≧１文字
   //
@@ -62,7 +24,7 @@ describe("Random Picker Unit Tests", () => {
         value: { writeText },
       });
 
-      await window.copyTextToClipboard("");
+      await copyTextToClipboard("");
 
       expect(writeText).toHaveBeenCalledWith("");
     });
@@ -74,7 +36,7 @@ describe("Random Picker Unit Tests", () => {
         value: { writeText },
       });
 
-      await window.copyTextToClipboard("A");
+      await copyTextToClipboard("A");
 
       expect(writeText).toHaveBeenCalledWith("A");
     });
@@ -93,23 +55,23 @@ describe("Random Picker Unit Tests", () => {
   // ○ 05 要素数≧１件／先頭末尾空白あり／空白行あり
   describe("normalizeItems", () => {
     test("01 要素数＝０件", () => {
-      expect(window.normalizeItems([])).toEqual([]);
+      expect(normalizeItems([])).toEqual([]);
     });
 
     test("02 要素数≧１件／先頭末尾空白なし／空白行なし", () => {
-      expect(window.normalizeItems(["A"])).toEqual(["A"]);
+      expect(normalizeItems(["A"])).toEqual(["A"]);
     });
 
     test("03 要素数≧１件／先頭末尾空白なし／空白行あり", () => {
-      expect(window.normalizeItems(["A", ""])).toEqual(["A"]);
+      expect(normalizeItems(["A", ""])).toEqual(["A"]);
     });
 
     test("04 要素数≧１件／先頭末尾空白あり／空白行なし", () => {
-      expect(window.normalizeItems([" A "])).toEqual(["A"]);
+      expect(normalizeItems([" A "])).toEqual(["A"]);
     });
 
     test("05 要素数≧１件／先頭末尾空白あり／空白行あり", () => {
-      expect(window.normalizeItems([" A ", "  "])).toEqual(["A"]);
+      expect(normalizeItems([" A ", "  "])).toEqual(["A"]);
     });
   });
 
@@ -126,7 +88,7 @@ describe("Random Picker Unit Tests", () => {
       const open = vi.fn();
       window.open = open;
 
-      window.openUrls([]);
+      openUrls([]);
 
       expect(open).not.toHaveBeenCalled();
     });
@@ -135,7 +97,7 @@ describe("Random Picker Unit Tests", () => {
       const open = vi.fn();
       window.open = open;
 
-      window.openUrls(["", ""]);
+      openUrls(["", ""]);
 
       expect(open).toHaveBeenCalledTimes(2);
       expect(open).toHaveBeenNthCalledWith(1, "", "_blank");
@@ -146,7 +108,7 @@ describe("Random Picker Unit Tests", () => {
       const open = vi.fn();
       window.open = open;
 
-      window.openUrls(["a", "b"]);
+      openUrls(["a", "b"]);
 
       expect(open).toHaveBeenCalledTimes(2);
       expect(open).toHaveBeenNthCalledWith(1, "a", "_blank");
@@ -155,29 +117,24 @@ describe("Random Picker Unit Tests", () => {
   });
 
   // パターン整理
-  // 01. 文字数＝０文字／≧１文字
-  // 02. 改行なし／あり
+  // 01. 文字数／０文字／≧１文字
+  // 02. 改行／なし／あり
   //
   // パターン一覧
-  // ○ 01 文字数＝０文字／改行なし
-  // ○ 02 文字数＝０文字／改行あり
-  // ○ 03 文字数≧１文字／改行なし
-  // ○ 04 文字数≧１文字／改行あり
+  // ○ 01 文字数＝０文字
+  // ○ 02 文字数≧１文字／改行なし
+  // ○ 03 文字数≧１文字／改行あり
   describe("parseItems", () => {
-    test("01 文字数＝０文字／改行なし", () => {
-      expect(window.parseItems("")).toEqual([]);
+    test("01 文字数＝０文字", () => {
+      expect(parseItems("")).toEqual([]);
     });
 
-    test("02 文字数＝０文字／改行あり", () => {
-      expect(window.parseItems("\n")).toEqual([]);
+    test("02 文字数≧１文字／改行なし", () => {
+      expect(parseItems("A")).toEqual(["A"]);
     });
 
-    test("03 文字数≧１文字／改行なし", () => {
-      expect(window.parseItems("A")).toEqual(["A"]);
-    });
-
-    test("04 文字数≧１文字／改行あり", () => {
-      expect(window.parseItems("A\nB")).toEqual(["A", "B"]);
+    test("03 文字数≧１文字／改行あり", () => {
+      expect(parseItems("A\nB")).toEqual(["A", "B"]);
     });
   });
 
@@ -193,23 +150,23 @@ describe("Random Picker Unit Tests", () => {
   // ○ 05 要素数≧２件／文字数≧１文字
   describe("pickRandomItem", () => {
     test("01 要素数＝０件", () => {
-      expect(window.pickRandomItem([])).toBe("");
+      expect(pickRandomItem([])).toBe("");
     });
 
     test("02 要素数＝１件／文字数＝０文字", () => {
-      expect(window.pickRandomItem([""])).toBe("");
+      expect(pickRandomItem([""])).toBe("");
     });
 
     test("03 要素数＝１件／文字数≧１文字", () => {
-      expect(window.pickRandomItem(["A"])).toBe("A");
+      expect(pickRandomItem(["A"])).toBe("A");
     });
 
     test("04 要素数≧２件／文字数＝０文字", () => {
-      expect(window.pickRandomItem(["", ""])).toBe("");
+      expect(pickRandomItem(["", ""])).toBe("");
     });
 
     test("05 要素数≧２件／文字数≧１文字", () => {
-      expect(["A", "B"]).toContain(window.pickRandomItem(["A", "B"]));
+      expect(["A", "B"]).toContain(pickRandomItem(["A", "B"]));
     });
   });
 
@@ -247,109 +204,103 @@ describe("Random Picker Unit Tests", () => {
   // ○ 25 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字
   describe("removeExcludedItems", () => {
     test("01 配列１要素数＝０件／配列２要素数＝０件", () => {
-      expect(window.removeExcludedItems([], [])).toEqual([]);
+      expect(removeExcludedItems([], [])).toEqual([]);
     });
 
     test("02 配列１要素数＝０件／配列２要素数＝１件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems([], [""])).toEqual([]);
+      expect(removeExcludedItems([], [""])).toEqual([]);
     });
 
     test("03 配列１要素数＝０件／配列２要素数＝１件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems([], ["A"])).toEqual([]);
+      expect(removeExcludedItems([], ["A"])).toEqual([]);
     });
 
     test("04 配列１要素数＝０件／配列２要素数≧２件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems([], ["", ""])).toEqual([]);
+      expect(removeExcludedItems([], ["", ""])).toEqual([]);
     });
 
     test("05 配列１要素数＝０件／配列２要素数≧２件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems([], ["A", "B"])).toEqual([]);
+      expect(removeExcludedItems([], ["A", "B"])).toEqual([]);
     });
 
     test("06 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝０件", () => {
-      expect(window.removeExcludedItems([""], [])).toEqual([""]);
+      expect(removeExcludedItems([""], [])).toEqual([""]);
     });
 
     test("07 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems([""], [""])).toEqual([]);
+      expect(removeExcludedItems([""], [""])).toEqual([]);
     });
 
     test("08 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems([""], ["A"])).toEqual([""]);
+      expect(removeExcludedItems([""], ["A"])).toEqual([""]);
     });
 
     test("09 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems([""], ["", ""])).toEqual([]);
+      expect(removeExcludedItems([""], ["", ""])).toEqual([]);
     });
 
     test("10 配列１要素数＝１件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems([""], ["A", "B"])).toEqual([""]);
+      expect(removeExcludedItems([""], ["A", "B"])).toEqual([""]);
     });
 
     test("11 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝０件", () => {
-      expect(window.removeExcludedItems(["A"], [])).toEqual(["A"]);
+      expect(removeExcludedItems(["A"], [])).toEqual(["A"]);
     });
 
     test("12 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems(["A"], [""])).toEqual(["A"]);
+      expect(removeExcludedItems(["A"], [""])).toEqual(["A"]);
     });
 
     test("13 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems(["A"], ["A"])).toEqual([]);
+      expect(removeExcludedItems(["A"], ["A"])).toEqual([]);
     });
 
     test("14 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems(["A"], ["", ""])).toEqual(["A"]);
+      expect(removeExcludedItems(["A"], ["", ""])).toEqual(["A"]);
     });
 
     test("15 配列１要素数＝１件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems(["A"], ["A", "B"])).toEqual([]);
+      expect(removeExcludedItems(["A"], ["A", "B"])).toEqual([]);
     });
 
     test("16 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝０件", () => {
-      expect(window.removeExcludedItems(["", ""], [])).toEqual(["", ""]);
+      expect(removeExcludedItems(["", ""], [])).toEqual(["", ""]);
     });
 
     test("17 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems(["", ""], [""])).toEqual([]);
+      expect(removeExcludedItems(["", ""], [""])).toEqual([]);
     });
 
     test("18 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems(["", ""], ["A"])).toEqual(["", ""]);
+      expect(removeExcludedItems(["", ""], ["A"])).toEqual(["", ""]);
     });
 
     test("19 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems(["", ""], ["", ""])).toEqual([]);
+      expect(removeExcludedItems(["", ""], ["", ""])).toEqual([]);
     });
 
     test("20 配列１要素数≧２件／配列１文字数＝０文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems(["", ""], ["A", "B"])).toEqual([
-        "",
-        "",
-      ]);
+      expect(removeExcludedItems(["", ""], ["A", "B"])).toEqual(["", ""]);
     });
 
     test("21 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝０件", () => {
-      expect(window.removeExcludedItems(["A", "B"], [])).toEqual(["A", "B"]);
+      expect(removeExcludedItems(["A", "B"], [])).toEqual(["A", "B"]);
     });
 
     test("22 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems(["A", "B"], [""])).toEqual(["A", "B"]);
+      expect(removeExcludedItems(["A", "B"], [""])).toEqual(["A", "B"]);
     });
 
     test("23 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数＝１件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems(["A", "B"], ["A"])).toEqual(["B"]);
+      expect(removeExcludedItems(["A", "B"], ["A"])).toEqual(["B"]);
     });
 
     test("24 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数＝０文字", () => {
-      expect(window.removeExcludedItems(["A", "B"], ["", ""])).toEqual([
-        "A",
-        "B",
-      ]);
+      expect(removeExcludedItems(["A", "B"], ["", ""])).toEqual(["A", "B"]);
     });
 
     test("25 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
-      expect(window.removeExcludedItems(["A", "B"], ["A", "B"])).toEqual([]);
+      expect(removeExcludedItems(["A", "B"], ["A", "B"])).toEqual([]);
     });
   });
 
@@ -363,7 +314,7 @@ describe("Random Picker Unit Tests", () => {
     test("01 文字数＝０文字", () => {
       const dummyDiv = document.createElement("div");
 
-      window.renderResult(dummyDiv, "");
+      renderResult(dummyDiv, "");
 
       expect(dummyDiv.textContent).toBe("");
     });
@@ -371,7 +322,7 @@ describe("Random Picker Unit Tests", () => {
     test("02 文字数≧１文字", () => {
       const dummyDiv = document.createElement("div");
 
-      window.renderResult(dummyDiv, "テスト結果");
+      renderResult(dummyDiv, "テスト結果");
 
       expect(dummyDiv.textContent).toBe("テスト結果");
     });

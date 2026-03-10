@@ -5,42 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Random Picker</title>
     <style>
+      /* apps/random-picker/src/style.css */
       :root {
-        /* カラーパレット */
         --bg-gradient-start: #141e30;
-        /* ダークブルー/ブラック */
         --bg-gradient-end: #243b55;
         --card-bg: rgba(255, 255, 255, 0.05);
-        /* ガラスエフェクト */
         --card-border: rgba(255, 255, 255, 0.1);
         --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-
         --text-primary: #ffffff;
         --text-secondary: rgba(255, 255, 255, 0.7);
         --text-placeholder: rgba(255, 255, 255, 0.4);
-
         --accent-glow: rgba(0, 212, 255, 0.6);
         --btn-bg: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
         --btn-hover: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
-
         --result-bg: rgba(0, 0, 0, 0.2);
         --result-glow:
           0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
-
-        /* タイポグラフィ */
         --font-family: system-ui, -apple-system, sans-serif;
-
-        /* アニメーション */
         --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
-
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
         outline: none;
       }
-
       body {
         font-family: var(--font-family);
         background: linear-gradient(
@@ -58,8 +47,6 @@
         overflow-x: hidden;
         position: relative;
       }
-
-      /* メインアプリコンテナ */
       .glass-container {
         background: var(--card-bg);
         backdrop-filter: blur(12px);
@@ -78,7 +65,6 @@
         overflow: hidden;
         animation: fadeIn 0.3s ease-out;
       }
-
       h1 {
         font-size: 2rem;
         font-weight: 800;
@@ -91,7 +77,6 @@
         -webkit-text-fill-color: transparent;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
-
       .subtitle {
         text-align: center;
         color: var(--text-secondary);
@@ -99,14 +84,11 @@
         margin-bottom: 12px;
         line-height: 1.5;
       }
-
-      /* 入力エリア */
       .input-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
-
       .input-header,
       .result-header {
         display: flex;
@@ -114,19 +96,16 @@
         justify-content: space-between;
         gap: 12px;
       }
-
       .input-label,
       .result-label {
         color: var(--text-secondary);
         font-size: 0.95rem;
         font-weight: 700;
       }
-
       .icon-buttons {
         display: flex;
         gap: 8px;
       }
-
       .icon-button {
         width: 40px;
         height: 40px;
@@ -139,11 +118,9 @@
         background: rgba(255, 255, 255, 0.08);
         box-shadow: none;
       }
-
       .icon-button:hover {
         background: rgba(255, 255, 255, 0.16);
       }
-
       .icon-button svg {
         width: 18px;
         height: 18px;
@@ -153,7 +130,6 @@
         stroke-linecap: round;
         stroke-linejoin: round;
       }
-
       textarea {
         width: 100%;
         height: 180px;
@@ -170,31 +146,24 @@
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
       }
-
       textarea::-webkit-scrollbar {
         width: 8px;
       }
-
       textarea::-webkit-scrollbar-track {
         background: transparent;
       }
-
       textarea::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
-
       textarea::placeholder {
         color: var(--text-placeholder);
       }
-
       textarea:focus {
         border-color: rgba(0, 212, 255, 0.5);
         background: rgba(0, 0, 0, 0.3);
         box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
       }
-
-      /* アクションボタン */
       button {
         background: var(--btn-bg);
         color: white;
@@ -208,27 +177,22 @@
         transition: all 0.2s ease;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
-
       .button-group {
         display: flex;
         gap: 12px;
       }
-
       .button-group button {
         flex: 1;
       }
-
       button:hover {
         transform: translateY(-1px);
         box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
         background: var(--btn-hover);
       }
-
       button:active {
         transform: translateY(1px);
         box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
       }
-
       button:disabled {
         background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.3);
@@ -236,14 +200,11 @@
         transform: none;
         box-shadow: none;
       }
-
-      /* 結果表示エリア */
       .result-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
-
       .result-container {
         display: flex;
         justify-content: center;
@@ -257,7 +218,6 @@
         transition: var(--transition-smooth);
         position: relative;
       }
-
       #result {
         font-size: 1.8rem;
         font-weight: 900;
@@ -267,33 +227,26 @@
         line-height: 1.4;
         transition: all 0.2s ease;
       }
-
-      /* レスポンシブ対応 */
       @media (max-width: 600px) {
         .glass-container {
           padding: 24px;
           border-radius: 20px;
         }
-
         h1 {
           font-size: 1.6rem;
         }
-
         .input-header,
         .result-header {
           align-items: flex-start;
           flex-direction: column;
         }
-
         .icon-buttons {
           align-self: flex-end;
         }
-
         button {
           padding: 16px 24px;
           font-size: 1.1rem;
         }
-
         #result {
           font-size: 1.5rem;
         }
@@ -394,154 +347,131 @@
     </div>
 
     <script>
-      // @ts-check
-
-      // --- UI要素の参照 ---
-      /**
-       * @typedef {Object} UI
-       * @property {HTMLTextAreaElement} inputArea
-       * @property {HTMLButtonElement} inputCopyBtn
-       * @property {HTMLButtonElement} inputOpenBtn
-       * @property {HTMLButtonElement} fullRandomBtn
-       * @property {HTMLButtonElement} exclusiveRandomBtn
-       * @property {HTMLDivElement} resultDisplay
-       * @property {HTMLButtonElement} resultCopyBtn
-       * @property {HTMLButtonElement} resultOpenBtn
-       */
-
-      /** @type {UI} */
-      const ui = {
-        inputArea: /** @type {HTMLTextAreaElement} */ (
-          document.getElementById("itemsInput")
-        ),
-        inputCopyBtn: /** @type {HTMLButtonElement} */ (
-          document.getElementById("inputCopyBtn")
-        ),
-        inputOpenBtn: /** @type {HTMLButtonElement} */ (
-          document.getElementById("inputOpenBtn")
-        ),
-        fullRandomBtn: /** @type {HTMLButtonElement} */ (
-          document.getElementById("fullRandomBtn")
-        ),
-        exclusiveRandomBtn: /** @type {HTMLButtonElement} */ (
-          document.getElementById("exclusiveRandomBtn")
-        ),
-        resultDisplay: /** @type {HTMLDivElement} */ (
-          document.getElementById("result")
-        ),
-        resultCopyBtn: /** @type {HTMLButtonElement} */ (
-          document.getElementById("resultCopyBtn")
-        ),
-        resultOpenBtn: /** @type {HTMLButtonElement} */ (
-          document.getElementById("resultOpenBtn")
-        ),
-      };
-
-      const initApp = () => {
-        // イベントリスナーの登録（一度だけ登録されるように配慮）
-        ui.inputCopyBtn.onclick = async () => {
-          await copyTextToClipboard(ui.inputArea.value);
+      var RandomPickerApp = (() => {
+        var __defProp = Object.defineProperty;
+        var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+        var __getOwnPropNames = Object.getOwnPropertyNames;
+        var __hasOwnProp = Object.prototype.hasOwnProperty;
+        var __export = (target, all) => {
+          for (var name in all)
+            __defProp(target, name, { get: all[name], enumerable: true });
         };
-
-        ui.inputOpenBtn.onclick = () => {
-          openUrls(parseItems(ui.inputArea.value));
+        var __copyProps = (to, from, except, desc) => {
+          if (
+            (from && typeof from === "object") ||
+            typeof from === "function"
+          ) {
+            for (let key of __getOwnPropNames(from))
+              if (!__hasOwnProp.call(to, key) && key !== except)
+                __defProp(to, key, {
+                  get: () => from[key],
+                  enumerable:
+                    !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+                });
+          }
+          return to;
         };
+        var __toCommonJS = (mod) =>
+          __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-        ui.fullRandomBtn.onclick = () => {
-          const items = parseItems(ui.inputArea.value);
-          renderResult(ui.resultDisplay, pickRandomItem(items));
-        };
-
-        ui.exclusiveRandomBtn.onclick = () => {
-          const items = parseItems(ui.inputArea.value);
-          const currentItems = parseItems(ui.resultDisplay.textContent ?? "");
-          const candidates = removeExcludedItems(items, currentItems);
-          renderResult(ui.resultDisplay, pickRandomItem(candidates));
-        };
-
-        ui.resultCopyBtn.onclick = async () => {
-          await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
-        };
-
-        ui.resultOpenBtn.onclick = () => {
-          openUrls(parseItems(ui.resultDisplay.textContent ?? ""));
-        };
-      };
-
-      document.addEventListener("DOMContentLoaded", initApp);
-
-      // --- ロジック（純粋関数：引数を受け取り、計算結果を返す） ---
-
-      /**
-       * テキストをクリップボードにコピーする
-       * @param {string} value - コピー対象のテキスト
-       * @returns {Promise<void>} コピー完了を表す Promise
-       */
-      async function copyTextToClipboard(value) {
-        await navigator.clipboard.writeText(value);
-      }
-
-      /**
-       * 文字列配列を整形する
-       * @param {string[]} values - 整形前の文字列配列
-       * @returns {string[]} 有効な項目の配列
-       */
-      function normalizeItems(values) {
-        return values
-          .map((value) => value.trim())
-          .filter((value) => value !== "");
-      }
-
-      /**
-       * URL 配列を新しいタブで順に開く
-       * @param {string[]} urls - 開く URL 配列
-       * @returns {void}
-       */
-      function openUrls(urls) {
-        urls.forEach((url) => {
-          window.open(url, "_blank");
+        // apps/random-picker/src/script.js
+        var script_exports = {};
+        __export(script_exports, {
+          copyTextToClipboard: () => copyTextToClipboard,
+          createUi: () => createUi,
+          initApp: () => initApp,
+          normalizeItems: () => normalizeItems,
+          openUrls: () => openUrls,
+          parseItems: () => parseItems,
+          pickRandomItem: () => pickRandomItem,
+          removeExcludedItems: () => removeExcludedItems,
+          renderResult: () => renderResult,
         });
-      }
+        function createUi(root = document) {
+          return {
+            inputArea:
+              /** @type {HTMLTextAreaElement} */
+              root.getElementById("itemsInput"),
+            inputCopyBtn:
+              /** @type {HTMLButtonElement} */
+              root.getElementById("inputCopyBtn"),
+            inputOpenBtn:
+              /** @type {HTMLButtonElement} */
+              root.getElementById("inputOpenBtn"),
+            fullRandomBtn:
+              /** @type {HTMLButtonElement} */
+              root.getElementById("fullRandomBtn"),
+            exclusiveRandomBtn:
+              /** @type {HTMLButtonElement} */
+              root.getElementById("exclusiveRandomBtn"),
+            resultDisplay:
+              /** @type {HTMLDivElement} */
+              root.getElementById("result"),
+            resultCopyBtn:
+              /** @type {HTMLButtonElement} */
+              root.getElementById("resultCopyBtn"),
+            resultOpenBtn:
+              /** @type {HTMLButtonElement} */
+              root.getElementById("resultOpenBtn"),
+          };
+        }
+        async function copyTextToClipboard(value) {
+          await navigator.clipboard.writeText(value);
+        }
+        function normalizeItems(values) {
+          return values
+            .map((value) => value.trim())
+            .filter((value) => value !== "");
+        }
+        function openUrls(urls) {
+          urls.forEach((url) => {
+            window.open(url, "_blank");
+          });
+        }
+        function parseItems(sourceText) {
+          return normalizeItems(sourceText.split("\n"));
+        }
+        function pickRandomItem(items) {
+          return items.length
+            ? items[Math.floor(Math.random() * items.length)]
+            : "";
+        }
+        function removeExcludedItems(items, excludedItems) {
+          const excludedItemSet = new Set(excludedItems);
+          return items.filter((item) => !excludedItemSet.has(item));
+        }
+        function renderResult(element, value) {
+          element.textContent = value;
+        }
+        function initApp(ui = createUi()) {
+          ui.inputCopyBtn.onclick = async () => {
+            await copyTextToClipboard(ui.inputArea.value);
+          };
+          ui.inputOpenBtn.onclick = () => {
+            openUrls(parseItems(ui.inputArea.value));
+          };
+          ui.fullRandomBtn.onclick = () => {
+            const items = parseItems(ui.inputArea.value);
+            renderResult(ui.resultDisplay, pickRandomItem(items));
+          };
+          ui.exclusiveRandomBtn.onclick = () => {
+            const items = parseItems(ui.inputArea.value);
+            const currentItems = parseItems(ui.resultDisplay.textContent ?? "");
+            const candidates = removeExcludedItems(items, currentItems);
+            renderResult(ui.resultDisplay, pickRandomItem(candidates));
+          };
+          ui.resultCopyBtn.onclick = async () => {
+            await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
+          };
+          ui.resultOpenBtn.onclick = () => {
+            openUrls(parseItems(ui.resultDisplay.textContent ?? ""));
+          };
+          return ui;
+        }
+        return __toCommonJS(script_exports);
+      })();
 
-      /**
-       * 行テキストを配列化する
-       * @param {string} sourceText - 行区切りテキスト
-       * @returns {string[]} 有効な項目の配列
-       */
-      function parseItems(sourceText) {
-        return normalizeItems(sourceText.split("\n"));
-      }
-
-      /**
-       * 配列からランダムに1つ選ぶ
-       * @param {string[]} items - アイテムの配列
-       * @returns {string} 選ばられたアイテム（空の場合は空文字）
-       */
-      function pickRandomItem(items) {
-        return items.length
-          ? items[Math.floor(Math.random() * items.length)]
-          : "";
-      }
-
-      /**
-       * 除外リストを適用した配列を返す
-       * @param {string[]} items - 全アイテムの配列
-       * @param {string[]} excludedItems - 除外するアイテムの配列
-       * @returns {string[]} 除外後の配列
-       */
-      function removeExcludedItems(items, excludedItems) {
-        const excludedItemSet = new Set(excludedItems);
-        return items.filter((item) => !excludedItemSet.has(item));
-      }
-
-      /**
-       * 画面に表示する（DOM操作を関数に分離）
-       * @param {HTMLDivElement} element - 表示先の要素
-       * @param {string} value - 表示する値
-       */
-      function renderResult(element, value) {
-        element.textContent = value;
-      }
+      RandomPickerApp.initApp();
     </script>
   </body>
 </html>
