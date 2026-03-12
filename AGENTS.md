@@ -87,7 +87,7 @@
 - 検証コマンドは原則 `npm run check:all` のみを使い、`npm test` 単体実行を通常運用に持ち込まない
 - 一括実行の標準は `npm run check:all` とする
 - `// @ts-check` を付けた JS を変更した場合は、テスト通過だけで終えず型エラーが出ていないことも確認する
-- TypeScript ファイルを追加・変更した場合は、`tsc --noEmit` を `npm run check:all` から実行できる状態を保ち、型チェック漏れを防ぐ
+- TypeScript ファイルを追加・変更した場合は、対象の `tsconfig.*.json` を `tsc --noEmit -p ...` で `npm run check:all` から実行できる状態を保ち、型チェック漏れを防ぐ
 - `package.json` の scripts は、`npm run` から別の `npm run` を呼ばず、実行コマンドをその場で読める形に保つ
 
 ### 6.1 実行環境（npm / node）
@@ -107,6 +107,14 @@
 - 運用ルール:
   - 未解決のまま作業を進めない
   - 何を原因と判断し、どう解決したかを作業ログに残す
+
+### 6.3 TypeScript 設定ファイルの運用
+
+- ルート `tsconfig.json` は共有設定兼 solution-style 用とし、`files: []` と `references` を持つ構成を維持する
+- ルート `tsconfig.json` は VSCode の project 認識用であり、`tsc --noEmit -p tsconfig.json` を全体型チェックの入口として扱わない
+- 新しい TypeScript ファイルを追加した場合は、対応する `tsconfig.browser.json` `tsconfig.node.json` `tsconfig.vitest.json` `tsconfig.playwright.json` の `include` を更新する
+- 日常の `npm run check:all` で不要な `.tsbuildinfo` を増やさないことを優先し、型チェック専用の `tsconfig.*.json` を build キャッシュ前提の運用へ寄せない
+- 新しい TypeScript 用 `tsconfig` を増やした場合は、ルート `tsconfig.json` の `references` と `npm run check:all` の型チェック列挙をあわせて更新する
 
 ## 7. 変更・レビュー方針
 

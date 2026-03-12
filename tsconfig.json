@@ -4,5 +4,12 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true
-  }
+  },
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.browser.json" },
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.playwright.json" },
+    { "path": "./tsconfig.vitest.json" }
+  ]
 }
