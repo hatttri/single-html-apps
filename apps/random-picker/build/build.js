@@ -1,14 +1,21 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const prettier = require("prettier");
-const { build } = require("esbuild");
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import * as prettier from "prettier";
+import { build } from "esbuild";
 
-const appDir = path.resolve(__dirname, "..");
-const sourceHtmlPath = path.join(appDir, "src", "index.html");
-const sourceCssPath = path.join(appDir, "src", "style.css");
-const sourceScriptPath = path.join(appDir, "src", "script.js");
-const outputDirPath = path.join(appDir, "generated");
-const outputHtmlPath = path.join(outputDirPath, "index.html");
+const sourceHtmlPath = fileURLToPath(
+  new URL("../src/index.html", import.meta.url),
+);
+const sourceCssPath = fileURLToPath(
+  new URL("../src/style.css", import.meta.url),
+);
+const sourceScriptPath = fileURLToPath(
+  new URL("../src/script.ts", import.meta.url),
+);
+const outputDirPath = fileURLToPath(new URL("../generated", import.meta.url));
+const outputHtmlPath = fileURLToPath(
+  new URL("../generated/index.html", import.meta.url),
+);
 
 async function bundleScript() {
   const result = await build({

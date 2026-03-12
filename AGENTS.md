@@ -87,6 +87,8 @@
 - 検証コマンドは原則 `npm run check:all` のみを使い、`npm test` 単体実行を通常運用に持ち込まない
 - 一括実行の標準は `npm run check:all` とする
 - `// @ts-check` を付けた JS を変更した場合は、テスト通過だけで終えず型エラーが出ていないことも確認する
+- TypeScript ファイルを追加・変更した場合は、`tsc --noEmit` を `npm run check:all` から実行できる状態を保ち、型チェック漏れを防ぐ
+- `package.json` の scripts は、`npm run` から別の `npm run` を呼ばず、実行コマンドをその場で読める形に保つ
 
 ### 6.1 実行環境（npm / node）
 

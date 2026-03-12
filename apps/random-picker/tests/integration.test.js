@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import fs from "fs";
-import path from "path";
-import { initApp } from "../src/script.js";
+import fs from "node:fs";
+import path from "node:path";
+import { initApp } from "../src/script.ts";
 
 const html = fs.readFileSync(
-  path.resolve(__dirname, "../src/index.html"),
+  path.resolve(process.cwd(), "apps/random-picker/src/index.html"),
   "utf8",
 );
 const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);

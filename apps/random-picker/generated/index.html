@@ -347,6 +347,7 @@
     </div>
 
     <script>
+      "use strict";
       var RandomPickerApp = (() => {
         var __defProp = Object.defineProperty;
         var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -374,7 +375,7 @@
         var __toCommonJS = (mod) =>
           __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-        // apps/random-picker/src/script.js
+        // apps/random-picker/src/script.ts
         var script_exports = {};
         __export(script_exports, {
           copyTextToClipboard: () => copyTextToClipboard,
@@ -387,32 +388,26 @@
           removeExcludedItems: () => removeExcludedItems,
           renderResult: () => renderResult,
         });
+        function getElementByIdOrThrow(root, id) {
+          const element = root.getElementById(id);
+          if (!element) {
+            throw new Error(`Element not found: #${id}`);
+          }
+          return element;
+        }
         function createUi(root = document) {
           return {
-            inputArea:
-              /** @type {HTMLTextAreaElement} */
-              root.getElementById("itemsInput"),
-            inputCopyBtn:
-              /** @type {HTMLButtonElement} */
-              root.getElementById("inputCopyBtn"),
-            inputOpenBtn:
-              /** @type {HTMLButtonElement} */
-              root.getElementById("inputOpenBtn"),
-            fullRandomBtn:
-              /** @type {HTMLButtonElement} */
-              root.getElementById("fullRandomBtn"),
-            exclusiveRandomBtn:
-              /** @type {HTMLButtonElement} */
-              root.getElementById("exclusiveRandomBtn"),
-            resultDisplay:
-              /** @type {HTMLDivElement} */
-              root.getElementById("result"),
-            resultCopyBtn:
-              /** @type {HTMLButtonElement} */
-              root.getElementById("resultCopyBtn"),
-            resultOpenBtn:
-              /** @type {HTMLButtonElement} */
-              root.getElementById("resultOpenBtn"),
+            inputArea: getElementByIdOrThrow(root, "itemsInput"),
+            inputCopyBtn: getElementByIdOrThrow(root, "inputCopyBtn"),
+            inputOpenBtn: getElementByIdOrThrow(root, "inputOpenBtn"),
+            fullRandomBtn: getElementByIdOrThrow(root, "fullRandomBtn"),
+            exclusiveRandomBtn: getElementByIdOrThrow(
+              root,
+              "exclusiveRandomBtn",
+            ),
+            resultDisplay: getElementByIdOrThrow(root, "result"),
+            resultCopyBtn: getElementByIdOrThrow(root, "resultCopyBtn"),
+            resultOpenBtn: getElementByIdOrThrow(root, "resultOpenBtn"),
           };
         }
         async function copyTextToClipboard(value) {

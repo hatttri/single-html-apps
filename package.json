@@ -8,9 +8,10 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "npm run build:random-picker && playwright test",
-    "test:e2e:headed": "npm run build:random-picker && playwright test --headed",
-    "check:all": "npm run format && npm test && npm run test:e2e"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "node apps/random-picker/build/build.js && playwright test",
+    "test:e2e:headed": "node apps/random-picker/build/build.js && playwright test --headed",
+    "check:all": "prettier --write . && tsc --noEmit && vitest run && node apps/random-picker/build/build.js && playwright test"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/hatttri/single-html-apps/issues"
   },
@@ -30,6 +31,7 @@
     "esbuild": "^0.27.0",
     "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
 }

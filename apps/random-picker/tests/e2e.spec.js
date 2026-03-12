@@ -1,11 +1,7 @@
 // @ts-check
-const path = require("node:path");
-const { pathToFileURL } = require("node:url");
-const { test, expect } = require("@playwright/test");
+import { test, expect } from "@playwright/test";
 
-const appUrl = pathToFileURL(
-  path.resolve(__dirname, "../generated/index.html"),
-).href;
+const appUrl = new URL("../generated/index.html", import.meta.url).href;
 
 /**
  * @typedef {{ url: string, target: string | undefined }} OpenedUrl

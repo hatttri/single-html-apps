@@ -7,7 +7,7 @@ import {
   pickRandomItem,
   removeExcludedItems,
   renderResult,
-} from "../src/script.js";
+} from "../src/script.ts";
 
 describe("Random Picker Unit Tests", () => {
   // パターン整理
