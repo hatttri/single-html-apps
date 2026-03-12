@@ -17,7 +17,7 @@
 - ユニットテスト: `apps/<app-name>/tests/unit.test.js`
 - インテグレーションテスト: `apps/<app-name>/tests/integration.test.js`
 - E2Eテスト: `apps/<app-name>/tests/e2e.spec.js`
-- アプリ専用ビルドスクリプト: `apps/<app-name>/build/build.js`
+- アプリ専用ビルドスクリプト: `apps/<app-name>/build/build.ts` または `apps/<app-name>/build/build.js`
 - 生成物HTML: `apps/<app-name>/generated/index.html`
 - 設定ファイル: ルート（`playwright.config.js`, `vitest.config.js` など）
 
@@ -30,14 +30,14 @@
 - ユニットテスト: `tests/unit.test.js`
 - インテグレーションテスト: `tests/integration.test.js`
 - E2Eテスト: `tests/e2e.spec.js`
-- ビルドスクリプト: `build/build.js`
+- ビルドスクリプト: `build/build.ts` または `build/build.js`
 - 生成物HTML: `generated/index.html`
 - `<app-name>` は kebab-case を使う
 
 ## 4. 実装規約（HTMLアプリ）
 
 - 1アプリ = 1ディレクトリ配下の `src/` を編集元、`generated/index.html` を生成物として管理する
-- `generated/index.html` は手修正せず、必ず `src/` を更新して `build/build.js` で再生成する
+- `generated/index.html` は手修正せず、必ず `src/` を更新して `build/build.ts` または `build/build.js` で再生成する
 - JSは純粋関数を優先し、副作用（DOM操作）は分離する
 - 純粋関数は実装コード内でアルファベット順に並べる
 - 純粋関数の命名は画面上の使われ方ではなく、入力と処理内容ベースで行う
@@ -87,7 +87,7 @@
 - 検証コマンドは原則 `npm run check:all` のみを使い、`npm test` 単体実行を通常運用に持ち込まない
 - 一括実行の標準は `npm run check:all` とする
 - `// @ts-check` を付けた JS を変更した場合は、テスト通過だけで終えず型エラーが出ていないことも確認する
-- TypeScript ファイルを追加・変更した場合は、対象の `tsconfig.*.json` を `tsc --noEmit -p ...` で `npm run check:all` から実行できる状態を保ち、型チェック漏れを防ぐ
+- TypeScript ファイルを追加・変更した場合は、`scripts/typecheck-all.ts` のコマンド列から型チェック対象が漏れない状態を保つ
 - `package.json` の scripts は、`npm run` から別の `npm run` を呼ばず、実行コマンドをその場で読める形に保つ
 
 ### 6.1 実行環境（npm / node）
@@ -114,7 +114,13 @@
 - ルート `tsconfig.json` は VSCode の project 認識用であり、`tsc --noEmit -p tsconfig.json` を全体型チェックの入口として扱わない
 - 新しい TypeScript ファイルを追加した場合は、対応する `tsconfig.browser.json` `tsconfig.node.json` `tsconfig.vitest.json` `tsconfig.playwright.json` の `include` を更新する
 - 日常の `npm run check:all` で不要な `.tsbuildinfo` を増やさないことを優先し、型チェック専用の `tsconfig.*.json` を build キャッシュ前提の運用へ寄せない
-- 新しい TypeScript 用 `tsconfig` を増やした場合は、ルート `tsconfig.json` の `references` と `npm run check:all` の型チェック列挙をあわせて更新する
+- 新しい TypeScript 用 `tsconfig` を増やした場合は、`scripts/typecheck-all.ts` のコマンド列を更新する
+
+### 6.4 ルート運用スクリプトの運用
+
+- `package.json` の `build` / `typecheck` には対象列挙を直書きせず、ルート `scripts/build-all.ts` / `scripts/typecheck-all.ts` に集約する
+- build 対象アプリを追加した場合は、`apps/<app-name>/build/build.ts` または `apps/<app-name>/build/build.js` を配置し、`scripts/build-all.ts` のコマンド列に追加する
+- build コマンド列を更新したときは、アプリ一覧と同じ順番で並べる
 
 ## 7. 変更・レビュー方針
 
@@ -141,7 +147,7 @@
 2. `apps/<app-name>/src/index.html` を追加
 3. `apps/<app-name>/src/style.css` を追加
 4. `apps/<app-name>/src/script.js` を追加
-5. `apps/<app-name>/tests/` と `apps/<app-name>/build/build.js` を追加
+5. `apps/<app-name>/tests/` と `apps/<app-name>/build/build.ts` または `build/build.js` を追加
 6. `apps/<app-name>/generated/index.html` を生成
 7. `README.md` のアプリ一覧を更新
 8. `npm run check:all` が通ることを確認
