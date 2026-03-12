@@ -17,7 +17,7 @@ const outputHtmlPath = fileURLToPath(
   new URL("../generated/index.html", import.meta.url),
 );
 
-async function bundleScript() {
+async function bundleScript(): Promise<string> {
   const result = await build({
     entryPoints: [sourceScriptPath],
     bundle: true,
@@ -39,7 +39,7 @@ async function bundleScript() {
   return outputFile.text;
 }
 
-async function bundleStyle() {
+async function bundleStyle(): Promise<string> {
   const result = await build({
     entryPoints: [sourceCssPath],
     bundle: true,
@@ -57,7 +57,11 @@ async function bundleStyle() {
   return outputFile.text;
 }
 
-function inlineTemplate(template, styleText, scriptText) {
+function inlineTemplate(
+  template: string,
+  styleText: string,
+  scriptText: string,
+): string {
   const escapedScript = scriptText.replace(/<\/script>/g, "<\\/script>");
   const bootScript = `${escapedScript}\nRandomPickerApp.initApp();`;
 
@@ -66,7 +70,7 @@ function inlineTemplate(template, styleText, scriptText) {
     .replace("/* __INLINE_SCRIPT__ */", bootScript);
 }
 
-async function main() {
+async function main(): Promise<void> {
   const template = fs.readFileSync(sourceHtmlPath, "utf8");
   const styleText = await bundleStyle();
   const scriptText = await bundleScript();

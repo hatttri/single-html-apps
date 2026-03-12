@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["DOM", "ES2020"],
+    "types": []
+  },
+  "include": ["apps/**/src/**/*.ts"]
+}

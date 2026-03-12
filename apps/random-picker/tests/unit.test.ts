@@ -85,7 +85,7 @@ describe("Random Picker Unit Tests", () => {
   // ○ 03 要素数≧１件／文字数≧１文字
   describe("openUrls", () => {
     test("01 要素数＝０件", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
       openUrls([]);
@@ -94,7 +94,7 @@ describe("Random Picker Unit Tests", () => {
     });
 
     test("02 要素数≧１件／文字数＝０文字", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
       openUrls(["", ""]);
@@ -105,7 +105,7 @@ describe("Random Picker Unit Tests", () => {
     });
 
     test("03 要素数≧１件／文字数≧１文字", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
       openUrls(["a", "b"]);

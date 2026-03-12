@@ -1,30 +1,23 @@
-// @ts-check
-import { test, expect } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const appUrl = new URL("../generated/index.html", import.meta.url).href;
 
-/**
- * @typedef {{ url: string, target: string | undefined }} OpenedUrl
- */
+type OpenedUrl = {
+  url: string;
+  target: string | undefined;
+};
 
-/**
- * @typedef {Window & {
- *   __copiedTexts: string[];
- *   __openedUrls: OpenedUrl[];
- * }} RandomPickerTestWindow
- */
+type RandomPickerTestWindow = Window & {
+  __copiedTexts: string[];
+  __openedUrls: OpenedUrl[];
+};
 
 /**
  * ブラウザ API をテスト用スタブに差し替える
- * @param {import("@playwright/test").Page} page
- * @returns {Promise<void>}
  */
-async function installBrowserApiStubs(page) {
+async function installBrowserApiStubs(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    /** @type {RandomPickerTestWindow} */
-    const testWindow = /** @type {RandomPickerTestWindow} */ (
-      /** @type {unknown} */ (window)
-    );
+    const testWindow = window as unknown as RandomPickerTestWindow;
 
     testWindow.__copiedTexts = [];
     testWindow.__openedUrls = [];
@@ -32,54 +25,39 @@ async function installBrowserApiStubs(page) {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
-        /**
-         * @param {string} text
-         * @returns {Promise<void>}
-         */
-        writeText(text) {
+        writeText(text: string): Promise<void> {
           testWindow.__copiedTexts.push(text);
           return Promise.resolve();
         },
       },
     });
 
-    window.open = (url, target) => {
-      testWindow.__openedUrls.push({ url: String(url), target });
+    window.open = ((url?: string | URL, target?: string) => {
+      testWindow.__openedUrls.push({ url: String(url ?? ""), target });
       return null;
-    };
+    }) as Window["open"];
   });
 }
 
 /**
  * コピー履歴を取得する
- * @param {import("@playwright/test").Page} page
- * @returns {Promise<string[]>}
  */
-function getCopiedTexts(page) {
+function getCopiedTexts(page: Page): Promise<string[]> {
   return page.evaluate(() => {
-    /** @type {RandomPickerTestWindow} */
-    const testWindow = /** @type {RandomPickerTestWindow} */ (
-      /** @type {unknown} */ (window)
-    );
+    const testWindow = window as unknown as RandomPickerTestWindow;
     return testWindow.__copiedTexts;
   });
 }
 
 /**
  * 新しいタブ起動履歴を取得する
- * @param {import("@playwright/test").Page} page
- * @returns {Promise<OpenedUrl[]>}
  */
-function getOpenedUrls(page) {
+function getOpenedUrls(page: Page): Promise<OpenedUrl[]> {
   return page.evaluate(() => {
-    /** @type {RandomPickerTestWindow} */
-    const testWindow = /** @type {RandomPickerTestWindow} */ (
-      /** @type {unknown} */ (window)
-    );
+    const testWindow = window as unknown as RandomPickerTestWindow;
     return testWindow.__openedUrls;
   });
 }
-
 // パターン整理
 // 01. 入力欄＝空
 // 02. 表示欄＝空

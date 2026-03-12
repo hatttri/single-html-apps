@@ -16,7 +16,7 @@ if (!bodyMatch) {
 const bodyHtml = bodyMatch[1];
 
 describe("Random Picker Integration Tests", () => {
-  let ui;
+  let ui: ReturnType<typeof initApp>;
 
   beforeEach(() => {
     document.body.innerHTML = bodyHtml;
@@ -80,7 +80,7 @@ describe("Random Picker Integration Tests", () => {
   // ○ 04 行数≧２行／無効行あり
   describe("ui.inputOpenBtn.onclick", () => {
     test("01 行数＝１行／無効行なし", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.inputArea.value = " https://example.com ";
 
@@ -91,7 +91,7 @@ describe("Random Picker Integration Tests", () => {
     });
 
     test("02 行数＝１行／無効行あり", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.inputArea.value = "  ";
 
@@ -101,7 +101,7 @@ describe("Random Picker Integration Tests", () => {
     });
 
     test("03 行数≧２行／無効行なし", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.inputArea.value = " https://example.com \n https://example.org ";
 
@@ -113,7 +113,7 @@ describe("Random Picker Integration Tests", () => {
     });
 
     test("04 行数≧２行／無効行あり", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.inputArea.value = " https://example.com \n  ";
 
@@ -465,7 +465,7 @@ describe("Random Picker Integration Tests", () => {
   // ○ 04 行数≧２行／無効行あり
   describe("ui.resultOpenBtn.onclick", () => {
     test("01 行数＝１行／無効行なし", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.resultDisplay.textContent = " https://example.com/result ";
 
@@ -476,7 +476,7 @@ describe("Random Picker Integration Tests", () => {
     });
 
     test("02 行数＝１行／無効行あり", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.resultDisplay.textContent = "  ";
 
@@ -486,7 +486,7 @@ describe("Random Picker Integration Tests", () => {
     });
 
     test("03 行数≧２行／無効行なし", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.resultDisplay.textContent =
         " https://example.com/result \n https://example.org/result ";
@@ -507,7 +507,7 @@ describe("Random Picker Integration Tests", () => {
     });
 
     test("04 行数≧２行／無効行あり", () => {
-      const open = vi.fn();
+      const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
       ui.resultDisplay.textContent = " https://example.com/result \n  ";
 

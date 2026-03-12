@@ -4,14 +4,14 @@
   "description": "ブラウザ上で動作する単一ファイルのHTMLアプリケーション（ゲーム、ツールなど）をまとめたリポジトリです。 HTML/CSS/JavaScriptが1つのファイルに完結しているため、サーバー環境なしでローカルですぐに実行・確認できます。",
   "main": "index.js",
   "scripts": {
-    "build:random-picker": "node apps/random-picker/build/build.js",
+    "build:random-picker": "node apps/random-picker/build/build.ts",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
-    "test:e2e": "node apps/random-picker/build/build.js && playwright test",
-    "test:e2e:headed": "node apps/random-picker/build/build.js && playwright test --headed",
-    "check:all": "prettier --write . && tsc --noEmit && vitest run && node apps/random-picker/build/build.js && playwright test"
+    "typecheck": "tsc --noEmit -p tsconfig.browser.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.vitest.json && tsc --noEmit -p tsconfig.playwright.json",
+    "test:e2e": "node apps/random-picker/build/build.ts && playwright test",
+    "test:e2e:headed": "node apps/random-picker/build/build.ts && playwright test --headed",
+    "check:all": "prettier --write . && tsc --noEmit -p tsconfig.browser.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.vitest.json && tsc --noEmit -p tsconfig.playwright.json && vitest run && node apps/random-picker/build/build.ts && playwright test"
   },
   "repository": {
     "type": "git",

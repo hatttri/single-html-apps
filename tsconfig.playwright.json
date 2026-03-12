@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["DOM", "ES2020"],
+    "types": ["node", "@playwright/test"]
+  },
+  "include": ["apps/**/tests/e2e.spec.ts"]
+}
