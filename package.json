@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build": "node scripts/build-all.ts",
-    "test": "vitest run",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "node scripts/typecheck-all.ts",
-    "test:e2e": "node scripts/build-all.ts && playwright test",
-    "test:e2e:headed": "node scripts/build-all.ts && playwright test --headed",
-    "check:all": "prettier --write . && node scripts/typecheck-all.ts && vitest run && node scripts/build-all.ts && playwright test"
+    "precommit": "npm run format && npm run tscheck && npm run test",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:e2e": "npm run build && playwright test",
+    "test:e2e:headed": "npm run build && playwright test --headed",
+    "test:unit": "vitest run",
+    "tscheck": "node scripts/typecheck-all.ts"
   },
   "repository": {
     "type": "git",

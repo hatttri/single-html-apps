@@ -82,17 +82,19 @@
 
 ## 6. 品質ゲート
 
-- コード変更時は、コミット前を待たずに `npm run check:all` を直ちに実行する
-- コミット時は、最新の変更に対して `npm run check:all` 実行済みであることと、その結果を確認したうえでコミットすることを必須とする
-- 検証コマンドは原則 `npm run check:all` のみを使い、`npm test` 単体実行を通常運用に持ち込まない
-- 一括実行の標準は `npm run check:all` とする
+- コード変更時は、コミット前を待たずに `npm run precommit` を直ちに実行する
+- コミット時は、最新の変更に対して `npm run precommit` 実行済みであることと、その結果を確認したうえでコミットすることを必須とする
+- 検証コマンドは原則 `npm run precommit` のみを使い、`npm test` 単体実行を通常運用に持ち込まない
+- 一括実行の標準は `npm run precommit` とする
 - `// @ts-check` を付けた JS を変更した場合は、テスト通過だけで終えず型エラーが出ていないことも確認する
 - TypeScript ファイルを追加・変更した場合は、`scripts/typecheck-all.ts` のコマンド列から型チェック対象が漏れない状態を保つ
-- `package.json` の scripts は、`npm run` から別の `npm run` を呼ばず、実行コマンドをその場で読める形に保つ
+- `package.json` の scripts は、生コマンドを葉 script に集約し、合成 script から `npm run` で再利用して重複を避ける
+- `package.json` の scripts は、キー名のアルファベット順で並べる
+- `package.json` の `test:unit` には unit テストの実コマンドを置き、`test` は `test:unit` と `test:e2e` を束ねる
 
 ### 6.1 実行環境（npm / node）
 
-- このリポジトリでは `npm run check:all` を標準コマンドとする
+- このリポジトリでは `npm run precommit` を標準コマンドとする
 - `npm` / `node` が未解決でも、未インストールとは限らない（実行環境の制約で見えない場合がある）
 
 ### 6.2 実行環境でコマンド未解決になる時の扱い
@@ -103,7 +105,7 @@
   - PATH をむやみに恒久変更する前に、実行権限や環境差分を確認する
   - サンドボックス環境で `npm` / `node` が未解決のときは、まず権限昇格で同じコマンドを再実行して確認する
   - 必要に応じて権限付き実行でコマンドを実行する
-  - 実行後に `npm run check:all` で動作確認する
+  - 実行後に `npm run precommit` で動作確認する
 - 運用ルール:
   - 未解決のまま作業を進めない
   - 何を原因と判断し、どう解決したかを作業ログに残す
@@ -113,12 +115,12 @@
 - ルート `tsconfig.json` は共有設定兼 solution-style 用とし、`files: []` と `references` を持つ構成を維持する
 - ルート `tsconfig.json` は VSCode の project 認識用であり、`tsc --noEmit -p tsconfig.json` を全体型チェックの入口として扱わない
 - 新しい TypeScript ファイルを追加した場合は、対応する `tsconfig.browser.json` `tsconfig.node.json` `tsconfig.vitest.json` `tsconfig.playwright.json` の `include` を更新する
-- 日常の `npm run check:all` で不要な `.tsbuildinfo` を増やさないことを優先し、型チェック専用の `tsconfig.*.json` を build キャッシュ前提の運用へ寄せない
+- 日常の `npm run precommit` で不要な `.tsbuildinfo` を増やさないことを優先し、型チェック専用の `tsconfig.*.json` を build キャッシュ前提の運用へ寄せない
 - 新しい TypeScript 用 `tsconfig` を増やした場合は、`scripts/typecheck-all.ts` のコマンド列を更新する
 
 ### 6.4 ルート運用スクリプトの運用
 
-- `package.json` の `build` / `typecheck` には対象列挙を直書きせず、ルート `scripts/build-all.ts` / `scripts/typecheck-all.ts` に集約する
+- `package.json` の `build` / `tscheck` には対象列挙を直書きせず、ルート `scripts/build-all.ts` / `scripts/typecheck-all.ts` に集約する
 - build 対象アプリを追加した場合は、`apps/<app-name>/build/build.ts` または `apps/<app-name>/build/build.js` を配置し、`scripts/build-all.ts` のコマンド列に追加する
 - build コマンド列を更新したときは、アプリ一覧と同じ順番で並べる
 
@@ -136,7 +138,7 @@
 ## 8. コミット規約
 
 - メッセージは日本語で要点を1行で書く
-- コミット前に `npm run check:all` の成功を確認し、その実行結果を確認した変更だけをコミット対象にする
+- コミット前に `npm run precommit` の成功を確認し、その実行結果を確認した変更だけをコミット対象にする
 - 必要に応じて本文で背景や制約を補足する
 - Codex を利用した変更では、共同作成者として以下を利用する:
   - `Co-authored-by: Codex <noreply@openai.com>`
@@ -150,7 +152,7 @@
 5. `apps/<app-name>/tests/` と `apps/<app-name>/build/build.ts` または `build/build.js` を追加
 6. `apps/<app-name>/generated/index.html` を生成
 7. `README.md` のアプリ一覧を更新
-8. `npm run check:all` が通ることを確認
+8. `npm run precommit` が通ることを確認
 
 ## 10. 運用改善の自動反映
 

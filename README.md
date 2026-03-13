@@ -37,22 +37,24 @@ HTML/CSS/JavaScript が 1 つのファイルに完結しているため、サー
    ```
 4. **一括検証**:
    ```powershell
-   npm run check:all
+   npm run precommit
    ```
 
 `npm run build` は `scripts/build-all.ts` に並べた `node .../build.ts` を順番に実行します。
-`npm run check:all` は整形、型チェック、Vitest、build、Playwright をまとめて実行する標準コマンドです。
+`npm run precommit` は整形、型チェック、Vitest、build、Playwright をまとめて実行する標準コマンドです。
 
 ### 個別コマンド
 
 ```powershell
-npm run typecheck
+npm run tscheck
+npm run test:unit
 npm run test
 npm run test:e2e
 ```
 
-`npm run typecheck` は `scripts/typecheck-all.ts` に並べた `tsc --noEmit -p ...` を順番に実行します。
-自動テストは JSDOM を使用し、`src/` のロジックと `generated/index.html` の挙動を検証します。
+`npm run tscheck` は `scripts/typecheck-all.ts` に並べた `tsc --noEmit -p ...` を順番に実行します。
+`npm run test:unit` は JSDOM を使用し、`src/` のロジックと `generated/index.html` の挙動を検証します。
+`npm run test` は `test:unit` のあとに `test:e2e` を実行します。
 
 ## E2Eテスト (Playwright)
 
