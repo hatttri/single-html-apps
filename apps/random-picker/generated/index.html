@@ -388,12 +388,30 @@
           removeExcludedItems: () => removeExcludedItems,
           renderResult: () => renderResult,
         });
-        function getElementByIdOrThrow(root, id) {
-          const element = root.getElementById(id);
-          if (!element) {
-            throw new Error(`Element not found: #${id}`);
-          }
-          return element;
+        function normalizeItems(values) {
+          return values
+            .map((value) => value.trim())
+            .filter((value) => value !== "");
+        }
+        function parseItems(sourceText) {
+          return normalizeItems(sourceText.split("\n"));
+        }
+        function pickRandomItem(items) {
+          return items.length
+            ? items[Math.floor(Math.random() * items.length)]
+            : "";
+        }
+        function removeExcludedItems(items, excludedItems) {
+          const excludedItemSet = new Set(excludedItems);
+          return items.filter((item) => !excludedItemSet.has(item));
+        }
+        async function copyTextToClipboard(value) {
+          await navigator.clipboard.writeText(value);
+        }
+        function openUrls(urls) {
+          urls.forEach((url) => {
+            window.open(url, "_blank");
+          });
         }
         function createUi(root = document) {
           return {
@@ -410,33 +428,12 @@
             resultOpenBtn: getElementByIdOrThrow(root, "resultOpenBtn"),
           };
         }
-        async function copyTextToClipboard(value) {
-          await navigator.clipboard.writeText(value);
-        }
-        function normalizeItems(values) {
-          return values
-            .map((value) => value.trim())
-            .filter((value) => value !== "");
-        }
-        function openUrls(urls) {
-          urls.forEach((url) => {
-            window.open(url, "_blank");
-          });
-        }
-        function parseItems(sourceText) {
-          return normalizeItems(sourceText.split("\n"));
-        }
-        function pickRandomItem(items) {
-          return items.length
-            ? items[Math.floor(Math.random() * items.length)]
-            : "";
-        }
-        function removeExcludedItems(items, excludedItems) {
-          const excludedItemSet = new Set(excludedItems);
-          return items.filter((item) => !excludedItemSet.has(item));
-        }
-        function renderResult(element, value) {
-          element.textContent = value;
+        function getElementByIdOrThrow(root, id) {
+          const element = root.getElementById(id);
+          if (!element) {
+            throw new Error(`Element not found: #${id}`);
+          }
+          return element;
         }
         function initApp(ui = createUi()) {
           ui.inputCopyBtn.onclick = async () => {
@@ -462,6 +459,9 @@
             openUrls(parseItems(ui.resultDisplay.textContent ?? ""));
           };
           return ui;
+        }
+        function renderResult(element, value) {
+          element.textContent = value;
         }
         return __toCommonJS(script_exports);
       })();

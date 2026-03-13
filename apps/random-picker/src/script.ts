@@ -1,3 +1,54 @@
+// 純粋ロジック
+/**
+ * 文字列配列を整形する
+ */
+export function normalizeItems(values: string[]): string[] {
+  return values.map((value) => value.trim()).filter((value) => value !== "");
+}
+
+/**
+ * 行テキストを配列化する
+ */
+export function parseItems(sourceText: string): string[] {
+  return normalizeItems(sourceText.split("\n"));
+}
+
+/**
+ * 配列からランダムに1つ選ぶ
+ */
+export function pickRandomItem(items: string[]): string {
+  return items.length ? items[Math.floor(Math.random() * items.length)] : "";
+}
+
+/**
+ * 除外リストを適用した配列を返す
+ */
+export function removeExcludedItems(
+  items: string[],
+  excludedItems: string[],
+): string[] {
+  const excludedItemSet = new Set(excludedItems);
+  return items.filter((item) => !excludedItemSet.has(item));
+}
+
+// ブラウザ副作用（非DOM）
+/**
+ * テキストをクリップボードにコピーする
+ */
+export async function copyTextToClipboard(value: string): Promise<void> {
+  await navigator.clipboard.writeText(value);
+}
+
+/**
+ * URL 配列を新しいタブで順に開く
+ */
+export function openUrls(urls: string[]): void {
+  urls.forEach((url) => {
+    window.open(url, "_blank");
+  });
+}
+
+// DOM/UI
 type UI = {
   inputArea: HTMLTextAreaElement;
   inputCopyBtn: HTMLButtonElement;
@@ -8,21 +59,6 @@ type UI = {
   resultCopyBtn: HTMLButtonElement;
   resultOpenBtn: HTMLButtonElement;
 };
-
-/**
- * 指定した ID の要素を取得し、見つからない場合は例外にする
- */
-function getElementByIdOrThrow<T extends HTMLElement>(
-  root: Document,
-  id: string,
-): T {
-  const element = root.getElementById(id);
-  if (!element) {
-    throw new Error(`Element not found: #${id}`);
-  }
-
-  return element as T;
-}
 
 /**
  * UI 要素を取得する
@@ -59,58 +95,18 @@ export function createUi(root: Document = document): UI {
 }
 
 /**
- * テキストをクリップボードにコピーする
+ * 指定した ID の要素を取得し、見つからない場合は例外にする
  */
-export async function copyTextToClipboard(value: string): Promise<void> {
-  await navigator.clipboard.writeText(value);
-}
+function getElementByIdOrThrow<T extends HTMLElement>(
+  root: Document,
+  id: string,
+): T {
+  const element = root.getElementById(id);
+  if (!element) {
+    throw new Error(`Element not found: #${id}`);
+  }
 
-/**
- * 文字列配列を整形する
- */
-export function normalizeItems(values: string[]): string[] {
-  return values.map((value) => value.trim()).filter((value) => value !== "");
-}
-
-/**
- * URL 配列を新しいタブで順に開く
- */
-export function openUrls(urls: string[]): void {
-  urls.forEach((url) => {
-    window.open(url, "_blank");
-  });
-}
-
-/**
- * 行テキストを配列化する
- */
-export function parseItems(sourceText: string): string[] {
-  return normalizeItems(sourceText.split("\n"));
-}
-
-/**
- * 配列からランダムに1つ選ぶ
- */
-export function pickRandomItem(items: string[]): string {
-  return items.length ? items[Math.floor(Math.random() * items.length)] : "";
-}
-
-/**
- * 除外リストを適用した配列を返す
- */
-export function removeExcludedItems(
-  items: string[],
-  excludedItems: string[],
-): string[] {
-  const excludedItemSet = new Set(excludedItems);
-  return items.filter((item) => !excludedItemSet.has(item));
-}
-
-/**
- * 画面に表示する
- */
-export function renderResult(element: HTMLDivElement, value: string): void {
-  element.textContent = value;
+  return element as T;
 }
 
 /**
@@ -146,4 +142,11 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   return ui;
+}
+
+/**
+ * 画面に表示する
+ */
+export function renderResult(element: HTMLDivElement, value: string): void {
+  element.textContent = value;
 }
