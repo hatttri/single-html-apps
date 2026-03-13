@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import {
+  applyStringArrayProcessors,
   filterEmptyStrings,
   pickRandomItem,
   removeExcludedItems,
@@ -11,6 +12,61 @@ import {
 } from "../src/script.ts";
 
 describe("Random Picker Unit Tests", () => {
+  // パターン整理
+  // 01. 要素数／＝０件／≧１件
+  // 02. 処理関数数／＝０件／≧１件
+  //
+  // パターン一覧
+  // ○ 01 要素数＝０件／処理関数数＝０件
+  // ○ 02 要素数＝０件／処理関数数≧１件
+  // ○ 03 要素数≧１件／処理関数数＝０件
+  // ○ 04 要素数≧１件／処理関数数≧１件
+  describe("applyStringArrayProcessors", () => {
+    test("01 要素数＝０件／処理関数数＝０件", () => {
+      expect(applyStringArrayProcessors([], [])).toEqual([]);
+    });
+
+    test("02 要素数＝０件／処理関数数≧１件", () => {
+      const addFallback = vi
+        .fn<(values: string[]) => string[]>()
+        .mockReturnValue(["fallback"]);
+      const addSuffix = vi
+        .fn<(values: string[]) => string[]>()
+        .mockImplementation((values) => values.map((value) => `${value}!`));
+
+      expect(applyStringArrayProcessors([], [addFallback, addSuffix])).toEqual([
+        "fallback!",
+      ]);
+      expect(addFallback).toHaveBeenCalledWith([]);
+      expect(addSuffix).toHaveBeenCalledWith(["fallback"]);
+    });
+
+    test("03 要素数≧１件／処理関数数＝０件", () => {
+      expect(applyStringArrayProcessors([" A ", " B "], [])).toEqual([
+        " A ",
+        " B ",
+      ]);
+    });
+
+    test("04 要素数≧１件／処理関数数≧１件", () => {
+      const trimValues = vi
+        .fn<(values: string[]) => string[]>()
+        .mockImplementation((values) => values.map((value) => value.trim()));
+      const filterValues = vi
+        .fn<(values: string[]) => string[]>()
+        .mockImplementation((values) => values.filter((value) => value !== ""));
+
+      expect(
+        applyStringArrayProcessors(
+          [" A ", " ", " B "],
+          [trimValues, filterValues],
+        ),
+      ).toEqual(["A", "B"]);
+      expect(trimValues).toHaveBeenCalledWith([" A ", " ", " B "]);
+      expect(filterValues).toHaveBeenCalledWith(["A", "", "B"]);
+    });
+  });
+
   // パターン整理
   // 01. 要素数／＝０件／≧１件
   // 02. 文字数／＝０文字／≧１文字

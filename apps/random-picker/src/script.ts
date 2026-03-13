@@ -1,5 +1,18 @@
 // 純粋ロジック
 /**
+ * 文字列配列に処理関数を順番に適用する
+ */
+export function applyStringArrayProcessors(
+  values: string[],
+  processors: Array<(values: string[]) => string[]>,
+): string[] {
+  return processors.reduce(
+    (currentValues, processor) => processor(currentValues),
+    values,
+  );
+}
+
+/**
  * 空文字列を除外する
  */
 export function filterEmptyStrings(values: string[]): string[] {
@@ -125,26 +138,32 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   ui.inputOpenBtn.onclick = () => {
-    openUrls(
-      filterEmptyStrings(trimStrings(splitByNewline(ui.inputArea.value))),
-    );
+    const inputItems = splitByNewline(ui.inputArea.value);
+    const itemProcessors = [trimStrings, filterEmptyStrings];
+    const urls = applyStringArrayProcessors(inputItems, itemProcessors);
+
+    openUrls(urls);
   };
 
   ui.fullRandomBtn.onclick = () => {
-    const items = filterEmptyStrings(
-      trimStrings(splitByNewline(ui.inputArea.value)),
-    );
+    const inputItems = splitByNewline(ui.inputArea.value);
+    const itemProcessors = [trimStrings, filterEmptyStrings];
+    const items = applyStringArrayProcessors(inputItems, itemProcessors);
+
     renderResult(ui.resultDisplay, pickRandomItem(items));
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
-    const items = filterEmptyStrings(
-      trimStrings(splitByNewline(ui.inputArea.value)),
-    );
-    const currentItems = filterEmptyStrings(
-      trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
+    const inputItems = splitByNewline(ui.inputArea.value);
+    const resultItems = splitByNewline(ui.resultDisplay.textContent ?? "");
+    const itemProcessors = [trimStrings, filterEmptyStrings];
+    const items = applyStringArrayProcessors(inputItems, itemProcessors);
+    const currentItems = applyStringArrayProcessors(
+      resultItems,
+      itemProcessors,
     );
     const candidates = removeExcludedItems(items, currentItems);
+
     renderResult(ui.resultDisplay, pickRandomItem(candidates));
   };
 
@@ -153,11 +172,11 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   ui.resultOpenBtn.onclick = () => {
-    openUrls(
-      filterEmptyStrings(
-        trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
-      ),
-    );
+    const resultItems = splitByNewline(ui.resultDisplay.textContent ?? "");
+    const itemProcessors = [trimStrings, filterEmptyStrings];
+    const urls = applyStringArrayProcessors(resultItems, itemProcessors);
+
+    openUrls(urls);
   };
 
   return ui;

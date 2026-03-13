@@ -378,6 +378,7 @@
         // apps/random-picker/src/script.ts
         var script_exports = {};
         __export(script_exports, {
+          applyStringArrayProcessors: () => applyStringArrayProcessors,
           copyTextToClipboard: () => copyTextToClipboard,
           createUi: () => createUi,
           filterEmptyStrings: () => filterEmptyStrings,
@@ -389,6 +390,12 @@
           splitByNewline: () => splitByNewline,
           trimStrings: () => trimStrings,
         });
+        function applyStringArrayProcessors(values, processors) {
+          return processors.reduce(
+            (currentValues, processor) => processor(currentValues),
+            values,
+          );
+        }
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
         }
@@ -442,24 +449,33 @@
             await copyTextToClipboard(ui.inputArea.value);
           };
           ui.inputOpenBtn.onclick = () => {
-            openUrls(
-              filterEmptyStrings(
-                trimStrings(splitByNewline(ui.inputArea.value)),
-              ),
-            );
+            const inputItems = splitByNewline(ui.inputArea.value);
+            const itemProcessors = [trimStrings, filterEmptyStrings];
+            const urls = applyStringArrayProcessors(inputItems, itemProcessors);
+            openUrls(urls);
           };
           ui.fullRandomBtn.onclick = () => {
-            const items = filterEmptyStrings(
-              trimStrings(splitByNewline(ui.inputArea.value)),
+            const inputItems = splitByNewline(ui.inputArea.value);
+            const itemProcessors = [trimStrings, filterEmptyStrings];
+            const items = applyStringArrayProcessors(
+              inputItems,
+              itemProcessors,
             );
             renderResult(ui.resultDisplay, pickRandomItem(items));
           };
           ui.exclusiveRandomBtn.onclick = () => {
-            const items = filterEmptyStrings(
-              trimStrings(splitByNewline(ui.inputArea.value)),
+            const inputItems = splitByNewline(ui.inputArea.value);
+            const resultItems = splitByNewline(
+              ui.resultDisplay.textContent ?? "",
             );
-            const currentItems = filterEmptyStrings(
-              trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
+            const itemProcessors = [trimStrings, filterEmptyStrings];
+            const items = applyStringArrayProcessors(
+              inputItems,
+              itemProcessors,
+            );
+            const currentItems = applyStringArrayProcessors(
+              resultItems,
+              itemProcessors,
             );
             const candidates = removeExcludedItems(items, currentItems);
             renderResult(ui.resultDisplay, pickRandomItem(candidates));
@@ -468,11 +484,15 @@
             await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
           };
           ui.resultOpenBtn.onclick = () => {
-            openUrls(
-              filterEmptyStrings(
-                trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
-              ),
+            const resultItems = splitByNewline(
+              ui.resultDisplay.textContent ?? "",
             );
+            const itemProcessors = [trimStrings, filterEmptyStrings];
+            const urls = applyStringArrayProcessors(
+              resultItems,
+              itemProcessors,
+            );
+            openUrls(urls);
           };
           return ui;
         }
