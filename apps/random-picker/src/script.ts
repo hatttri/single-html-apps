@@ -1,15 +1,26 @@
 // 純粋ロジック
+export type StringArrayProcessor = (values: string[]) => string[];
+
 /**
  * 文字列配列に処理関数を順番に適用する
  */
 export function applyStringArrayProcessors(
   values: string[],
-  processors: Array<(values: string[]) => string[]>,
+  processors: StringArrayProcessor[],
 ): string[] {
   return processors.reduce(
     (currentValues, processor) => processor(currentValues),
     values,
   );
+}
+
+/**
+ * 指定件数ぶんランダム選択する処理関数を返す
+ */
+export function createPickRandomItemsProcessor(
+  count: number,
+): StringArrayProcessor {
+  return (items) => pickRandomItems(items, count);
 }
 
 /**
@@ -27,10 +38,24 @@ export function joinByNewline(values: string[]): string {
 }
 
 /**
- * 配列からランダムに１件選んだ配列を返す
+ * 配列からランダムに指定件数ぶん選んだ配列を返す
  */
-export function pickRandomItem(items: string[]): string[] {
-  return items.length ? [items[Math.floor(Math.random() * items.length)]] : [];
+export function pickRandomItems(items: string[], count: number): string[] {
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new RangeError("count must be a non-negative safe integer");
+  }
+
+  const remainingItems = [...items];
+  const pickedItems: string[] = [];
+
+  while (remainingItems.length > 0 && pickedItems.length < count) {
+    const pickedIndex = Math.floor(Math.random() * remainingItems.length);
+    const pickedItem = remainingItems[pickedIndex];
+    pickedItems.push(pickedItem);
+    remainingItems.splice(pickedIndex, 1);
+  }
+
+  return pickedItems;
 }
 
 /**
@@ -124,7 +149,7 @@ export function createUi(root: Document = document): UI {
 /**
  * 指定した ID の要素を取得し、見つからない場合は例外にする
  */
-function getElementByIdOrThrow<T extends HTMLElement>(
+export function getElementByIdOrThrow<T extends HTMLElement>(
   root: Document,
   id: string,
 ): T {
@@ -154,10 +179,14 @@ export function initApp(ui: UI = createUi()): UI {
 
   ui.fullRandomBtn.onclick = () => {
     const inputItems = splitByNewline(ui.inputArea.value);
-    const itemProcessors = [trimStrings, filterEmptyStrings];
+    const itemProcessors = [
+      trimStrings,
+      filterEmptyStrings,
+      createPickRandomItemsProcessor(1),
+    ];
     const items = applyStringArrayProcessors(inputItems, itemProcessors);
 
-    renderResult(ui.resultDisplay, joinByNewline(pickRandomItem(items)));
+    renderResult(ui.resultDisplay, joinByNewline(items));
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
@@ -170,8 +199,11 @@ export function initApp(ui: UI = createUi()): UI {
       itemProcessors,
     );
     const candidates = removeExcludedItems(items, currentItems);
+    const pickedItems = applyStringArrayProcessors(candidates, [
+      createPickRandomItemsProcessor(1),
+    ]);
 
-    renderResult(ui.resultDisplay, joinByNewline(pickRandomItem(candidates)));
+    renderResult(ui.resultDisplay, joinByNewline(pickedItems));
   };
 
   ui.resultCopyBtn.onclick = async () => {

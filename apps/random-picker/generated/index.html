@@ -380,12 +380,14 @@
         __export(script_exports, {
           applyStringArrayProcessors: () => applyStringArrayProcessors,
           copyTextToClipboard: () => copyTextToClipboard,
+          createPickRandomItemsProcessor: () => createPickRandomItemsProcessor,
           createUi: () => createUi,
           filterEmptyStrings: () => filterEmptyStrings,
+          getElementByIdOrThrow: () => getElementByIdOrThrow,
           initApp: () => initApp,
           joinByNewline: () => joinByNewline,
           openUrls: () => openUrls,
-          pickRandomItem: () => pickRandomItem,
+          pickRandomItems: () => pickRandomItems,
           removeExcludedItems: () => removeExcludedItems,
           renderResult: () => renderResult,
           splitByNewline: () => splitByNewline,
@@ -397,16 +399,30 @@
             values,
           );
         }
+        function createPickRandomItemsProcessor(count) {
+          return (items) => pickRandomItems(items, count);
+        }
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
         }
         function joinByNewline(values) {
           return values.join("\n");
         }
-        function pickRandomItem(items) {
-          return items.length
-            ? [items[Math.floor(Math.random() * items.length)]]
-            : [];
+        function pickRandomItems(items, count) {
+          if (!Number.isSafeInteger(count) || count < 0) {
+            throw new RangeError("count must be a non-negative safe integer");
+          }
+          const remainingItems = [...items];
+          const pickedItems = [];
+          while (remainingItems.length > 0 && pickedItems.length < count) {
+            const pickedIndex = Math.floor(
+              Math.random() * remainingItems.length,
+            );
+            const pickedItem = remainingItems[pickedIndex];
+            pickedItems.push(pickedItem);
+            remainingItems.splice(pickedIndex, 1);
+          }
+          return pickedItems;
         }
         function removeExcludedItems(items, excludedItems) {
           const excludedItemSet = new Set(excludedItems);
@@ -460,15 +476,16 @@
           };
           ui.fullRandomBtn.onclick = () => {
             const inputItems = splitByNewline(ui.inputArea.value);
-            const itemProcessors = [trimStrings, filterEmptyStrings];
+            const itemProcessors = [
+              trimStrings,
+              filterEmptyStrings,
+              createPickRandomItemsProcessor(1),
+            ];
             const items = applyStringArrayProcessors(
               inputItems,
               itemProcessors,
             );
-            renderResult(
-              ui.resultDisplay,
-              joinByNewline(pickRandomItem(items)),
-            );
+            renderResult(ui.resultDisplay, joinByNewline(items));
           };
           ui.exclusiveRandomBtn.onclick = () => {
             const inputItems = splitByNewline(ui.inputArea.value);
@@ -485,10 +502,10 @@
               itemProcessors,
             );
             const candidates = removeExcludedItems(items, currentItems);
-            renderResult(
-              ui.resultDisplay,
-              joinByNewline(pickRandomItem(candidates)),
-            );
+            const pickedItems = applyStringArrayProcessors(candidates, [
+              createPickRandomItemsProcessor(1),
+            ]);
+            renderResult(ui.resultDisplay, joinByNewline(pickedItems));
           };
           ui.resultCopyBtn.onclick = async () => {
             await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
