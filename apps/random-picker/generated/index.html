@@ -380,21 +380,20 @@
         __export(script_exports, {
           copyTextToClipboard: () => copyTextToClipboard,
           createUi: () => createUi,
+          filterEmptyStrings: () => filterEmptyStrings,
           initApp: () => initApp,
-          normalizeItems: () => normalizeItems,
           openUrls: () => openUrls,
           parseItems: () => parseItems,
           pickRandomItem: () => pickRandomItem,
           removeExcludedItems: () => removeExcludedItems,
           renderResult: () => renderResult,
+          trimStrings: () => trimStrings,
         });
-        function normalizeItems(values) {
-          return values
-            .map((value) => value.trim())
-            .filter((value) => value !== "");
+        function filterEmptyStrings(values) {
+          return values.filter((value) => value !== "");
         }
         function parseItems(sourceText) {
-          return normalizeItems(sourceText.split("\n"));
+          return filterEmptyStrings(trimStrings(sourceText.split("\n")));
         }
         function pickRandomItem(items) {
           return items.length
@@ -404,6 +403,9 @@
         function removeExcludedItems(items, excludedItems) {
           const excludedItemSet = new Set(excludedItems);
           return items.filter((item) => !excludedItemSet.has(item));
+        }
+        function trimStrings(values) {
+          return values.map((value) => value.trim());
         }
         async function copyTextToClipboard(value) {
           await navigator.clipboard.writeText(value);

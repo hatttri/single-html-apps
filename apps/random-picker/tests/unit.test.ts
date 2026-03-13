@@ -1,9 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 import {
-  normalizeItems,
+  filterEmptyStrings,
   parseItems,
   pickRandomItem,
   removeExcludedItems,
+  trimStrings,
   copyTextToClipboard,
   openUrls,
   renderResult,
@@ -12,34 +13,23 @@ import {
 describe("Random Picker Unit Tests", () => {
   // パターン整理
   // 01. 要素数／＝０件／≧１件
-  // 02. 先頭末尾空白／なし／あり
-  // 03. 空白行／なし／あり
+  // 02. 文字数／＝０文字／≧１文字
   //
   // パターン一覧
   // ○ 01 要素数＝０件
-  // ○ 02 要素数≧１件／先頭末尾空白なし／空白行なし
-  // ○ 03 要素数≧１件／先頭末尾空白なし／空白行あり
-  // ○ 04 要素数≧１件／先頭末尾空白あり／空白行なし
-  // ○ 05 要素数≧１件／先頭末尾空白あり／空白行あり
-  describe("normalizeItems", () => {
+  // ○ 02 要素数≧１件／文字数＝０文字
+  // ○ 03 要素数≧１件／文字数≧１文字
+  describe("filterEmptyStrings", () => {
     test("01 要素数＝０件", () => {
-      expect(normalizeItems([])).toEqual([]);
+      expect(filterEmptyStrings([])).toEqual([]);
     });
 
-    test("02 要素数≧１件／先頭末尾空白なし／空白行なし", () => {
-      expect(normalizeItems(["A"])).toEqual(["A"]);
+    test("02 要素数≧１件／文字数＝０文字", () => {
+      expect(filterEmptyStrings(["", ""])).toEqual([]);
     });
 
-    test("03 要素数≧１件／先頭末尾空白なし／空白行あり", () => {
-      expect(normalizeItems(["A", ""])).toEqual(["A"]);
-    });
-
-    test("04 要素数≧１件／先頭末尾空白あり／空白行なし", () => {
-      expect(normalizeItems([" A "])).toEqual(["A"]);
-    });
-
-    test("05 要素数≧１件／先頭末尾空白あり／空白行あり", () => {
-      expect(normalizeItems([" A ", "  "])).toEqual(["A"]);
+    test("03 要素数≧１件／文字数≧１文字", () => {
+      expect(filterEmptyStrings(["A", "B"])).toEqual(["A", "B"]);
     });
   });
 
@@ -228,6 +218,39 @@ describe("Random Picker Unit Tests", () => {
 
     test("25 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
       expect(removeExcludedItems(["A", "B"], ["A", "B"])).toEqual([]);
+    });
+  });
+
+  // パターン整理
+  // 01. 要素数／＝０件／≧１件
+  // 02. 文字数／＝０文字／≧１文字
+  // 03. 前後空白／なし／あり
+  //
+  // パターン一覧
+  // ○ 01 要素数＝０件
+  // ○ 02 要素数≧１件／文字数＝０文字／前後空白なし
+  // ○ 03 要素数≧１件／文字数＝０文字／前後空白あり
+  // ○ 04 要素数≧１件／文字数≧１文字／前後空白なし
+  // ○ 05 要素数≧１件／文字数≧１文字／前後空白あり
+  describe("trimStrings", () => {
+    test("01 要素数＝０件", () => {
+      expect(trimStrings([])).toEqual([]);
+    });
+
+    test("02 要素数≧１件／文字数＝０文字／前後空白なし", () => {
+      expect(trimStrings([""])).toEqual([""]);
+    });
+
+    test("03 要素数≧１件／文字数＝０文字／前後空白あり", () => {
+      expect(trimStrings(["  "])).toEqual([""]);
+    });
+
+    test("04 要素数≧１件／文字数≧１文字／前後空白なし", () => {
+      expect(trimStrings(["A", "B"])).toEqual(["A", "B"]);
+    });
+
+    test("05 要素数≧１件／文字数≧１文字／前後空白あり", () => {
+      expect(trimStrings([" A ", " B "])).toEqual(["A", "B"]);
     });
   });
 

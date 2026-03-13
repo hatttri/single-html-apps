@@ -1,16 +1,16 @@
 // 純粋ロジック
 /**
- * 文字列配列を整形する
+ * 空文字列を除外する
  */
-export function normalizeItems(values: string[]): string[] {
-  return values.map((value) => value.trim()).filter((value) => value !== "");
+export function filterEmptyStrings(values: string[]): string[] {
+  return values.filter((value) => value !== "");
 }
 
 /**
  * 行テキストを配列化する
  */
 export function parseItems(sourceText: string): string[] {
-  return normalizeItems(sourceText.split("\n"));
+  return filterEmptyStrings(trimStrings(sourceText.split("\n")));
 }
 
 /**
@@ -29,6 +29,13 @@ export function removeExcludedItems(
 ): string[] {
   const excludedItemSet = new Set(excludedItems);
   return items.filter((item) => !excludedItemSet.has(item));
+}
+
+/**
+ * 文字列配列の各要素を trim する
+ */
+export function trimStrings(values: string[]): string[] {
+  return values.map((value) => value.trim());
 }
 
 // ブラウザ副作用（非DOM）
