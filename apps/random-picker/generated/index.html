@@ -383,6 +383,7 @@
           createUi: () => createUi,
           filterEmptyStrings: () => filterEmptyStrings,
           initApp: () => initApp,
+          joinByNewline: () => joinByNewline,
           openUrls: () => openUrls,
           pickRandomItem: () => pickRandomItem,
           removeExcludedItems: () => removeExcludedItems,
@@ -399,10 +400,13 @@
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
         }
+        function joinByNewline(values) {
+          return values.join("\n");
+        }
         function pickRandomItem(items) {
           return items.length
-            ? items[Math.floor(Math.random() * items.length)]
-            : "";
+            ? [items[Math.floor(Math.random() * items.length)]]
+            : [];
         }
         function removeExcludedItems(items, excludedItems) {
           const excludedItemSet = new Set(excludedItems);
@@ -461,7 +465,10 @@
               inputItems,
               itemProcessors,
             );
-            renderResult(ui.resultDisplay, pickRandomItem(items));
+            renderResult(
+              ui.resultDisplay,
+              joinByNewline(pickRandomItem(items)),
+            );
           };
           ui.exclusiveRandomBtn.onclick = () => {
             const inputItems = splitByNewline(ui.inputArea.value);
@@ -478,7 +485,10 @@
               itemProcessors,
             );
             const candidates = removeExcludedItems(items, currentItems);
-            renderResult(ui.resultDisplay, pickRandomItem(candidates));
+            renderResult(
+              ui.resultDisplay,
+              joinByNewline(pickRandomItem(candidates)),
+            );
           };
           ui.resultCopyBtn.onclick = async () => {
             await copyTextToClipboard(ui.resultDisplay.textContent ?? "");

@@ -20,10 +20,17 @@ export function filterEmptyStrings(values: string[]): string[] {
 }
 
 /**
- * 配列からランダムに1つ選ぶ
+ * 文字列配列を改行文字で結合する
  */
-export function pickRandomItem(items: string[]): string {
-  return items.length ? items[Math.floor(Math.random() * items.length)] : "";
+export function joinByNewline(values: string[]): string {
+  return values.join("\n");
+}
+
+/**
+ * 配列からランダムに１件選んだ配列を返す
+ */
+export function pickRandomItem(items: string[]): string[] {
+  return items.length ? [items[Math.floor(Math.random() * items.length)]] : [];
 }
 
 /**
@@ -150,7 +157,7 @@ export function initApp(ui: UI = createUi()): UI {
     const itemProcessors = [trimStrings, filterEmptyStrings];
     const items = applyStringArrayProcessors(inputItems, itemProcessors);
 
-    renderResult(ui.resultDisplay, pickRandomItem(items));
+    renderResult(ui.resultDisplay, joinByNewline(pickRandomItem(items)));
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
@@ -164,7 +171,7 @@ export function initApp(ui: UI = createUi()): UI {
     );
     const candidates = removeExcludedItems(items, currentItems);
 
-    renderResult(ui.resultDisplay, pickRandomItem(candidates));
+    renderResult(ui.resultDisplay, joinByNewline(pickRandomItem(candidates)));
   };
 
   ui.resultCopyBtn.onclick = async () => {

@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
   applyStringArrayProcessors,
   filterEmptyStrings,
+  joinByNewline,
   pickRandomItem,
   removeExcludedItems,
   splitByNewline,
@@ -99,25 +100,63 @@ describe("Random Picker Unit Tests", () => {
   // ○ 03 要素数＝１件／文字数≧１文字
   // ○ 04 要素数≧２件／文字数＝０文字
   // ○ 05 要素数≧２件／文字数≧１文字
-  describe("pickRandomItem", () => {
+  describe("joinByNewline", () => {
     test("01 要素数＝０件", () => {
-      expect(pickRandomItem([])).toBe("");
+      expect(joinByNewline([])).toBe("");
     });
 
     test("02 要素数＝１件／文字数＝０文字", () => {
-      expect(pickRandomItem([""])).toBe("");
+      expect(joinByNewline([""])).toBe("");
     });
 
     test("03 要素数＝１件／文字数≧１文字", () => {
-      expect(pickRandomItem(["A"])).toBe("A");
+      expect(joinByNewline(["A"])).toBe("A");
     });
 
     test("04 要素数≧２件／文字数＝０文字", () => {
-      expect(pickRandomItem(["", ""])).toBe("");
+      expect(joinByNewline(["", ""])).toBe("\n");
     });
 
     test("05 要素数≧２件／文字数≧１文字", () => {
-      expect(["A", "B"]).toContain(pickRandomItem(["A", "B"]));
+      expect(joinByNewline(["A", "B"])).toBe("A\nB");
+    });
+  });
+
+  // パターン整理
+  // 01. 要素数＝０件／＝１件／≧２件
+  // 02. 文字数＝０文字／≧１文字
+  //
+  // パターン一覧
+  // ○ 01 要素数＝０件
+  // ○ 02 要素数＝１件／文字数＝０文字
+  // ○ 03 要素数＝１件／文字数≧１文字
+  // ○ 04 要素数≧２件／文字数＝０文字
+  // ○ 05 要素数≧２件／文字数≧１文字
+  describe("pickRandomItem", () => {
+    test("01 要素数＝０件", () => {
+      expect(pickRandomItem([])).toEqual([]);
+    });
+
+    test("02 要素数＝１件／文字数＝０文字", () => {
+      expect(pickRandomItem([""])).toEqual([""]);
+    });
+
+    test("03 要素数＝１件／文字数≧１文字", () => {
+      expect(pickRandomItem(["A"])).toEqual(["A"]);
+    });
+
+    test("04 要素数≧２件／文字数＝０文字", () => {
+      expect(pickRandomItem(["", ""])).toEqual([""]);
+    });
+
+    test("05 要素数≧２件／文字数≧１文字", () => {
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
+
+      try {
+        expect(pickRandomItem(["A", "B"])).toEqual(["B"]);
+      } finally {
+        randomSpy.mockRestore();
+      }
     });
   });
 
