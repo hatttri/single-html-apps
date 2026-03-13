@@ -383,17 +383,14 @@
           filterEmptyStrings: () => filterEmptyStrings,
           initApp: () => initApp,
           openUrls: () => openUrls,
-          parseItems: () => parseItems,
           pickRandomItem: () => pickRandomItem,
           removeExcludedItems: () => removeExcludedItems,
           renderResult: () => renderResult,
+          splitByNewline: () => splitByNewline,
           trimStrings: () => trimStrings,
         });
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
-        }
-        function parseItems(sourceText) {
-          return filterEmptyStrings(trimStrings(sourceText.split("\n")));
         }
         function pickRandomItem(items) {
           return items.length
@@ -403,6 +400,9 @@
         function removeExcludedItems(items, excludedItems) {
           const excludedItemSet = new Set(excludedItems);
           return items.filter((item) => !excludedItemSet.has(item));
+        }
+        function splitByNewline(sourceText) {
+          return sourceText.split("\n");
         }
         function trimStrings(values) {
           return values.map((value) => value.trim());
@@ -442,15 +442,25 @@
             await copyTextToClipboard(ui.inputArea.value);
           };
           ui.inputOpenBtn.onclick = () => {
-            openUrls(parseItems(ui.inputArea.value));
+            openUrls(
+              filterEmptyStrings(
+                trimStrings(splitByNewline(ui.inputArea.value)),
+              ),
+            );
           };
           ui.fullRandomBtn.onclick = () => {
-            const items = parseItems(ui.inputArea.value);
+            const items = filterEmptyStrings(
+              trimStrings(splitByNewline(ui.inputArea.value)),
+            );
             renderResult(ui.resultDisplay, pickRandomItem(items));
           };
           ui.exclusiveRandomBtn.onclick = () => {
-            const items = parseItems(ui.inputArea.value);
-            const currentItems = parseItems(ui.resultDisplay.textContent ?? "");
+            const items = filterEmptyStrings(
+              trimStrings(splitByNewline(ui.inputArea.value)),
+            );
+            const currentItems = filterEmptyStrings(
+              trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
+            );
             const candidates = removeExcludedItems(items, currentItems);
             renderResult(ui.resultDisplay, pickRandomItem(candidates));
           };
@@ -458,7 +468,11 @@
             await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
           };
           ui.resultOpenBtn.onclick = () => {
-            openUrls(parseItems(ui.resultDisplay.textContent ?? ""));
+            openUrls(
+              filterEmptyStrings(
+                trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
+              ),
+            );
           };
           return ui;
         }

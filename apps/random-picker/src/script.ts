@@ -7,13 +7,6 @@ export function filterEmptyStrings(values: string[]): string[] {
 }
 
 /**
- * 行テキストを配列化する
- */
-export function parseItems(sourceText: string): string[] {
-  return filterEmptyStrings(trimStrings(sourceText.split("\n")));
-}
-
-/**
  * 配列からランダムに1つ選ぶ
  */
 export function pickRandomItem(items: string[]): string {
@@ -29,6 +22,13 @@ export function removeExcludedItems(
 ): string[] {
   const excludedItemSet = new Set(excludedItems);
   return items.filter((item) => !excludedItemSet.has(item));
+}
+
+/**
+ * 改行で文字列を分割する
+ */
+export function splitByNewline(sourceText: string): string[] {
+  return sourceText.split("\n");
 }
 
 /**
@@ -125,17 +125,25 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   ui.inputOpenBtn.onclick = () => {
-    openUrls(parseItems(ui.inputArea.value));
+    openUrls(
+      filterEmptyStrings(trimStrings(splitByNewline(ui.inputArea.value))),
+    );
   };
 
   ui.fullRandomBtn.onclick = () => {
-    const items = parseItems(ui.inputArea.value);
+    const items = filterEmptyStrings(
+      trimStrings(splitByNewline(ui.inputArea.value)),
+    );
     renderResult(ui.resultDisplay, pickRandomItem(items));
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
-    const items = parseItems(ui.inputArea.value);
-    const currentItems = parseItems(ui.resultDisplay.textContent ?? "");
+    const items = filterEmptyStrings(
+      trimStrings(splitByNewline(ui.inputArea.value)),
+    );
+    const currentItems = filterEmptyStrings(
+      trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
+    );
     const candidates = removeExcludedItems(items, currentItems);
     renderResult(ui.resultDisplay, pickRandomItem(candidates));
   };
@@ -145,7 +153,11 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   ui.resultOpenBtn.onclick = () => {
-    openUrls(parseItems(ui.resultDisplay.textContent ?? ""));
+    openUrls(
+      filterEmptyStrings(
+        trimStrings(splitByNewline(ui.resultDisplay.textContent ?? "")),
+      ),
+    );
   };
 
   return ui;

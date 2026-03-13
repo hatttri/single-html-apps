@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   filterEmptyStrings,
-  parseItems,
   pickRandomItem,
   removeExcludedItems,
+  splitByNewline,
   trimStrings,
   copyTextToClipboard,
   openUrls,
@@ -30,28 +30,6 @@ describe("Random Picker Unit Tests", () => {
 
     test("03 要素数≧１件／文字数≧１文字", () => {
       expect(filterEmptyStrings(["A", "B"])).toEqual(["A", "B"]);
-    });
-  });
-
-  // パターン整理
-  // 01. 文字数／０文字／≧１文字
-  // 02. 改行／なし／あり
-  //
-  // パターン一覧
-  // ○ 01 文字数＝０文字
-  // ○ 02 文字数≧１文字／改行なし
-  // ○ 03 文字数≧１文字／改行あり
-  describe("parseItems", () => {
-    test("01 文字数＝０文字", () => {
-      expect(parseItems("")).toEqual([]);
-    });
-
-    test("02 文字数≧１文字／改行なし", () => {
-      expect(parseItems("A")).toEqual(["A"]);
-    });
-
-    test("03 文字数≧１文字／改行あり", () => {
-      expect(parseItems("A\nB")).toEqual(["A", "B"]);
     });
   });
 
@@ -218,6 +196,28 @@ describe("Random Picker Unit Tests", () => {
 
     test("25 配列１要素数≧２件／配列１文字数≧１文字／配列２要素数≧２件／配列２文字数≧１文字", () => {
       expect(removeExcludedItems(["A", "B"], ["A", "B"])).toEqual([]);
+    });
+  });
+
+  // パターン整理
+  // 01. 文字数／０文字／≧１文字
+  // 02. 改行／なし／あり
+  //
+  // パターン一覧
+  // ○ 01 文字数＝０文字
+  // ○ 02 文字数≧１文字／改行なし
+  // ○ 03 文字数≧１文字／改行あり
+  describe("splitByNewline", () => {
+    test("01 文字数＝０文字", () => {
+      expect(splitByNewline("")).toEqual([""]);
+    });
+
+    test("02 文字数≧１文字／改行なし", () => {
+      expect(splitByNewline("A")).toEqual(["A"]);
+    });
+
+    test("03 文字数≧１文字／改行あり", () => {
+      expect(splitByNewline("A\nB")).toEqual(["A", "B"]);
     });
   });
 
