@@ -209,21 +209,32 @@ describe("Random Picker Unit Tests", () => {
     });
 
     // パターン整理
-    // 01. 要素数／＝０件／＝１件／≧２件
-    // 02. 取得数／＝０件／＝１件／≧２件
+    // 01. 要素数／＝０件／＝１件／＝２件／≧３件
+    // 02. 取得数／＝０件／＝１件／＝２件／≧３件
     // 03. 重複／なし／あり
     //
     // パターン一覧
     // ○ 01 要素数＝０件
     // ○ 02 要素数＝１件／取得数＝０件
     // ○ 03 要素数＝１件／取得数＝１件
-    // ○ 04 要素数＝１件／取得数≧２件
-    // ○ 05 要素数≧２件／取得数＝０件／重複なし
-    // ○ 06 要素数≧２件／取得数＝０件／重複あり
-    // ○ 07 要素数≧２件／取得数＝１件／重複なし
-    // ○ 08 要素数≧２件／取得数＝１件／重複あり
-    // ○ 09 要素数≧２件／取得数≧２件／重複なし
-    // ○ 10 要素数≧２件／取得数≧２件／重複あり
+    // ○ 04 要素数＝１件／取得数＝２件
+    // ○ 05 要素数＝１件／取得数≧３件
+    // ○ 06 要素数＝２件／取得数＝０件／重複なし
+    // ○ 07 要素数＝２件／取得数＝０件／重複あり
+    // ○ 08 要素数＝２件／取得数＝１件／重複なし
+    // ○ 09 要素数＝２件／取得数＝１件／重複あり
+    // ○ 10 要素数＝２件／取得数＝２件／重複なし
+    // ○ 11 要素数＝２件／取得数＝２件／重複あり
+    // ○ 12 要素数＝２件／取得数≧３件／重複なし
+    // ○ 13 要素数＝２件／取得数≧３件／重複あり
+    // ○ 14 要素数≧３件／取得数＝０件／重複なし
+    // ○ 15 要素数≧３件／取得数＝０件／重複あり
+    // ○ 16 要素数≧３件／取得数＝１件／重複なし
+    // ○ 17 要素数≧３件／取得数＝１件／重複あり
+    // ○ 18 要素数≧３件／取得数＝２件／重複なし
+    // ○ 19 要素数≧３件／取得数＝２件／重複あり
+    // ○ 20 要素数≧３件／取得数≧３件／重複なし
+    // ○ 21 要素数≧３件／取得数≧３件／重複あり
     describe("正常系", () => {
       test("01 要素数＝０件", () => {
         expect(pickRandomItems([], 2)).toEqual([]);
@@ -237,19 +248,23 @@ describe("Random Picker Unit Tests", () => {
         expect(pickRandomItems(["A"], 1)).toEqual(["A"]);
       });
 
-      test("04 要素数＝１件／取得数≧２件", () => {
+      test("04 要素数＝１件／取得数＝２件", () => {
         expect(pickRandomItems(["A"], 2)).toEqual(["A"]);
       });
 
-      test("05 要素数≧２件／取得数＝０件／重複なし", () => {
+      test("05 要素数＝１件／取得数≧３件", () => {
+        expect(pickRandomItems(["A"], 3)).toEqual(["A"]);
+      });
+
+      test("06 要素数＝２件／取得数＝０件／重複なし", () => {
         expect(pickRandomItems(["A", "B"], 0)).toEqual([]);
       });
 
-      test("06 要素数≧２件／取得数＝０件／重複あり", () => {
-        expect(pickRandomItems(["1", "2", "1", "2"], 0)).toEqual([]);
+      test("07 要素数＝２件／取得数＝０件／重複あり", () => {
+        expect(pickRandomItems(["A", "A"], 0)).toEqual([]);
       });
 
-      test("07 要素数≧２件／取得数＝１件／重複なし", () => {
+      test("08 要素数＝２件／取得数＝１件／重複なし", () => {
         const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
 
         try {
@@ -259,7 +274,51 @@ describe("Random Picker Unit Tests", () => {
         }
       });
 
-      test("08 要素数≧２件／取得数＝１件／重複あり", () => {
+      test("09 要素数＝２件／取得数＝１件／重複あり", () => {
+        const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+        try {
+          expect(pickRandomItems(["A", "A"], 1)).toEqual(["A"]);
+        } finally {
+          randomSpy.mockRestore();
+        }
+      });
+
+      test("10 要素数＝２件／取得数＝２件／重複なし", () => {
+        expect(pickRandomItems(["A", "B"], 2)).toEqual(["A", "B"]);
+      });
+
+      test("11 要素数＝２件／取得数＝２件／重複あり", () => {
+        expect(pickRandomItems(["A", "A"], 2)).toEqual(["A", "A"]);
+      });
+
+      test("12 要素数＝２件／取得数≧３件／重複なし", () => {
+        expect(pickRandomItems(["A", "B"], 3)).toEqual(["A", "B"]);
+      });
+
+      test("13 要素数＝２件／取得数≧３件／重複あり", () => {
+        expect(pickRandomItems(["A", "A"], 3)).toEqual(["A", "A"]);
+      });
+
+      test("14 要素数≧３件／取得数＝０件／重複なし", () => {
+        expect(pickRandomItems(["A", "B", "C", "D"], 0)).toEqual([]);
+      });
+
+      test("15 要素数≧３件／取得数＝０件／重複あり", () => {
+        expect(pickRandomItems(["1", "2", "1", "2"], 0)).toEqual([]);
+      });
+
+      test("16 要素数≧３件／取得数＝１件／重複なし", () => {
+        const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
+
+        try {
+          expect(pickRandomItems(["A", "B", "C", "D"], 1)).toEqual(["D"]);
+        } finally {
+          randomSpy.mockRestore();
+        }
+      });
+
+      test("17 要素数≧３件／取得数＝１件／重複あり", () => {
         const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
 
         try {
@@ -269,20 +328,20 @@ describe("Random Picker Unit Tests", () => {
         }
       });
 
-      test("09 要素数≧２件／取得数≧２件／重複なし", () => {
+      test("18 要素数≧３件／取得数＝２件／重複なし", () => {
         const randomSpy = vi
           .spyOn(Math, "random")
           .mockReturnValueOnce(0.99)
           .mockReturnValueOnce(0);
 
         try {
-          expect(pickRandomItems(["A", "B"], 2)).toEqual(["B", "A"]);
+          expect(pickRandomItems(["A", "B", "C", "D"], 2)).toEqual(["B", "D"]);
         } finally {
           randomSpy.mockRestore();
         }
       });
 
-      test("10 要素数≧２件／取得数≧２件／重複あり", () => {
+      test("19 要素数≧３件／取得数＝２件／重複あり", () => {
         const randomSpy = vi
           .spyOn(Math, "random")
           .mockReturnValueOnce(0)
@@ -290,6 +349,42 @@ describe("Random Picker Unit Tests", () => {
 
         try {
           expect(pickRandomItems(["1", "2", "1", "2"], 2)).toEqual(["1", "1"]);
+        } finally {
+          randomSpy.mockRestore();
+        }
+      });
+
+      test("20 要素数≧３件／取得数≧３件／重複なし", () => {
+        const randomSpy = vi
+          .spyOn(Math, "random")
+          .mockReturnValueOnce(0.5)
+          .mockReturnValueOnce(0.99)
+          .mockReturnValueOnce(0.5);
+
+        try {
+          expect(pickRandomItems(["A", "B", "C", "D"], 3)).toEqual([
+            "B",
+            "C",
+            "D",
+          ]);
+        } finally {
+          randomSpy.mockRestore();
+        }
+      });
+
+      test("21 要素数≧３件／取得数≧３件／重複あり", () => {
+        const randomSpy = vi
+          .spyOn(Math, "random")
+          .mockReturnValueOnce(0.5)
+          .mockReturnValueOnce(0.99)
+          .mockReturnValueOnce(0.5);
+
+        try {
+          expect(pickRandomItems(["1", "2", "1", "2"], 3)).toEqual([
+            "2",
+            "1",
+            "2",
+          ]);
         } finally {
           randomSpy.mockRestore();
         }
@@ -591,7 +686,7 @@ describe("Random Picker Unit Tests", () => {
   // describe("initApp", () => {});
 
   // パターン整理
-  // 01. 文字数＝０文字／≧１文字
+  // 01. 文字数／＝０文字／≧１文字
   //
   // パターン一覧
   // ○ 01 文字数＝０文字

@@ -46,17 +46,24 @@ export function pickRandomItems(items: string[], count: number): string[] {
     throw new RangeError("count must be a non-negative safe integer");
   }
 
-  const remainingItems = [...items];
-  const pickedItems: string[] = [];
+  const pickedCount = Math.min(count, items.length);
+  const allIndexes = items.map((_, itemIndex) => itemIndex);
 
-  while (remainingItems.length > 0 && pickedItems.length < count) {
-    const pickedIndex = Math.floor(Math.random() * remainingItems.length);
-    const pickedItem = remainingItems[pickedIndex];
-    pickedItems.push(pickedItem);
-    remainingItems.splice(pickedIndex, 1);
+  for (let currentIndex = 0; currentIndex < pickedCount; currentIndex += 1) {
+    const randomIndex =
+      currentIndex +
+      Math.floor(Math.random() * (allIndexes.length - currentIndex));
+    [allIndexes[currentIndex], allIndexes[randomIndex]] = [
+      allIndexes[randomIndex],
+      allIndexes[currentIndex],
+    ];
   }
 
-  return pickedItems;
+  const pickedIndexes = allIndexes.slice(0, pickedCount).sort((left, right) => {
+    return left - right;
+  });
+
+  return pickedIndexes.map((itemIndex) => items[itemIndex]);
 }
 
 /**
