@@ -18,7 +18,7 @@ const outputHtmlPath = fileURLToPath(
 );
 
 async function bundleScript(): Promise<string> {
-  const result = await build({
+  const buildOutput = await build({
     entryPoints: [sourceScriptPath],
     bundle: true,
     format: "iife",
@@ -29,7 +29,7 @@ async function bundleScript(): Promise<string> {
     outfile: "script.js",
   });
 
-  const outputFile = result.outputFiles.find((file) =>
+  const outputFile = buildOutput.outputFiles.find((file) =>
     file.path.endsWith(".js"),
   );
   if (!outputFile) {
@@ -40,14 +40,14 @@ async function bundleScript(): Promise<string> {
 }
 
 async function bundleStyle(): Promise<string> {
-  const result = await build({
+  const buildOutput = await build({
     entryPoints: [sourceCssPath],
     bundle: true,
     write: false,
     outfile: "style.css",
   });
 
-  const outputFile = result.outputFiles.find((file) =>
+  const outputFile = buildOutput.outputFiles.find((file) =>
     file.path.endsWith(".css"),
   );
   if (!outputFile) {

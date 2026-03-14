@@ -16,8 +16,8 @@
   --btn-bg: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
   --btn-hover: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
 
-  --result-bg: rgba(0, 0, 0, 0.2);
-  --result-glow:
+  --output-bg: rgba(0, 0, 0, 0.2);
+  --output-glow:
     0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
 
   /* タイポグラフィ */
@@ -101,7 +101,7 @@ h1 {
 }
 
 .input-header,
-.result-header {
+.output-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -109,7 +109,7 @@ h1 {
 }
 
 .input-label,
-.result-label {
+.output-label {
   color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 700;
@@ -230,18 +230,18 @@ button:disabled {
   box-shadow: none;
 }
 
-/* 結果表示エリア */
-.result-group {
+/* 出力欄エリア */
+.output-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.result-container {
+.output-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--result-bg);
+  background: var(--output-bg);
   border-radius: 16px;
   min-height: 120px;
   padding: 24px;
@@ -251,7 +251,7 @@ button:disabled {
   position: relative;
 }
 
-#result {
+#output {
   font-size: 1.8rem;
   font-weight: 900;
   text-align: center;
@@ -273,7 +273,7 @@ button:disabled {
   }
 
   .input-header,
-  .result-header {
+  .output-header {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -287,7 +287,7 @@ button:disabled {
     font-size: 1.1rem;
   }
 
-  #result {
+  #output {
     font-size: 1.5rem;
   }
 }

@@ -125,9 +125,9 @@ type UI = {
   inputOpenBtn: HTMLButtonElement;
   fullRandomBtn: HTMLButtonElement;
   exclusiveRandomBtn: HTMLButtonElement;
-  resultDisplay: HTMLDivElement;
-  resultCopyBtn: HTMLButtonElement;
-  resultOpenBtn: HTMLButtonElement;
+  outputDisplay: HTMLDivElement;
+  outputCopyBtn: HTMLButtonElement;
+  outputOpenBtn: HTMLButtonElement;
 };
 
 /**
@@ -152,14 +152,14 @@ export function createUi(root: Document = document): UI {
       root,
       "exclusiveRandomBtn",
     ),
-    resultDisplay: getElementByIdOrThrow<HTMLDivElement>(root, "result"),
-    resultCopyBtn: getElementByIdOrThrow<HTMLButtonElement>(
+    outputDisplay: getElementByIdOrThrow<HTMLDivElement>(root, "output"),
+    outputCopyBtn: getElementByIdOrThrow<HTMLButtonElement>(
       root,
-      "resultCopyBtn",
+      "outputCopyBtn",
     ),
-    resultOpenBtn: getElementByIdOrThrow<HTMLButtonElement>(
+    outputOpenBtn: getElementByIdOrThrow<HTMLButtonElement>(
       root,
-      "resultOpenBtn",
+      "outputOpenBtn",
     ),
   };
 }
@@ -226,7 +226,7 @@ export function initApp(ui: UI = createUi()): UI {
     const outputText = joinByNewline(outputLines);
 
     // 出力文字列を出力欄に設定する
-    renderResult(ui.resultDisplay, outputText);
+    renderOutput(ui.outputDisplay, outputText);
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
@@ -241,7 +241,7 @@ export function initApp(ui: UI = createUi()): UI {
       trimStrings,
       filterEmptyStrings,
       createRemoveExcludedItemsProcessor(
-        splitByNewline(ui.resultDisplay.textContent ?? ""),
+        splitByNewline(ui.outputDisplay.textContent ?? ""),
       ),
       createPickRandomItemsProcessor(1),
     ]);
@@ -250,20 +250,20 @@ export function initApp(ui: UI = createUi()): UI {
     const outputText = joinByNewline(outputLines);
 
     // 出力文字列を出力欄に設定する
-    renderResult(ui.resultDisplay, outputText);
+    renderOutput(ui.outputDisplay, outputText);
   };
 
-  ui.resultCopyBtn.onclick = async () => {
+  ui.outputCopyBtn.onclick = async () => {
     // 出力文字列を取得する
-    const outputText = ui.resultDisplay.textContent ?? "";
+    const outputText = ui.outputDisplay.textContent ?? "";
 
     // 出力文字列をコピーする
     await copyTextToClipboard(outputText);
   };
 
-  ui.resultOpenBtn.onclick = () => {
+  ui.outputOpenBtn.onclick = () => {
     // 出力文字列を取得する
-    const outputText = ui.resultDisplay.textContent ?? "";
+    const outputText = ui.outputDisplay.textContent ?? "";
 
     // 出力文字列を出力文字列配列に分割する
     const outputLines = splitByNewline(outputText);
@@ -282,8 +282,8 @@ export function initApp(ui: UI = createUi()): UI {
 }
 
 /**
- * 画面に表示する
+ * 画面に出力する
  */
-export function renderResult(element: HTMLDivElement, value: string): void {
+export function renderOutput(element: HTMLDivElement, value: string): void {
   element.textContent = value;
 }

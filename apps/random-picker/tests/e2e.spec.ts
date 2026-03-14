@@ -58,26 +58,26 @@ function getOpenedUrls(page: Page): Promise<OpenedUrl[]> {
     return testWindow.__openedUrls;
   });
 }
+
 // パターン整理
-// 01. 入力欄＝空
-// 02. 表示欄＝空
+// 01. 初期表示
 //
 // パターン一覧
-// ○ 01 入力欄＝空／表示欄＝空
-test("01 入力欄＝空／表示欄＝空", async ({ page }) => {
+// ○ 初期表示
+test("初期表示", async ({ page }) => {
   await page.goto(appUrl);
 
   await expect(page.locator("#itemsInput")).toHaveValue("");
-  await expect(page.locator("#result")).toHaveText("");
+  await expect(page.locator("#output")).toHaveText("");
 });
 
 // パターン整理
-// 01. 文字数＝０文字／≧１文字
+// 01. 文字数／＝０文字／≧１文字
 //
 // パターン一覧
 // ○ 01 文字数＝０文字
 // ○ 02 文字数≧１文字
-test.describe("入力欄コピー", () => {
+test.describe("入力欄コピーボタンクリック", () => {
   test("01 文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
@@ -104,7 +104,7 @@ test.describe("入力欄コピー", () => {
 });
 
 // パターン整理
-// 01. 行数＝１行／≧２行
+// 01. 行数／＝１行／≧２行
 // 02. 前後空白なし／あり
 // 03. 無効行なし／あり
 //
@@ -117,7 +117,7 @@ test.describe("入力欄コピー", () => {
 // ○ 06 行数≧２行／前後空白なし／無効行あり
 // ○ 07 行数≧２行／前後空白あり／無効行なし
 // ○ 08 行数≧２行／前後空白あり／無効行あり
-test.describe("入力欄リンク起動", () => {
+test.describe("入力欄リンク起動ボタンクリック", () => {
   test("01 行数＝１行／前後空白なし／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
@@ -239,50 +239,50 @@ test.describe("入力欄リンク起動", () => {
 
 // パターン整理
 // 01. 入力なし／あり
-// 02. 表示なし／あり
-// 03. 入力文字列内に表示文字列なし／あり
+// 02. 出力なし／あり
+// 03. 入力文字列内に出力文字列なし／あり
 //
 // パターン一覧
-// × 01 入力なし／表示なし／入力文字列内に表示文字列なし
-// ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
-// ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
-// × 04 入力なし／表示あり／入力文字列内に表示文字列あり
-// ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
-// ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
-// ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
-// ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+// × 01 入力なし／出力なし／入力文字列内に出力文字列なし
+// ○ 02 入力なし／出力なし／入力文字列内に出力文字列あり
+// ○ 03 入力なし／出力あり／入力文字列内に出力文字列なし
+// × 04 入力なし／出力あり／入力文字列内に出力文字列あり
+// ○ 05 入力あり／出力なし／入力文字列内に出力文字列なし
+// ○ 06 入力あり／出力なし／入力文字列内に出力文字列あり
+// ○ 07 入力あり／出力あり／入力文字列内に出力文字列なし
+// ○ 08 入力あり／出力あり／入力文字列内に出力文字列あり
 test.describe("完全ランダムボタンクリック", () => {
-  test("02 入力なし／表示なし／入力文字列内に表示文字列あり", async ({
+  test("02 入力なし／出力なし／入力文字列内に出力文字列あり", async ({
     page,
   }) => {
     const buttonId = "#fullRandomBtn";
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "";
     });
 
     await page.locator(buttonId).click();
-    await expect(page.locator("#result")).toHaveText("");
+    await expect(page.locator("#output")).toHaveText("");
   });
 
-  test("03 入力なし／表示あり／入力文字列内に表示文字列なし", async ({
+  test("03 入力なし／出力あり／入力文字列内に出力文字列なし", async ({
     page,
   }) => {
     const buttonId = "#fullRandomBtn";
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "Z";
     });
 
     await page.locator(buttonId).click();
-    await expect(page.locator("#result")).toHaveText("");
+    await expect(page.locator("#output")).toHaveText("");
   });
 
-  test("05 入力あり／表示なし／入力文字列内に表示文字列なし", async ({
+  test("05 入力あり／出力なし／入力文字列内に出力文字列なし", async ({
     page,
   }) => {
     const buttonId = "#fullRandomBtn";
@@ -290,16 +290,16 @@ test.describe("完全ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 
-  test("06 入力あり／表示なし／入力文字列内に表示文字列あり", async ({
+  test("06 入力あり／出力なし／入力文字列内に出力文字列あり", async ({
     page,
   }) => {
     const buttonId = "#fullRandomBtn";
@@ -307,16 +307,16 @@ test.describe("完全ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\n\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 
-  test("07 入力あり／表示あり／入力文字列内に表示文字列なし", async ({
+  test("07 入力あり／出力あり／入力文字列内に出力文字列なし", async ({
     page,
   }) => {
     const buttonId = "#fullRandomBtn";
@@ -324,16 +324,16 @@ test.describe("完全ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "Z";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 
-  test("08 入力あり／表示あり／入力文字列内に表示文字列あり", async ({
+  test("08 入力あり／出力あり／入力文字列内に出力文字列あり", async ({
     page,
   }) => {
     const buttonId = "#fullRandomBtn";
@@ -341,62 +341,62 @@ test.describe("完全ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "A";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 });
 
 // パターン整理
 // 01. 入力なし／あり
-// 02. 表示なし／あり
-// 03. 入力文字列内に表示文字列なし／あり
+// 02. 出力なし／あり
+// 03. 入力文字列内に出力文字列なし／あり
 //
 // パターン一覧
-// × 01 入力なし／表示なし／入力文字列内に表示文字列なし
-// ○ 02 入力なし／表示なし／入力文字列内に表示文字列あり
-// ○ 03 入力なし／表示あり／入力文字列内に表示文字列なし
-// × 04 入力なし／表示あり／入力文字列内に表示文字列あり
-// ○ 05 入力あり／表示なし／入力文字列内に表示文字列なし
-// ○ 06 入力あり／表示なし／入力文字列内に表示文字列あり
-// ○ 07 入力あり／表示あり／入力文字列内に表示文字列なし
-// ○ 08 入力あり／表示あり／入力文字列内に表示文字列あり
+// × 01 入力なし／出力なし／入力文字列内に出力文字列なし
+// ○ 02 入力なし／出力なし／入力文字列内に出力文字列あり
+// ○ 03 入力なし／出力あり／入力文字列内に出力文字列なし
+// × 04 入力なし／出力あり／入力文字列内に出力文字列あり
+// ○ 05 入力あり／出力なし／入力文字列内に出力文字列なし
+// ○ 06 入力あり／出力なし／入力文字列内に出力文字列あり
+// ○ 07 入力あり／出力あり／入力文字列内に出力文字列なし
+// ○ 08 入力あり／出力あり／入力文字列内に出力文字列あり
 test.describe("排他ランダムボタンクリック", () => {
-  test("02 入力なし／表示なし／入力文字列内に表示文字列あり", async ({
+  test("02 入力なし／出力なし／入力文字列内に出力文字列あり", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "";
     });
 
     await page.locator(buttonId).click();
-    await expect(page.locator("#result")).toHaveText("");
+    await expect(page.locator("#output")).toHaveText("");
   });
 
-  test("03 入力なし／表示あり／入力文字列内に表示文字列なし", async ({
+  test("03 入力なし／出力あり／入力文字列内に出力文字列なし", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "Z";
     });
 
     await page.locator(buttonId).click();
-    await expect(page.locator("#result")).toHaveText("");
+    await expect(page.locator("#output")).toHaveText("");
   });
 
-  test("05 入力あり／表示なし／入力文字列内に表示文字列なし", async ({
+  test("05 入力あり／出力なし／入力文字列内に出力文字列なし", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
@@ -404,16 +404,16 @@ test.describe("排他ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 
-  test("06 入力あり／表示なし／入力文字列内に表示文字列あり", async ({
+  test("06 入力あり／出力なし／入力文字列内に出力文字列あり", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
@@ -421,16 +421,16 @@ test.describe("排他ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\n\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 
-  test("07 入力あり／表示あり／入力文字列内に表示文字列なし", async ({
+  test("07 入力あり／出力あり／入力文字列内に出力文字列なし", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
@@ -438,16 +438,16 @@ test.describe("排他ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "Z";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(items).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(items).toContain(output);
   });
 
-  test("08 入力あり／表示あり／入力文字列内に表示文字列あり", async ({
+  test("08 入力あり／出力あり／入力文字列内に出力文字列あり", async ({
     page,
   }) => {
     const buttonId = "#exclusiveRandomBtn";
@@ -456,25 +456,25 @@ test.describe("排他ランダムボタンクリック", () => {
 
     await page.goto(appUrl);
     await page.locator("#itemsInput").fill("A\nB\nC");
-    await page.locator("#result").evaluate((el) => {
+    await page.locator("#output").evaluate((el) => {
       el.textContent = "A";
     });
 
     await page.locator(buttonId).click();
-    const result = ((await page.locator("#result").textContent()) ?? "").trim();
-    expect(expectedItems).toContain(result);
+    const output = ((await page.locator("#output").textContent()) ?? "").trim();
+    expect(expectedItems).toContain(output);
   });
 });
 
 // パターン整理
-// 01. ボタン＝完全ランダム／排他ランダム
+// 01. ボタン／＝完全ランダム／排他ランダム
 // 02. 全候補が１回以上出る
 // 03. 前回と同じ値を許容する／しない
 //
 // パターン一覧
 // ○ 01 ボタン＝完全ランダム／全候補が１回以上出る／前回と同じ値を許容する
 // ○ 02 ボタン＝排他ランダム／全候補が１回以上出る／前回と同じ値を許容しない
-test.describe("ランダムボタン（３択／試行１００回）", () => {
+test.describe("ランダムボタンクリック（３択／試行１００回）", () => {
   test("01 ボタン＝完全ランダム／全候補が１回以上出る／前回と同じ値を許容する", async ({
     page,
   }) => {
@@ -489,10 +489,10 @@ test.describe("ランダムボタン（３択／試行１００回）", () => {
 
     for (let i = 0; i < trials; i += 1) {
       await page.locator(buttonId).click();
-      const result = (
-        (await page.locator("#result").textContent()) ?? ""
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
       ).trim();
-      seen.add(result);
+      seen.add(output);
     }
 
     expect(seen).toEqual(expected);
@@ -512,16 +512,16 @@ test.describe("ランダムボタン（３択／試行１００回）", () => {
 
     for (let i = 0; i < trials; i += 1) {
       const previous = (
-        (await page.locator("#result").textContent()) ?? ""
+        (await page.locator("#output").textContent()) ?? ""
       ).trim();
       await page.locator(buttonId).click();
-      const result = (
-        (await page.locator("#result").textContent()) ?? ""
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
       ).trim();
-      seen.add(result);
+      seen.add(output);
 
       if (previous !== "") {
-        expect(result).not.toBe(previous);
+        expect(output).not.toBe(previous);
       }
     }
 
@@ -530,17 +530,17 @@ test.describe("ランダムボタン（３択／試行１００回）", () => {
 });
 
 // パターン整理
-// 01. 文字数＝０文字／≧１文字
+// 01. 文字数／＝０文字／≧１文字
 //
 // パターン一覧
 // ○ 01 文字数＝０文字
 // ○ 02 文字数≧１文字
-test.describe("表示欄コピー", () => {
+test.describe("出力欄コピーボタンクリック", () => {
   test("01 文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
 
-    await page.getByRole("button", { name: "表示欄をコピー" }).click();
+    await page.getByRole("button", { name: "出力欄をコピー" }).click();
 
     await expect.poll(() => getCopiedTexts(page)).toEqual([""]);
   });
@@ -548,29 +548,29 @@ test.describe("表示欄コピー", () => {
   test("02 文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#result").evaluate((el) => {
-      el.textContent = "表示テキスト";
+    await page.locator("#output").evaluate((el) => {
+      el.textContent = "出力テキスト";
     });
 
-    await page.getByRole("button", { name: "表示欄をコピー" }).click();
+    await page.getByRole("button", { name: "出力欄をコピー" }).click();
 
-    await expect.poll(() => getCopiedTexts(page)).toEqual(["表示テキスト"]);
+    await expect.poll(() => getCopiedTexts(page)).toEqual(["出力テキスト"]);
   });
 });
 
 // パターン整理
-// 01. 文字数＝０文字／≧１文字
+// 01. 文字数／＝０文字／≧１文字
 //
 // パターン一覧
 // ○ 01 文字数＝０文字
 // ○ 02 文字数≧１文字
-test.describe("表示欄リンク起動", () => {
+test.describe("出力欄リンク起動ボタンクリック", () => {
   test("01 文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
 
     await page
-      .getByRole("button", { name: "表示欄のリンクを新しいタブで開く" })
+      .getByRole("button", { name: "出力欄のリンクを新しいタブで開く" })
       .click();
 
     await expect.poll(() => getOpenedUrls(page)).toEqual([]);
@@ -579,16 +579,16 @@ test.describe("表示欄リンク起動", () => {
   test("02 文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#result").evaluate((el) => {
-      el.textContent = "https://example.com/result";
+    await page.locator("#output").evaluate((el) => {
+      el.textContent = "https://example.com/output";
     });
 
     await page
-      .getByRole("button", { name: "表示欄のリンクを新しいタブで開く" })
+      .getByRole("button", { name: "出力欄のリンクを新しいタブで開く" })
       .click();
 
     await expect
       .poll(() => getOpenedUrls(page))
-      .toEqual([{ url: "https://example.com/result", target: "_blank" }]);
+      .toEqual([{ url: "https://example.com/output", target: "_blank" }]);
   });
 });

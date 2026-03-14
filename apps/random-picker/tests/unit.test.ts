@@ -12,7 +12,7 @@ import {
   trimStrings,
   copyTextToClipboard,
   openUrls,
-  renderResult,
+  renderOutput,
 } from "../src/script.ts";
 
 describe("Random Picker Unit Tests", () => {
@@ -555,7 +555,7 @@ describe("Random Picker Unit Tests", () => {
   });
 
   // パターン整理
-  // 01. 文字数／０文字／≧１文字
+  // 01. 文字数／＝０文字／≧１文字
   // 02. 改行／なし／あり
   //
   // パターン一覧
@@ -719,11 +719,11 @@ describe("Random Picker Unit Tests", () => {
   // パターン一覧
   // ○ 01 文字数＝０文字
   // ○ 02 文字数≧１文字
-  describe("renderResult", () => {
+  describe("renderOutput", () => {
     test("01 文字数＝０文字", () => {
       const dummyDiv = document.createElement("div");
 
-      renderResult(dummyDiv, "");
+      renderOutput(dummyDiv, "");
 
       expect(dummyDiv.textContent).toBe("");
     });
@@ -731,7 +731,7 @@ describe("Random Picker Unit Tests", () => {
     test("02 文字数≧１文字", () => {
       const dummyDiv = document.createElement("div");
 
-      renderResult(dummyDiv, "テスト結果");
+      renderOutput(dummyDiv, "テスト結果");
 
       expect(dummyDiv.textContent).toBe("テスト結果");
     });

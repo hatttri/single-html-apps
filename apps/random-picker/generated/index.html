@@ -18,8 +18,8 @@
         --accent-glow: rgba(0, 212, 255, 0.6);
         --btn-bg: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
         --btn-hover: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
-        --result-bg: rgba(0, 0, 0, 0.2);
-        --result-glow:
+        --output-bg: rgba(0, 0, 0, 0.2);
+        --output-glow:
           0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
         --font-family: system-ui, -apple-system, sans-serif;
         --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -90,14 +90,14 @@
         gap: 8px;
       }
       .input-header,
-      .result-header {
+      .output-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
       .input-label,
-      .result-label {
+      .output-label {
         color: var(--text-secondary);
         font-size: 0.95rem;
         font-weight: 700;
@@ -200,16 +200,16 @@
         transform: none;
         box-shadow: none;
       }
-      .result-group {
+      .output-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
-      .result-container {
+      .output-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        background: var(--result-bg);
+        background: var(--output-bg);
         border-radius: 16px;
         min-height: 120px;
         padding: 24px;
@@ -218,7 +218,7 @@
         transition: var(--transition-smooth);
         position: relative;
       }
-      #result {
+      #output {
         font-size: 1.8rem;
         font-weight: 900;
         text-align: center;
@@ -236,7 +236,7 @@
           font-size: 1.6rem;
         }
         .input-header,
-        .result-header {
+        .output-header {
           align-items: flex-start;
           flex-direction: column;
         }
@@ -247,7 +247,7 @@
           padding: 16px 24px;
           font-size: 1.1rem;
         }
-        #result {
+        #output {
           font-size: 1.5rem;
         }
       }
@@ -307,15 +307,15 @@
         <button id="exclusiveRandomBtn" type="button">排他ランダム</button>
       </div>
 
-      <div class="result-group">
-        <div class="result-header">
-          <p class="result-label">表示欄</p>
+      <div class="output-group">
+        <div class="output-header">
+          <p class="output-label">出力欄</p>
           <div class="icon-buttons">
             <button
-              id="resultCopyBtn"
+              id="outputCopyBtn"
               class="icon-button"
               type="button"
-              aria-label="表示欄をコピー"
+              aria-label="出力欄をコピー"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="9" y="9" width="10" height="10" rx="2"></rect>
@@ -325,10 +325,10 @@
               </svg>
             </button>
             <button
-              id="resultOpenBtn"
+              id="outputOpenBtn"
               class="icon-button"
               type="button"
-              aria-label="表示欄のリンクを新しいタブで開く"
+              aria-label="出力欄のリンクを新しいタブで開く"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M14 5h5v5"></path>
@@ -340,8 +340,8 @@
             </button>
           </div>
         </div>
-        <div id="resultContainer" class="result-container">
-          <div id="result"></div>
+        <div id="outputContainer" class="output-container">
+          <div id="output"></div>
         </div>
       </div>
     </div>
@@ -391,7 +391,7 @@
           openUrls: () => openUrls,
           pickRandomItems: () => pickRandomItems,
           removeExcludedItems: () => removeExcludedItems,
-          renderResult: () => renderResult,
+          renderOutput: () => renderOutput,
           splitByNewline: () => splitByNewline,
           trimStrings: () => trimStrings,
         });
@@ -473,9 +473,9 @@
               root,
               "exclusiveRandomBtn",
             ),
-            resultDisplay: getElementByIdOrThrow(root, "result"),
-            resultCopyBtn: getElementByIdOrThrow(root, "resultCopyBtn"),
-            resultOpenBtn: getElementByIdOrThrow(root, "resultOpenBtn"),
+            outputDisplay: getElementByIdOrThrow(root, "output"),
+            outputCopyBtn: getElementByIdOrThrow(root, "outputCopyBtn"),
+            outputOpenBtn: getElementByIdOrThrow(root, "outputOpenBtn"),
           };
         }
         function getElementByIdOrThrow(root, id) {
@@ -508,7 +508,7 @@
               createPickRandomItemsProcessor(1),
             ]);
             const outputText = joinByNewline(outputLines);
-            renderResult(ui.resultDisplay, outputText);
+            renderOutput(ui.outputDisplay, outputText);
           };
           ui.exclusiveRandomBtn.onclick = () => {
             const inputText = ui.inputArea.value;
@@ -517,19 +517,19 @@
               trimStrings,
               filterEmptyStrings,
               createRemoveExcludedItemsProcessor(
-                splitByNewline(ui.resultDisplay.textContent ?? ""),
+                splitByNewline(ui.outputDisplay.textContent ?? ""),
               ),
               createPickRandomItemsProcessor(1),
             ]);
             const outputText = joinByNewline(outputLines);
-            renderResult(ui.resultDisplay, outputText);
+            renderOutput(ui.outputDisplay, outputText);
           };
-          ui.resultCopyBtn.onclick = async () => {
-            const outputText = ui.resultDisplay.textContent ?? "";
+          ui.outputCopyBtn.onclick = async () => {
+            const outputText = ui.outputDisplay.textContent ?? "";
             await copyTextToClipboard(outputText);
           };
-          ui.resultOpenBtn.onclick = () => {
-            const outputText = ui.resultDisplay.textContent ?? "";
+          ui.outputOpenBtn.onclick = () => {
+            const outputText = ui.outputDisplay.textContent ?? "";
             const outputLines = splitByNewline(outputText);
             const urls = applyStringArrayProcessors(outputLines, [
               trimStrings,
@@ -539,7 +539,7 @@
           };
           return ui;
         }
-        function renderResult(element, value) {
+        function renderOutput(element, value) {
           element.textContent = value;
         }
         return __toCommonJS(script_exports);
