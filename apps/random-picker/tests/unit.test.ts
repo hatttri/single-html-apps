@@ -71,40 +71,26 @@ describe("Random Picker Unit Tests", () => {
   });
 
   // パターン整理
-  // 01. 取得件数／＜０／＝小数／＝０／＝１／＞要素数
+  // 01. 依存関数の入出力確認
   //
   // パターン一覧
-  // ○ 01 取得件数＜０
-  // ○ 02 取得件数＝小数
-  // ○ 03 取得件数＝０
-  // ○ 04 取得件数＝１
-  // ○ 05 取得件数＞要素数
-  //
-  // `pickRandomItems` の乱択ロジック全体は後続の describe で網羅する。
-  // ここでは count を束縛した processor を返す責務だけを直接確認する。
+  // ○ 01 依存関数の入出力確認
   describe("createPickRandomItemsProcessor", () => {
-    test("01 取得件数＜０", () => {
-      expect(() => createPickRandomItemsProcessor(-1)(["A"])).toThrow(
-        RangeError,
+    test("01 依存関数の入出力確認", () => {
+      const inputItems = ["A", "B"];
+      const count = 42;
+      const returnedItems = ["only-one"];
+      const pickRandomItemsFn = vi
+        .fn<(items: string[], count: number) => string[]>()
+        .mockReturnValue(returnedItems);
+      const processor = createPickRandomItemsProcessor(
+        count,
+        pickRandomItemsFn,
       );
-    });
 
-    test("02 取得件数＝小数", () => {
-      expect(() => createPickRandomItemsProcessor(1.5)(["A"])).toThrow(
-        RangeError,
-      );
-    });
-
-    test("03 取得件数＝０", () => {
-      expect(createPickRandomItemsProcessor(0)([""])).toEqual([]);
-    });
-
-    test("04 取得件数＝１", () => {
-      expect(createPickRandomItemsProcessor(1)(["A"])).toEqual(["A"]);
-    });
-
-    test("05 取得件数＞要素数", () => {
-      expect(createPickRandomItemsProcessor(2)(["A"])).toEqual(["A"]);
+      expect(processor(inputItems)).toBe(returnedItems);
+      expect(pickRandomItemsFn).toHaveBeenCalledTimes(1);
+      expect(pickRandomItemsFn).toHaveBeenCalledWith(inputItems, count);
     });
   });
 

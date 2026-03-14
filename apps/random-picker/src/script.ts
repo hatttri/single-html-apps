@@ -15,12 +15,13 @@ export function applyStringArrayProcessors(
 }
 
 /**
- * 指定件数ぶんランダム選択する処理関数を返す
+ * 指定件数ぶんランダム選択する処理関数を返す。既定では pickRandomItems を使う。
  */
 export function createPickRandomItemsProcessor(
   count: number,
+  pickRandomItemsFn: typeof pickRandomItems = pickRandomItems,
 ): StringArrayProcessor {
-  return (items) => pickRandomItems(items, count);
+  return (items) => pickRandomItemsFn(items, count);
 }
 
 /**

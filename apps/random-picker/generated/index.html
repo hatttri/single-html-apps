@@ -399,8 +399,11 @@
             values,
           );
         }
-        function createPickRandomItemsProcessor(count) {
-          return (items) => pickRandomItems(items, count);
+        function createPickRandomItemsProcessor(
+          count,
+          pickRandomItemsFn = pickRandomItems,
+        ) {
+          return (items) => pickRandomItemsFn(items, count);
         }
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
