@@ -487,12 +487,16 @@
         }
         function initApp(ui = createUi()) {
           ui.inputCopyBtn.onclick = async () => {
-            await copyTextToClipboard(ui.inputArea.value);
+            const inputText = ui.inputArea.value;
+            await copyTextToClipboard(inputText);
           };
           ui.inputOpenBtn.onclick = () => {
-            const inputItems = splitByNewline(ui.inputArea.value);
-            const itemProcessors = [trimStrings, filterEmptyStrings];
-            const urls = applyStringArrayProcessors(inputItems, itemProcessors);
+            const inputText = ui.inputArea.value;
+            const inputLines = splitByNewline(inputText);
+            const urls = applyStringArrayProcessors(inputLines, [
+              trimStrings,
+              filterEmptyStrings,
+            ]);
             openUrls(urls);
           };
           ui.fullRandomBtn.onclick = () => {
@@ -521,17 +525,16 @@
             renderResult(ui.resultDisplay, outputText);
           };
           ui.resultCopyBtn.onclick = async () => {
-            await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
+            const outputText = ui.resultDisplay.textContent ?? "";
+            await copyTextToClipboard(outputText);
           };
           ui.resultOpenBtn.onclick = () => {
-            const resultItems = splitByNewline(
-              ui.resultDisplay.textContent ?? "",
-            );
-            const itemProcessors = [trimStrings, filterEmptyStrings];
-            const urls = applyStringArrayProcessors(
-              resultItems,
-              itemProcessors,
-            );
+            const outputText = ui.resultDisplay.textContent ?? "";
+            const outputLines = splitByNewline(outputText);
+            const urls = applyStringArrayProcessors(outputLines, [
+              trimStrings,
+              filterEmptyStrings,
+            ]);
             openUrls(urls);
           };
           return ui;

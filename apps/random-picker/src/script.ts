@@ -184,14 +184,27 @@ export function getElementByIdOrThrow<T extends HTMLElement>(
  */
 export function initApp(ui: UI = createUi()): UI {
   ui.inputCopyBtn.onclick = async () => {
-    await copyTextToClipboard(ui.inputArea.value);
+    // 入力文字列を取得する
+    const inputText = ui.inputArea.value;
+
+    // 入力文字列をコピーする
+    await copyTextToClipboard(inputText);
   };
 
   ui.inputOpenBtn.onclick = () => {
-    const inputItems = splitByNewline(ui.inputArea.value);
-    const itemProcessors = [trimStrings, filterEmptyStrings];
-    const urls = applyStringArrayProcessors(inputItems, itemProcessors);
+    // 入力文字列を取得する
+    const inputText = ui.inputArea.value;
 
+    // 入力文字列を入力文字列配列に分割する
+    const inputLines = splitByNewline(inputText);
+
+    // 入力文字列配列を URL 配列に変換する
+    const urls = applyStringArrayProcessors(inputLines, [
+      trimStrings,
+      filterEmptyStrings,
+    ]);
+
+    // URL 配列を開く
     openUrls(urls);
   };
 
@@ -241,14 +254,27 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   ui.resultCopyBtn.onclick = async () => {
-    await copyTextToClipboard(ui.resultDisplay.textContent ?? "");
+    // 出力文字列を取得する
+    const outputText = ui.resultDisplay.textContent ?? "";
+
+    // 出力文字列をコピーする
+    await copyTextToClipboard(outputText);
   };
 
   ui.resultOpenBtn.onclick = () => {
-    const resultItems = splitByNewline(ui.resultDisplay.textContent ?? "");
-    const itemProcessors = [trimStrings, filterEmptyStrings];
-    const urls = applyStringArrayProcessors(resultItems, itemProcessors);
+    // 出力文字列を取得する
+    const outputText = ui.resultDisplay.textContent ?? "";
 
+    // 出力文字列を出力文字列配列に分割する
+    const outputLines = splitByNewline(outputText);
+
+    // 出力文字列配列を URL 配列に変換する
+    const urls = applyStringArrayProcessors(outputLines, [
+      trimStrings,
+      filterEmptyStrings,
+    ]);
+
+    // URL 配列を開く
     openUrls(urls);
   };
 
