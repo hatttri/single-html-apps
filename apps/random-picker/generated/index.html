@@ -496,37 +496,29 @@
             openUrls(urls);
           };
           ui.fullRandomBtn.onclick = () => {
-            const inputItems = splitByNewline(ui.inputArea.value);
-            const itemProcessors = [
+            const inputText = ui.inputArea.value;
+            const inputLines = splitByNewline(inputText);
+            const outputLines = applyStringArrayProcessors(inputLines, [
               trimStrings,
               filterEmptyStrings,
               createPickRandomItemsProcessor(1),
-            ];
-            const items = applyStringArrayProcessors(
-              inputItems,
-              itemProcessors,
-            );
-            renderResult(ui.resultDisplay, joinByNewline(items));
+            ]);
+            const outputText = joinByNewline(outputLines);
+            renderResult(ui.resultDisplay, outputText);
           };
           ui.exclusiveRandomBtn.onclick = () => {
-            const inputItems = splitByNewline(ui.inputArea.value);
-            const resultItems = splitByNewline(
-              ui.resultDisplay.textContent ?? "",
-            );
-            const itemProcessors = [trimStrings, filterEmptyStrings];
-            const items = applyStringArrayProcessors(
-              inputItems,
-              itemProcessors,
-            );
-            const currentItems = applyStringArrayProcessors(
-              resultItems,
-              itemProcessors,
-            );
-            const pickedItems = applyStringArrayProcessors(items, [
-              createRemoveExcludedItemsProcessor(currentItems),
+            const inputText = ui.inputArea.value;
+            const inputLines = splitByNewline(inputText);
+            const outputLines = applyStringArrayProcessors(inputLines, [
+              trimStrings,
+              filterEmptyStrings,
+              createRemoveExcludedItemsProcessor(
+                splitByNewline(ui.resultDisplay.textContent ?? ""),
+              ),
               createPickRandomItemsProcessor(1),
             ]);
-            renderResult(ui.resultDisplay, joinByNewline(pickedItems));
+            const outputText = joinByNewline(outputLines);
+            renderResult(ui.resultDisplay, outputText);
           };
           ui.resultCopyBtn.onclick = async () => {
             await copyTextToClipboard(ui.resultDisplay.textContent ?? "");

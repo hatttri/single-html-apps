@@ -196,32 +196,48 @@ export function initApp(ui: UI = createUi()): UI {
   };
 
   ui.fullRandomBtn.onclick = () => {
-    const inputItems = splitByNewline(ui.inputArea.value);
-    const itemProcessors = [
+    // 入力文字列を取得する
+    const inputText = ui.inputArea.value;
+
+    // 入力文字列を入力文字列配列に分割する
+    const inputLines = splitByNewline(inputText);
+
+    // 入力文字列配列を出力文字列配列に変換する
+    const outputLines = applyStringArrayProcessors(inputLines, [
       trimStrings,
       filterEmptyStrings,
       createPickRandomItemsProcessor(1),
-    ];
-    const items = applyStringArrayProcessors(inputItems, itemProcessors);
+    ]);
 
-    renderResult(ui.resultDisplay, joinByNewline(items));
+    // 出力文字列配列を出力文字列に結合する
+    const outputText = joinByNewline(outputLines);
+
+    // 出力文字列を出力欄に設定する
+    renderResult(ui.resultDisplay, outputText);
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
-    const inputItems = splitByNewline(ui.inputArea.value);
-    const resultItems = splitByNewline(ui.resultDisplay.textContent ?? "");
-    const itemProcessors = [trimStrings, filterEmptyStrings];
-    const items = applyStringArrayProcessors(inputItems, itemProcessors);
-    const currentItems = applyStringArrayProcessors(
-      resultItems,
-      itemProcessors,
-    );
-    const pickedItems = applyStringArrayProcessors(items, [
-      createRemoveExcludedItemsProcessor(currentItems),
+    // 入力文字列を取得する
+    const inputText = ui.inputArea.value;
+
+    // 入力文字列を入力文字列配列に分割する
+    const inputLines = splitByNewline(inputText);
+
+    // 入力文字列配列を出力文字列配列に変換する
+    const outputLines = applyStringArrayProcessors(inputLines, [
+      trimStrings,
+      filterEmptyStrings,
+      createRemoveExcludedItemsProcessor(
+        splitByNewline(ui.resultDisplay.textContent ?? ""),
+      ),
       createPickRandomItemsProcessor(1),
     ]);
 
-    renderResult(ui.resultDisplay, joinByNewline(pickedItems));
+    // 出力文字列配列を出力文字列に結合する
+    const outputText = joinByNewline(outputLines);
+
+    // 出力文字列を出力欄に設定する
+    renderResult(ui.resultDisplay, outputText);
   };
 
   ui.resultCopyBtn.onclick = async () => {
