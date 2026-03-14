@@ -25,6 +25,16 @@ export function createPickRandomItemsProcessor(
 }
 
 /**
+ * 除外リストを適用する処理関数を返す。既定では removeExcludedItems を使う。
+ */
+export function createRemoveExcludedItemsProcessor(
+  excludedItems: string[],
+  removeExcludedItemsFn: typeof removeExcludedItems = removeExcludedItems,
+): StringArrayProcessor {
+  return (items) => removeExcludedItemsFn(items, excludedItems);
+}
+
+/**
  * 空文字列を除外する
  */
 export function filterEmptyStrings(values: string[]): string[] {
@@ -206,8 +216,8 @@ export function initApp(ui: UI = createUi()): UI {
       resultItems,
       itemProcessors,
     );
-    const candidates = removeExcludedItems(items, currentItems);
-    const pickedItems = applyStringArrayProcessors(candidates, [
+    const pickedItems = applyStringArrayProcessors(items, [
+      createRemoveExcludedItemsProcessor(currentItems),
       createPickRandomItemsProcessor(1),
     ]);
 

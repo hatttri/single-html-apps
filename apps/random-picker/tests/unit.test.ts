@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
   applyStringArrayProcessors,
   createPickRandomItemsProcessor,
+  createRemoveExcludedItemsProcessor,
   filterEmptyStrings,
   getElementByIdOrThrow,
   joinByNewline,
@@ -91,6 +92,33 @@ describe("Random Picker Unit Tests", () => {
       expect(processor(inputItems)).toBe(returnedItems);
       expect(pickRandomItemsFn).toHaveBeenCalledTimes(1);
       expect(pickRandomItemsFn).toHaveBeenCalledWith(inputItems, count);
+    });
+  });
+
+  // パターン整理
+  // 01. 依存関数の入出力テスト
+  //
+  // パターン一覧
+  // ○ 01 依存関数の入出力テスト
+  describe("createRemoveExcludedItemsProcessor", () => {
+    test("01 依存関数の入出力テスト", () => {
+      const inputItems = ["A", "B"];
+      const excludedItems = ["B"];
+      const returnedItems = ["A"];
+      const removeExcludedItemsFn = vi
+        .fn<(items: string[], excludedItems: string[]) => string[]>()
+        .mockReturnValue(returnedItems);
+      const processor = createRemoveExcludedItemsProcessor(
+        excludedItems,
+        removeExcludedItemsFn,
+      );
+
+      expect(processor(inputItems)).toBe(returnedItems);
+      expect(removeExcludedItemsFn).toHaveBeenCalledTimes(1);
+      expect(removeExcludedItemsFn).toHaveBeenCalledWith(
+        inputItems,
+        excludedItems,
+      );
     });
   });
 

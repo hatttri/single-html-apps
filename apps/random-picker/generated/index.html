@@ -381,6 +381,8 @@
           applyStringArrayProcessors: () => applyStringArrayProcessors,
           copyTextToClipboard: () => copyTextToClipboard,
           createPickRandomItemsProcessor: () => createPickRandomItemsProcessor,
+          createRemoveExcludedItemsProcessor: () =>
+            createRemoveExcludedItemsProcessor,
           createUi: () => createUi,
           filterEmptyStrings: () => filterEmptyStrings,
           getElementByIdOrThrow: () => getElementByIdOrThrow,
@@ -404,6 +406,12 @@
           pickRandomItemsFn = pickRandomItems,
         ) {
           return (items) => pickRandomItemsFn(items, count);
+        }
+        function createRemoveExcludedItemsProcessor(
+          excludedItems,
+          removeExcludedItemsFn = removeExcludedItems,
+        ) {
+          return (items) => removeExcludedItemsFn(items, excludedItems);
         }
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
@@ -514,8 +522,8 @@
               resultItems,
               itemProcessors,
             );
-            const candidates = removeExcludedItems(items, currentItems);
-            const pickedItems = applyStringArrayProcessors(candidates, [
+            const pickedItems = applyStringArrayProcessors(items, [
+              createRemoveExcludedItemsProcessor(currentItems),
               createPickRandomItemsProcessor(1),
             ]);
             renderResult(ui.resultDisplay, joinByNewline(pickedItems));
