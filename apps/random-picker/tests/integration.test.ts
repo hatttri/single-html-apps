@@ -112,15 +112,41 @@ describe("Random Picker Integration Tests", () => {
 
     // パターン整理
     // 01. 行数／＝１行／≧２行
-    // 02. 無効行／なし／あり
+    // 02. 前後空白／なし／あり
+    // 03. 無効行／なし／あり
     //
     // パターン一覧
-    // ○ 01 行数＝１行／無効行なし
-    // ○ 02 行数＝１行／無効行あり
-    // ○ 03 行数≧２行／無効行なし
-    // ○ 04 行数≧２行／無効行あり
+    // ○ 01 行数＝１行／前後空白なし／無効行なし
+    // ○ 02 行数＝１行／前後空白なし／無効行あり
+    // ○ 03 行数＝１行／前後空白あり／無効行なし
+    // ○ 04 行数＝１行／前後空白あり／無効行あり
+    // ○ 05 行数≧２行／前後空白なし／無効行なし
+    // ○ 06 行数≧２行／前後空白なし／無効行あり
+    // ○ 07 行数≧２行／前後空白あり／無効行なし
+    // ○ 08 行数≧２行／前後空白あり／無効行あり
     describe("ui.inputOpenBtn.onclick", () => {
-      test("01 行数＝１行／無効行なし", () => {
+      test("01 行数＝１行／前後空白なし／無効行なし", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.inputArea.value = "https://example.com";
+
+        ui.inputOpenBtn.click();
+
+        expect(open).toHaveBeenCalledTimes(1);
+        expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
+      });
+
+      test("02 行数＝１行／前後空白なし／無効行あり", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.inputArea.value = "";
+
+        ui.inputOpenBtn.click();
+
+        expect(open).not.toHaveBeenCalled();
+      });
+
+      test("03 行数＝１行／前後空白あり／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.inputArea.value = " https://example.com ";
@@ -131,7 +157,7 @@ describe("Random Picker Integration Tests", () => {
         expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
       });
 
-      test("02 行数＝１行／無効行あり", () => {
+      test("04 行数＝１行／前後空白あり／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.inputArea.value = "  ";
@@ -141,7 +167,38 @@ describe("Random Picker Integration Tests", () => {
         expect(open).not.toHaveBeenCalled();
       });
 
-      test("03 行数≧２行／無効行なし", () => {
+      test("05 行数≧２行／前後空白なし／無効行なし", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.inputArea.value = "https://example.com\nhttps://example.org";
+
+        ui.inputOpenBtn.click();
+
+        expect(open).toHaveBeenCalledTimes(2);
+        expect(open).toHaveBeenNthCalledWith(
+          1,
+          "https://example.com",
+          "_blank",
+        );
+        expect(open).toHaveBeenNthCalledWith(
+          2,
+          "https://example.org",
+          "_blank",
+        );
+      });
+
+      test("06 行数≧２行／前後空白なし／無効行あり", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.inputArea.value = "https://example.com\n";
+
+        ui.inputOpenBtn.click();
+
+        expect(open).toHaveBeenCalledTimes(1);
+        expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
+      });
+
+      test("07 行数≧２行／前後空白あり／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.inputArea.value = " https://example.com \n https://example.org ";
@@ -161,7 +218,7 @@ describe("Random Picker Integration Tests", () => {
         );
       });
 
-      test("04 行数≧２行／無効行あり", () => {
+      test("08 行数≧２行／前後空白あり／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.inputArea.value = " https://example.com \n  ";
@@ -505,15 +562,44 @@ describe("Random Picker Integration Tests", () => {
 
     // パターン整理
     // 01. 行数／＝１行／≧２行
-    // 02. 無効行／なし／あり
+    // 02. 前後空白／なし／あり
+    // 03. 無効行／なし／あり
     //
     // パターン一覧
-    // ○ 01 行数＝１行／無効行なし
-    // ○ 02 行数＝１行／無効行あり
-    // ○ 03 行数≧２行／無効行なし
-    // ○ 04 行数≧２行／無効行あり
+    // ○ 01 行数＝１行／前後空白なし／無効行なし
+    // ○ 02 行数＝１行／前後空白なし／無効行あり
+    // ○ 03 行数＝１行／前後空白あり／無効行なし
+    // ○ 04 行数＝１行／前後空白あり／無効行あり
+    // ○ 05 行数≧２行／前後空白なし／無効行なし
+    // ○ 06 行数≧２行／前後空白なし／無効行あり
+    // ○ 07 行数≧２行／前後空白あり／無効行なし
+    // ○ 08 行数≧２行／前後空白あり／無効行あり
     describe("ui.resultOpenBtn.onclick", () => {
-      test("01 行数＝１行／無効行なし", () => {
+      test("01 行数＝１行／前後空白なし／無効行なし", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.resultDisplay.textContent = "https://example.com/result";
+
+        ui.resultOpenBtn.click();
+
+        expect(open).toHaveBeenCalledTimes(1);
+        expect(open).toHaveBeenCalledWith(
+          "https://example.com/result",
+          "_blank",
+        );
+      });
+
+      test("02 行数＝１行／前後空白なし／無効行あり", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.resultDisplay.textContent = "";
+
+        ui.resultOpenBtn.click();
+
+        expect(open).not.toHaveBeenCalled();
+      });
+
+      test("03 行数＝１行／前後空白あり／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.resultDisplay.textContent = " https://example.com/result ";
@@ -527,7 +613,7 @@ describe("Random Picker Integration Tests", () => {
         );
       });
 
-      test("02 行数＝１行／無効行あり", () => {
+      test("04 行数＝１行／前後空白あり／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.resultDisplay.textContent = "  ";
@@ -537,7 +623,42 @@ describe("Random Picker Integration Tests", () => {
         expect(open).not.toHaveBeenCalled();
       });
 
-      test("03 行数≧２行／無効行なし", () => {
+      test("05 行数≧２行／前後空白なし／無効行なし", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.resultDisplay.textContent =
+          "https://example.com/result\nhttps://example.org/result";
+
+        ui.resultOpenBtn.click();
+
+        expect(open).toHaveBeenCalledTimes(2);
+        expect(open).toHaveBeenNthCalledWith(
+          1,
+          "https://example.com/result",
+          "_blank",
+        );
+        expect(open).toHaveBeenNthCalledWith(
+          2,
+          "https://example.org/result",
+          "_blank",
+        );
+      });
+
+      test("06 行数≧２行／前後空白なし／無効行あり", () => {
+        const open = vi.fn<typeof window.open>(() => null);
+        window.open = open;
+        ui.resultDisplay.textContent = "https://example.com/result\n";
+
+        ui.resultOpenBtn.click();
+
+        expect(open).toHaveBeenCalledTimes(1);
+        expect(open).toHaveBeenCalledWith(
+          "https://example.com/result",
+          "_blank",
+        );
+      });
+
+      test("07 行数≧２行／前後空白あり／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.resultDisplay.textContent =
@@ -558,7 +679,7 @@ describe("Random Picker Integration Tests", () => {
         );
       });
 
-      test("04 行数≧２行／無効行あり", () => {
+      test("08 行数≧２行／前後空白あり／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
         ui.resultDisplay.textContent = " https://example.com/result \n  ";
