@@ -65,25 +65,6 @@
         overflow: hidden;
         animation: fadeIn 0.3s ease-out;
       }
-      h1 {
-        font-size: 2rem;
-        font-weight: 800;
-        text-align: center;
-        letter-spacing: -0.5px;
-        margin-bottom: 8px;
-        background: linear-gradient(to right, #fff, #b3e5fc);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .subtitle {
-        text-align: center;
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-        margin-bottom: 12px;
-        line-height: 1.5;
-      }
       .input-group {
         display: flex;
         flex-direction: column;
@@ -163,9 +144,6 @@
         background-color: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
-      #input::placeholder {
-        color: var(--text-placeholder);
-      }
       #input:focus,
       #output:focus {
         border-color: rgba(0, 212, 255, 0.5);
@@ -218,9 +196,6 @@
           padding: 24px;
           border-radius: 20px;
         }
-        h1 {
-          font-size: 1.6rem;
-        }
         .input-header,
         .output-header {
           align-items: flex-start;
@@ -239,13 +214,6 @@
 
   <body>
     <div class="glass-container">
-      <header>
-        <h1>Random Picker</h1>
-        <p class="subtitle">
-          改行区切りで入力したテキストから、<br />ルーレット風にランダムで1つを選びます。
-        </p>
-      </header>
-
       <div class="input-group">
         <div class="input-header">
           <p class="input-label">入力欄</p>
@@ -279,10 +247,7 @@
             </button>
           </div>
         </div>
-        <textarea
-          id="input"
-          placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"
-        ></textarea>
+        <textarea id="input"></textarea>
       </div>
 
       <div class="button-group">

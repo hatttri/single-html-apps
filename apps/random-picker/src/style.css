@@ -72,27 +72,6 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
-h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  text-align: center;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-  background: linear-gradient(to right, #fff, #b3e5fc);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.subtitle {
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
 /* 入力エリア */
 .input-group {
   display: flex;
@@ -185,10 +164,6 @@ h1 {
   border-radius: 4px;
 }
 
-#input::placeholder {
-  color: var(--text-placeholder);
-}
-
 #input:focus,
 #output:focus {
   border-color: rgba(0, 212, 255, 0.5);
@@ -251,10 +226,6 @@ button:disabled {
   .glass-container {
     padding: 24px;
     border-radius: 20px;
-  }
-
-  h1 {
-    font-size: 1.6rem;
   }
 
   .input-header,
