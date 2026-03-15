@@ -258,60 +258,84 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
 
 test.describe("完全ランダムボタンクリック", () => {
   // パターン整理
-  // 01. 入力なし／あり
-  // 02. 出力なし／あり
-  // 03. 入力文字列内に出力文字列なし／あり
+  // 01. 入力行数／＝１行／＝２行／≧３行
+  // 02. 前後空白／なし／あり
+  // 03. 無効行／なし／あり
   //
   // パターン一覧
-  // × 01 入力なし／出力なし／入力文字列内に出力文字列なし
-  // ○ 02 入力なし／出力なし／入力文字列内に出力文字列あり
-  // ○ 03 入力なし／出力あり／入力文字列内に出力文字列なし
-  // × 04 入力なし／出力あり／入力文字列内に出力文字列あり
-  // ○ 05 入力あり／出力なし／入力文字列内に出力文字列なし
-  // ○ 06 入力あり／出力なし／入力文字列内に出力文字列あり
-  // ○ 07 入力あり／出力あり／入力文字列内に出力文字列なし
-  // ○ 08 入力あり／出力あり／入力文字列内に出力文字列あり
+  // ○ 01 入力行数＝１行／前後空白なし／無効行なし
+  // ○ 02 入力行数＝１行／前後空白なし／無効行あり
+  // ○ 03 入力行数＝１行／前後空白あり／無効行なし
+  // ○ 04 入力行数＝１行／前後空白あり／無効行あり
+  // ○ 05 入力行数＝２行／前後空白なし／無効行なし
+  // ○ 06 入力行数＝２行／前後空白なし／無効行あり
+  // ○ 07 入力行数＝２行／前後空白あり／無効行なし
+  // ○ 08 入力行数＝２行／前後空白あり／無効行あり
+  // ○ 09 入力行数≧３行／前後空白なし／無効行なし
+  // ○ 10 入力行数≧３行／前後空白なし／無効行あり
+  // ○ 11 入力行数≧３行／前後空白あり／無効行なし
+  // ○ 12 入力行数≧３行／前後空白あり／無効行あり
   test.describe("試行回数１回", () => {
-    test("02 入力なし／出力なし／入力文字列内に出力文字列あり", async ({
-      page,
-    }) => {
+    test("01 入力行数＝１行／前後空白なし／無効行なし", async ({ page }) => {
+      const buttonId = "#fullRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "OLD";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("02 入力行数＝１行／前後空白なし／無効行あり", async ({ page }) => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
       await page.locator("#itemsInput").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "";
+        el.textContent = "OLD";
       });
 
       await page.locator(buttonId).click();
       await expect(page.locator("#output")).toHaveText("");
     });
 
-    test("03 入力なし／出力あり／入力文字列内に出力文字列なし", async ({
-      page,
-    }) => {
+    test("03 入力行数＝１行／前後空白あり／無効行なし", async ({ page }) => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("");
+      await page.locator("#itemsInput").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "Z";
+        el.textContent = "OLD";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("04 入力行数＝１行／前後空白あり／無効行あり", async ({ page }) => {
+      const buttonId = "#fullRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "OLD";
       });
 
       await page.locator(buttonId).click();
       await expect(page.locator("#output")).toHaveText("");
     });
 
-    test("05 入力あり／出力なし／入力文字列内に出力文字列なし", async ({
-      page,
-    }) => {
+    test("05 入力行数＝２行／前後空白なし／無効行なし", async ({ page }) => {
       const buttonId = "#fullRandomBtn";
-      const items = ["A", "B", "C"];
+      const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#itemsInput").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "";
+        el.textContent = "OLD";
       });
 
       await page.locator(buttonId).click();
@@ -321,16 +345,27 @@ test.describe("完全ランダムボタンクリック", () => {
       expect(items).toContain(output);
     });
 
-    test("06 入力あり／出力なし／入力文字列内に出力文字列あり", async ({
-      page,
-    }) => {
+    test("06 入力行数＝２行／前後空白なし／無効行あり", async ({ page }) => {
       const buttonId = "#fullRandomBtn";
-      const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB\nC");
+      await page.locator("#itemsInput").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "";
+        el.textContent = "OLD";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("07 入力行数＝２行／前後空白あり／無効行なし", async ({ page }) => {
+      const buttonId = "#fullRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "OLD";
       });
 
       await page.locator(buttonId).click();
@@ -340,16 +375,27 @@ test.describe("完全ランダムボタンクリック", () => {
       expect(items).toContain(output);
     });
 
-    test("07 入力あり／出力あり／入力文字列内に出力文字列なし", async ({
-      page,
-    }) => {
+    test("08 入力行数＝２行／前後空白あり／無効行あり", async ({ page }) => {
+      const buttonId = "#fullRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "OLD";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("09 入力行数≧３行／前後空白なし／無効行なし", async ({ page }) => {
       const buttonId = "#fullRandomBtn";
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
       await page.locator("#itemsInput").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "Z";
+        el.textContent = "OLD";
       });
 
       await page.locator(buttonId).click();
@@ -359,16 +405,48 @@ test.describe("完全ランダムボタンクリック", () => {
       expect(items).toContain(output);
     });
 
-    test("08 入力あり／出力あり／入力文字列内に出力文字列あり", async ({
-      page,
-    }) => {
+    test("10 入力行数≧３行／前後空白なし／無効行あり", async ({ page }) => {
+      const buttonId = "#fullRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "OLD";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("11 入力行数≧３行／前後空白あり／無効行なし", async ({ page }) => {
       const buttonId = "#fullRandomBtn";
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        el.textContent = "OLD";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("12 入力行数≧３行／前後空白あり／無効行あり", async ({ page }) => {
+      const buttonId = "#fullRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "OLD";
       });
 
       await page.locator(buttonId).click();
@@ -407,21 +485,117 @@ test.describe("完全ランダムボタンクリック", () => {
 
 test.describe("排他ランダムボタンクリック", () => {
   // パターン整理
-  // 01. 入力なし／あり
-  // 02. 出力なし／あり
-  // 03. 入力文字列内に出力文字列なし／あり
+  // 01. 入力行数／＝１行／＝２行／≧３行
+  // 02. 出力行数／＝１行／＝２行／≧３行
+  // 03. 入力の前後空白／なし／あり
+  // 04. 入力の無効行／なし／あり
+  // 05. 入力・出力の共通行／なし／あり
   //
   // パターン一覧
-  // × 01 入力なし／出力なし／入力文字列内に出力文字列なし
-  // ○ 02 入力なし／出力なし／入力文字列内に出力文字列あり
-  // ○ 03 入力なし／出力あり／入力文字列内に出力文字列なし
-  // × 04 入力なし／出力あり／入力文字列内に出力文字列あり
-  // ○ 05 入力あり／出力なし／入力文字列内に出力文字列なし
-  // ○ 06 入力あり／出力なし／入力文字列内に出力文字列あり
-  // ○ 07 入力あり／出力あり／入力文字列内に出力文字列なし
-  // ○ 08 入力あり／出力あり／入力文字列内に出力文字列あり
+  // ○ 01 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 02 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 03 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // × 04 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり／入力前処理後の有効行が０件になり、共通行ありを成立させられないため
+  // ○ 05 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 06 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 07 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // × 08 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり／入力前処理後の有効行が０件になり、共通行ありを成立させられないため
+  // ○ 09 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 10 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 11 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // × 12 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり／入力前処理後の有効行が０件になり、共通行ありを成立させられないため
+  // ○ 13 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 14 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 15 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // × 16 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり／入力前処理後の有効行が０件になり、共通行ありを成立させられないため
+  // ○ 17 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 18 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 19 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // × 20 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり／入力前処理後の有効行が０件になり、共通行ありを成立させられないため
+  // ○ 21 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 22 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 23 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // × 24 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり／入力前処理後の有効行が０件になり、共通行ありを成立させられないため
+  // ○ 25 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 26 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 27 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // ○ 28 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり
+  // ○ 29 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 30 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 31 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // ○ 32 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり
+  // ○ 33 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 34 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 35 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // ○ 36 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり
+  // ○ 37 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 38 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 39 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // ○ 40 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり
+  // ○ 41 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 42 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 43 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // ○ 44 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり
+  // ○ 45 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 46 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 47 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // ○ 48 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり
+  // ○ 49 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 50 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 51 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // ○ 52 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり
+  // ○ 53 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 54 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 55 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // ○ 56 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり
+  // ○ 57 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 58 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 59 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // ○ 60 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり
+  // ○ 61 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 62 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 63 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // ○ 64 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり
+  // ○ 65 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし
+  // ○ 66 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり
+  // ○ 67 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし
+  // ○ 68 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり
+  // ○ 69 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし
+  // ○ 70 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり
+  // ○ 71 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし
+  // ○ 72 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり
   test.describe("試行回数１回", () => {
-    test("02 入力なし／出力なし／入力文字列内に出力文字列あり", async ({
+    test("01 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("02 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("03 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
       page,
     }) => {
       const buttonId = "#exclusiveRandomBtn";
@@ -429,14 +603,89 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#itemsInput").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "";
+        el.textContent = "X";
       });
 
       await page.locator(buttonId).click();
       await expect(page.locator("#output")).toHaveText("");
     });
 
-    test("03 入力なし／出力あり／入力文字列内に出力文字列なし", async ({
+    test("05 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("06 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("07 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("09 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("10 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("11 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
       page,
     }) => {
       const buttonId = "#exclusiveRandomBtn";
@@ -444,14 +693,533 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#itemsInput").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "Z";
+        el.textContent = "X\nY";
       });
 
       await page.locator(buttonId).click();
       await expect(page.locator("#output")).toHaveText("");
     });
 
-    test("05 入力あり／出力なし／入力文字列内に出力文字列なし", async ({
+    test("13 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("14 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("15 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("17 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("18 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("19 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("21 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("22 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("23 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("25 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("26 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("27 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("28 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("29 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("30 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("31 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("32 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("33 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("34 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("35 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("36 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("37 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("38 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("39 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("40 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("41 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("42 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("43 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("44 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("45 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("46 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("47 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("A");
+    });
+
+    test("48 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("");
+    });
+
+    test("49 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
       page,
     }) => {
       const buttonId = "#exclusiveRandomBtn";
@@ -460,7 +1228,7 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#itemsInput").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "";
+        el.textContent = "X";
       });
 
       await page.locator(buttonId).click();
@@ -470,50 +1238,11 @@ test.describe("排他ランダムボタンクリック", () => {
       expect(items).toContain(output);
     });
 
-    test("06 入力あり／出力なし／入力文字列内に出力文字列あり", async ({
+    test("50 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
       page,
     }) => {
       const buttonId = "#exclusiveRandomBtn";
-      const items = ["A", "B", "C"];
-
-      await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB\nC");
-      await page.locator("#output").evaluate((el) => {
-        el.textContent = "";
-      });
-
-      await page.locator(buttonId).click();
-      const output = (
-        (await page.locator("#output").textContent()) ?? ""
-      ).trim();
-      expect(items).toContain(output);
-    });
-
-    test("07 入力あり／出力あり／入力文字列内に出力文字列なし", async ({
-      page,
-    }) => {
-      const buttonId = "#exclusiveRandomBtn";
-      const items = ["A", "B", "C"];
-
-      await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
-      await page.locator("#output").evaluate((el) => {
-        el.textContent = "Z";
-      });
-
-      await page.locator(buttonId).click();
-      const output = (
-        (await page.locator("#output").textContent()) ?? ""
-      ).trim();
-      expect(items).toContain(output);
-    });
-
-    test("08 入力あり／出力あり／入力文字列内に出力文字列あり", async ({
-      page,
-    }) => {
-      const buttonId = "#exclusiveRandomBtn";
-      const items = ["A", "B", "C"];
-      const expectedItems = items.filter((item) => item !== "A");
+      const items = ["B", "C"];
 
       await page.goto(appUrl);
       await page.locator("#itemsInput").fill("A\nB\nC");
@@ -525,7 +1254,401 @@ test.describe("排他ランダムボタンクリック", () => {
       const output = (
         (await page.locator("#output").textContent()) ?? ""
       ).trim();
-      expect(expectedItems).toContain(output);
+      expect(items).toContain(output);
+    });
+
+    test("51 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("52 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("53 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("54 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("55 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("56 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("57 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("58 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("59 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("60 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("61 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("62 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("63 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("64 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("65 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("66 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("67 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("68 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
+    });
+
+    test("69 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("70 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["B", "C"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("71 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+      const items = ["A", "B"];
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "X\nY\nZ";
+      });
+
+      await page.locator(buttonId).click();
+      const output = (
+        (await page.locator("#output").textContent()) ?? ""
+      ).trim();
+      expect(items).toContain(output);
+    });
+
+    test("72 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
+      page,
+    }) => {
+      const buttonId = "#exclusiveRandomBtn";
+
+      await page.goto(appUrl);
+      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#output").evaluate((el) => {
+        el.textContent = "A\nX\nY";
+      });
+
+      await page.locator(buttonId).click();
+      await expect(page.locator("#output")).toHaveText("B");
     });
   });
 
