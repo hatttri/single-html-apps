@@ -78,14 +78,13 @@ test.describe("初期表示", () => {
   test("02 出力欄／空欄", async ({ page }) => {
     await page.goto(appUrl);
 
-    await expect(page.locator("#output")).toHaveText("");
+    await expect(page.locator("#output")).toHaveValue("");
   });
 
   test("03 入力欄と出力欄のスタイル／一致", async ({ page }) => {
     await page.goto(appUrl);
 
     const input = page.locator("#input");
-    const outputContainer = page.locator("#outputContainer");
     const output = page.locator("#output");
 
     expect(await input.evaluate((el) => getComputedStyle(el).fontSize)).toBe(
@@ -104,42 +103,26 @@ test.describe("初期表示", () => {
       await output.evaluate((el) => getComputedStyle(el).whiteSpace),
     );
     expect(await input.evaluate((el) => getComputedStyle(el).paddingTop)).toBe(
-      await outputContainer.evaluate((el) => getComputedStyle(el).paddingTop),
+      await output.evaluate((el) => getComputedStyle(el).paddingTop),
     );
     expect(
       await input.evaluate((el) => getComputedStyle(el).paddingRight),
-    ).toBe(
-      await outputContainer.evaluate((el) => getComputedStyle(el).paddingRight),
-    );
+    ).toBe(await output.evaluate((el) => getComputedStyle(el).paddingRight));
     expect(
       await input.evaluate((el) => getComputedStyle(el).paddingBottom),
-    ).toBe(
-      await outputContainer.evaluate(
-        (el) => getComputedStyle(el).paddingBottom,
-      ),
-    );
+    ).toBe(await output.evaluate((el) => getComputedStyle(el).paddingBottom));
     expect(await input.evaluate((el) => getComputedStyle(el).paddingLeft)).toBe(
-      await outputContainer.evaluate((el) => getComputedStyle(el).paddingLeft),
+      await output.evaluate((el) => getComputedStyle(el).paddingLeft),
     );
     expect(
       await input.evaluate((el) => getComputedStyle(el).borderRadius),
-    ).toBe(
-      await outputContainer.evaluate((el) => getComputedStyle(el).borderRadius),
-    );
+    ).toBe(await output.evaluate((el) => getComputedStyle(el).borderRadius));
     expect(
       await input.evaluate((el) => getComputedStyle(el).backgroundColor),
-    ).toBe(
-      await outputContainer.evaluate(
-        (el) => getComputedStyle(el).backgroundColor,
-      ),
-    );
+    ).toBe(await output.evaluate((el) => getComputedStyle(el).backgroundColor));
     expect(
       await input.evaluate((el) => getComputedStyle(el).borderTopColor),
-    ).toBe(
-      await outputContainer.evaluate(
-        (el) => getComputedStyle(el).borderTopColor,
-      ),
-    );
+    ).toBe(await output.evaluate((el) => getComputedStyle(el).borderTopColor));
   });
 });
 
@@ -354,11 +337,11 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("02 入力行数＝１行／前後空白なし／無効行あり", async ({ page }) => {
@@ -367,11 +350,11 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("03 入力行数＝１行／前後空白あり／無効行なし", async ({ page }) => {
@@ -380,11 +363,11 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("04 入力行数＝１行／前後空白あり／無効行あり", async ({ page }) => {
@@ -393,11 +376,11 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("05 入力行数＝２行／前後空白なし／無効行なし", async ({ page }) => {
@@ -407,12 +390,12 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -423,11 +406,11 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("07 入力行数＝２行／前後空白あり／無効行なし", async ({ page }) => {
@@ -437,12 +420,12 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -453,11 +436,11 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("09 入力行数≧３行／前後空白なし／無効行なし", async ({ page }) => {
@@ -467,12 +450,12 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -484,12 +467,12 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -501,12 +484,12 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -518,12 +501,12 @@ test.describe("完全ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "OLD";
+        (el as HTMLTextAreaElement).value = "OLD";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -549,7 +532,7 @@ test.describe("完全ランダムボタンクリック", () => {
       for (let i = 0; i < trials; i += 1) {
         await page.locator(buttonId).click();
         const output = (
-          (await page.locator("#output").textContent()) ?? ""
+          (await page.locator("#output").inputValue()) ?? ""
         ).trim();
         seen.add(output);
       }
@@ -649,11 +632,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("02 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
@@ -664,11 +647,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("03 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -679,11 +662,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("05 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -694,11 +677,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("06 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
@@ -709,11 +692,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("07 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -724,11 +707,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("09 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -739,11 +722,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("10 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
@@ -754,11 +737,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("11 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -769,11 +752,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("13 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -784,11 +767,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("14 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
@@ -799,11 +782,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("15 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -814,11 +797,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("17 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -829,11 +812,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("18 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", async ({
@@ -844,11 +827,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("19 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -859,11 +842,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("21 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -874,11 +857,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("22 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", async ({
@@ -889,11 +872,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("23 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -904,11 +887,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("25 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -920,12 +903,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -938,11 +921,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("27 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -953,11 +936,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("28 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
@@ -968,11 +951,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("29 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -984,12 +967,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1002,11 +985,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("31 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -1017,11 +1000,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("32 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
@@ -1032,11 +1015,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("33 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1048,12 +1031,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1066,11 +1049,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("35 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -1081,11 +1064,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("36 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
@@ -1096,11 +1079,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("37 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1112,12 +1095,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1130,11 +1113,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("39 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -1145,11 +1128,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("40 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
@@ -1160,11 +1143,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("41 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1176,12 +1159,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1194,11 +1177,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("43 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -1209,11 +1192,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("44 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", async ({
@@ -1224,11 +1207,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("45 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1240,12 +1223,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1258,11 +1241,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("47 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", async ({
@@ -1273,11 +1256,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("A");
+      await expect(page.locator("#output")).toHaveValue("A");
     });
 
     test("48 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", async ({
@@ -1288,11 +1271,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("");
+      await expect(page.locator("#output")).toHaveValue("");
     });
 
     test("49 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1304,12 +1287,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1323,12 +1306,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1342,12 +1325,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1360,11 +1343,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("53 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1376,12 +1359,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1395,12 +1378,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1414,12 +1397,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X";
+        (el as HTMLTextAreaElement).value = "X";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1432,11 +1415,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A";
+        (el as HTMLTextAreaElement).value = "A";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("57 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1448,12 +1431,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1467,12 +1450,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1486,12 +1469,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1504,11 +1487,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("61 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1520,12 +1503,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1539,12 +1522,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1558,12 +1541,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY";
+        (el as HTMLTextAreaElement).value = "X\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1576,11 +1559,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX";
+        (el as HTMLTextAreaElement).value = "A\nX";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("65 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1592,12 +1575,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1611,12 +1594,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1630,12 +1613,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1648,11 +1631,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
 
     test("69 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", async ({
@@ -1664,12 +1647,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1683,12 +1666,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1702,12 +1685,12 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "X\nY\nZ";
+        (el as HTMLTextAreaElement).value = "X\nY\nZ";
       });
 
       await page.locator(buttonId).click();
       const output = (
-        (await page.locator("#output").textContent()) ?? ""
+        (await page.locator("#output").inputValue()) ?? ""
       ).trim();
       expect(items).toContain(output);
     });
@@ -1720,11 +1703,11 @@ test.describe("排他ランダムボタンクリック", () => {
       await page.goto(appUrl);
       await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
-        el.textContent = "A\nX\nY";
+        (el as HTMLTextAreaElement).value = "A\nX\nY";
       });
 
       await page.locator(buttonId).click();
-      await expect(page.locator("#output")).toHaveText("B");
+      await expect(page.locator("#output")).toHaveValue("B");
     });
   });
 
@@ -1750,11 +1733,11 @@ test.describe("排他ランダムボタンクリック", () => {
 
       for (let i = 0; i < trials; i += 1) {
         const previous = (
-          (await page.locator("#output").textContent()) ?? ""
+          (await page.locator("#output").inputValue()) ?? ""
         ).trim();
         await page.locator(buttonId).click();
         const output = (
-          (await page.locator("#output").textContent()) ?? ""
+          (await page.locator("#output").inputValue()) ?? ""
         ).trim();
         seen.add(output);
 
@@ -1782,7 +1765,7 @@ test.describe("出力欄コピーボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "";
+      (el as HTMLTextAreaElement).value = "";
     });
 
     await page.getByRole("button", { name: "出力欄をコピー" }).click();
@@ -1794,7 +1777,7 @@ test.describe("出力欄コピーボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "A";
+      (el as HTMLTextAreaElement).value = "A";
     });
 
     await page.getByRole("button", { name: "出力欄をコピー" }).click();
@@ -1806,7 +1789,7 @@ test.describe("出力欄コピーボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "\n";
+      (el as HTMLTextAreaElement).value = "\n";
     });
 
     await page.getByRole("button", { name: "出力欄をコピー" }).click();
@@ -1818,7 +1801,7 @@ test.describe("出力欄コピーボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "A\nB";
+      (el as HTMLTextAreaElement).value = "A\nB";
     });
 
     await page.getByRole("button", { name: "出力欄をコピー" }).click();
@@ -1846,7 +1829,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "https://example.com/output";
+      (el as HTMLTextAreaElement).value = "https://example.com/output";
     });
 
     await page
@@ -1862,7 +1845,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "";
+      (el as HTMLTextAreaElement).value = "";
     });
 
     await page
@@ -1876,7 +1859,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = " https://example.com/output ";
+      (el as HTMLTextAreaElement).value = " https://example.com/output ";
     });
 
     await page
@@ -1892,7 +1875,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "  ";
+      (el as HTMLTextAreaElement).value = "  ";
     });
 
     await page
@@ -1906,7 +1889,8 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "https://example.com/output\nhttps://example.org/output";
+      (el as HTMLTextAreaElement).value =
+        "https://example.com/output\nhttps://example.org/output";
     });
 
     await page
@@ -1925,7 +1909,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = "https://example.com/output\n";
+      (el as HTMLTextAreaElement).value = "https://example.com/output\n";
     });
 
     await page
@@ -1941,7 +1925,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent =
+      (el as HTMLTextAreaElement).value =
         " https://example.com/output \n https://example.org/output ";
     });
 
@@ -1961,7 +1945,7 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page.locator("#output").evaluate((el) => {
-      el.textContent = " https://example.com/output \n  ";
+      (el as HTMLTextAreaElement).value = " https://example.com/output \n  ";
     });
 
     await page

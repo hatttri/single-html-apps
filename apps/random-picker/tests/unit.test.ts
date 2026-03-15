@@ -721,19 +721,19 @@ describe("Random Picker Unit Tests", () => {
   // ○ 02 文字数≧１文字
   describe("renderOutput", () => {
     test("01 文字数＝０文字", () => {
-      const dummyDiv = document.createElement("div");
+      const dummyDiv = document.createElement("textarea");
 
       renderOutput(dummyDiv, "");
 
-      expect(dummyDiv.textContent).toBe("");
+      expect(dummyDiv.value).toBe("");
     });
 
     test("02 文字数≧１文字", () => {
-      const dummyDiv = document.createElement("div");
+      const dummyDiv = document.createElement("textarea");
 
       renderOutput(dummyDiv, "テスト結果");
 
-      expect(dummyDiv.textContent).toBe("テスト結果");
+      expect(dummyDiv.value).toBe("テスト結果");
     });
   });
 });

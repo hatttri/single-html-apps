@@ -53,7 +53,7 @@ describe("Random Picker Integration Tests", () => {
       expect(createdUi.exclusiveRandomBtn.tagName).toBe("BUTTON");
 
       expect(createdUi.output).toBe(document.getElementById("output"));
-      expect(createdUi.output.tagName).toBe("DIV");
+      expect(createdUi.output.tagName).toBe("TEXTAREA");
 
       expect(createdUi.outputCopyBtn).toBe(
         document.getElementById("outputCopyBtn"),
@@ -251,110 +251,110 @@ describe("Random Picker Integration Tests", () => {
     describe("ui.fullRandomBtn.onclick", () => {
       test("01 入力行数＝１行／前後空白なし／無効行なし", () => {
         ui.input.value = "A";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("02 入力行数＝１行／前後空白なし／無効行あり", () => {
         ui.input.value = "";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("03 入力行数＝１行／前後空白あり／無効行なし", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("04 入力行数＝１行／前後空白あり／無効行あり", () => {
         ui.input.value = "  ";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("05 入力行数＝２行／前後空白なし／無効行なし", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("06 入力行数＝２行／前後空白なし／無効行あり", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("07 入力行数＝２行／前後空白あり／無効行なし", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("08 入力行数＝２行／前後空白あり／無効行あり", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("09 入力行数≧３行／前後空白なし／無効行なし", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("10 入力行数≧３行／前後空白なし／無効行あり", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("11 入力行数≧３行／前後空白あり／無効行なし", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("12 入力行数≧３行／前後空白あり／無効行あり", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "OLD";
+        ui.output.value = "OLD";
 
         ui.fullRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
     });
 
@@ -441,596 +441,596 @@ describe("Random Picker Integration Tests", () => {
     describe("ui.exclusiveRandomBtn.onclick", () => {
       test("01 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("02 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("03 入力行数＝１行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("05 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("06 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("07 入力行数＝１行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "  ";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("09 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("10 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("11 入力行数＝１行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("13 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("14 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("15 入力行数＝１行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "  ";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("17 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("18 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("19 入力行数＝１行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("21 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("22 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A ";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("23 入力行数＝１行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "  ";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("25 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("26 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("27 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("28 入力行数＝２行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("29 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("30 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("31 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("32 入力行数＝２行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("33 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("34 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("35 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("36 入力行数＝２行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("37 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("38 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("39 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("40 入力行数＝２行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("41 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("42 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A\nB";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("43 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("44 入力行数＝２行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = "A\n";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("45 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("46 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A \n B ";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("47 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("A");
+        expect(ui.output.value).toBe("A");
       });
 
       test("48 入力行数＝２行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = " A \n  ";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("");
+        expect(ui.output.value).toBe("");
       });
 
       test("49 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("50 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["B", "C"]).toContain(ui.output.textContent);
+        expect(["B", "C"]).toContain(ui.output.value);
       });
 
       test("51 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("52 入力行数≧３行／出力行数＝１行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("53 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("54 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["B", "C"]).toContain(ui.output.textContent);
+        expect(["B", "C"]).toContain(ui.output.value);
       });
 
       test("55 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "X";
+        ui.output.value = "X";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("56 入力行数≧３行／出力行数＝１行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "A";
+        ui.output.value = "A";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("57 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("58 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["B", "C"]).toContain(ui.output.textContent);
+        expect(["B", "C"]).toContain(ui.output.value);
       });
 
       test("59 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("60 入力行数≧３行／出力行数＝２行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("61 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("62 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["B", "C"]).toContain(ui.output.textContent);
+        expect(["B", "C"]).toContain(ui.output.value);
       });
 
       test("63 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "X\nY";
+        ui.output.value = "X\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("64 入力行数≧３行／出力行数＝２行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "A\nX";
+        ui.output.value = "A\nX";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("65 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("66 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = "A\nB\nC";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["B", "C"]).toContain(ui.output.textContent);
+        expect(["B", "C"]).toContain(ui.output.value);
       });
 
       test("67 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("68 入力行数≧３行／出力行数≧３行／入力の前後空白なし／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = "A\n\nB";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
 
       test("69 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行なし", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B", "C"]).toContain(ui.output.textContent);
+        expect(["A", "B", "C"]).toContain(ui.output.value);
       });
 
       test("70 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行なし／入力・出力の共通行あり", () => {
         ui.input.value = " A \n B \n C ";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["B", "C"]).toContain(ui.output.textContent);
+        expect(["B", "C"]).toContain(ui.output.value);
       });
 
       test("71 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行なし", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "X\nY\nZ";
+        ui.output.value = "X\nY\nZ";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(["A", "B"]).toContain(ui.output.textContent);
+        expect(["A", "B"]).toContain(ui.output.value);
       });
 
       test("72 入力行数≧３行／出力行数≧３行／入力の前後空白あり／入力の無効行あり／入力・出力の共通行あり", () => {
         ui.input.value = " A \n  \n B ";
-        ui.output.textContent = "A\nX\nY";
+        ui.output.value = "A\nX\nY";
 
         ui.exclusiveRandomBtn.click();
 
-        expect(ui.output.textContent).toBe("B");
+        expect(ui.output.value).toBe("B");
       });
     });
 
@@ -1048,7 +1048,7 @@ describe("Random Picker Integration Tests", () => {
           value: { writeText },
         });
 
-        ui.output.textContent = "";
+        ui.output.value = "";
         await ui.outputCopyBtn.click();
 
         expect(writeText).toHaveBeenCalledWith("");
@@ -1061,7 +1061,7 @@ describe("Random Picker Integration Tests", () => {
           value: { writeText },
         });
 
-        ui.output.textContent = "出力テキスト";
+        ui.output.value = "出力テキスト";
         await ui.outputCopyBtn.click();
 
         expect(writeText).toHaveBeenCalledWith("出力テキスト");
@@ -1086,7 +1086,7 @@ describe("Random Picker Integration Tests", () => {
       test("01 行数＝１行／前後空白なし／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent = "https://example.com/output";
+        ui.output.value = "https://example.com/output";
 
         ui.outputOpenBtn.click();
 
@@ -1100,7 +1100,7 @@ describe("Random Picker Integration Tests", () => {
       test("02 行数＝１行／前後空白なし／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent = "";
+        ui.output.value = "";
 
         ui.outputOpenBtn.click();
 
@@ -1110,7 +1110,7 @@ describe("Random Picker Integration Tests", () => {
       test("03 行数＝１行／前後空白あり／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent = " https://example.com/output ";
+        ui.output.value = " https://example.com/output ";
 
         ui.outputOpenBtn.click();
 
@@ -1124,7 +1124,7 @@ describe("Random Picker Integration Tests", () => {
       test("04 行数＝１行／前後空白あり／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent = "  ";
+        ui.output.value = "  ";
 
         ui.outputOpenBtn.click();
 
@@ -1134,7 +1134,7 @@ describe("Random Picker Integration Tests", () => {
       test("05 行数≧２行／前後空白なし／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent =
+        ui.output.value =
           "https://example.com/output\nhttps://example.org/output";
 
         ui.outputOpenBtn.click();
@@ -1155,7 +1155,7 @@ describe("Random Picker Integration Tests", () => {
       test("06 行数≧２行／前後空白なし／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent = "https://example.com/output\n";
+        ui.output.value = "https://example.com/output\n";
 
         ui.outputOpenBtn.click();
 
@@ -1169,7 +1169,7 @@ describe("Random Picker Integration Tests", () => {
       test("07 行数≧２行／前後空白あり／無効行なし", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent =
+        ui.output.value =
           " https://example.com/output \n https://example.org/output ";
 
         ui.outputOpenBtn.click();
@@ -1190,7 +1190,7 @@ describe("Random Picker Integration Tests", () => {
       test("08 行数≧２行／前後空白あり／無効行あり", () => {
         const open = vi.fn<typeof window.open>(() => null);
         window.open = open;
-        ui.output.textContent = " https://example.com/output \n  ";
+        ui.output.value = " https://example.com/output \n  ";
 
         ui.outputOpenBtn.click();
 

@@ -131,7 +131,7 @@
         stroke-linejoin: round;
       }
       #input,
-      .output-container {
+      #output {
         width: 100%;
         background: rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -142,7 +142,8 @@
         line-height: 1.6;
         transition: var(--transition-smooth);
       }
-      #input {
+      #input,
+      #output {
         height: 180px;
         color: var(--text-primary);
         resize: vertical;
@@ -150,22 +151,23 @@
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
       }
       #input::-webkit-scrollbar,
-      .output-container::-webkit-scrollbar {
+      #output::-webkit-scrollbar {
         width: 8px;
       }
       #input::-webkit-scrollbar-track,
-      .output-container::-webkit-scrollbar-track {
+      #output::-webkit-scrollbar-track {
         background: transparent;
       }
       #input::-webkit-scrollbar-thumb,
-      .output-container::-webkit-scrollbar-thumb {
+      #output::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
       #input::placeholder {
         color: var(--text-placeholder);
       }
-      #input:focus {
+      #input:focus,
+      #output:focus {
         border-color: rgba(0, 212, 255, 0.5);
         background: rgba(0, 0, 0, 0.3);
         box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
@@ -210,27 +212,6 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-      }
-      .output-container {
-        display: flex;
-        justify-content: flex-start;
-        align-items: stretch;
-        min-height: 180px;
-        margin-top: 8px;
-        position: relative;
-        overflow: auto;
-      }
-      #output {
-        width: 100%;
-        color: var(--text-primary);
-        font-family: var(--font-family);
-        font-size: 1rem;
-        font-weight: 400;
-        text-align: left;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-        line-height: 1.6;
-        white-space: pre-wrap;
       }
       @media (max-width: 600px) {
         .glass-container {
@@ -342,9 +323,7 @@
             </button>
           </div>
         </div>
-        <div id="outputContainer" class="output-container">
-          <div id="output"></div>
-        </div>
+        <textarea id="output" readonly></textarea>
       </div>
     </div>
 
@@ -519,7 +498,7 @@
               trimStrings,
               filterEmptyStrings,
               createRemoveExcludedItemsProcessor(
-                splitByNewline(ui.output.textContent ?? ""),
+                splitByNewline(ui.output.value ?? ""),
               ),
               createPickRandomItemsProcessor(1),
             ]);
@@ -527,11 +506,11 @@
             renderOutput(ui.output, outputText);
           };
           ui.outputCopyBtn.onclick = async () => {
-            const outputText = ui.output.textContent ?? "";
+            const outputText = ui.output.value ?? "";
             await copyTextToClipboard(outputText);
           };
           ui.outputOpenBtn.onclick = () => {
-            const outputText = ui.output.textContent ?? "";
+            const outputText = ui.output.value ?? "";
             const outputLines = splitByNewline(outputText);
             const urls = applyStringArrayProcessors(outputLines, [
               trimStrings,
@@ -542,7 +521,7 @@
           return ui;
         }
         function renderOutput(element, value) {
-          element.textContent = value;
+          element.value = value;
         }
         return __toCommonJS(script_exports);
       })();
