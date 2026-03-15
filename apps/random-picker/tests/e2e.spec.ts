@@ -60,15 +60,87 @@ function getOpenedUrls(page: Page): Promise<OpenedUrl[]> {
 }
 
 // パターン整理
-// 01. 初期表示
+// 01. 入力欄／空欄
+// 02. 出力欄／空欄
+// 03. 入力欄と出力欄のスタイル／一致
 //
 // パターン一覧
-// ○ 初期表示
-test("初期表示", async ({ page }) => {
-  await page.goto(appUrl);
+// ○ 01. 入力欄／空欄
+// ○ 02. 出力欄／空欄
+// ○ 03. 入力欄と出力欄のスタイル／一致
+test.describe("初期表示", () => {
+  test("01 入力欄／空欄", async ({ page }) => {
+    await page.goto(appUrl);
 
-  await expect(page.locator("#itemsInput")).toHaveValue("");
-  await expect(page.locator("#output")).toHaveText("");
+    await expect(page.locator("#input")).toHaveValue("");
+  });
+
+  test("02 出力欄／空欄", async ({ page }) => {
+    await page.goto(appUrl);
+
+    await expect(page.locator("#output")).toHaveText("");
+  });
+
+  test("03 入力欄と出力欄のスタイル／一致", async ({ page }) => {
+    await page.goto(appUrl);
+
+    const input = page.locator("#input");
+    const outputContainer = page.locator("#outputContainer");
+    const output = page.locator("#output");
+
+    expect(await input.evaluate((el) => getComputedStyle(el).fontSize)).toBe(
+      await output.evaluate((el) => getComputedStyle(el).fontSize),
+    );
+    expect(await input.evaluate((el) => getComputedStyle(el).lineHeight)).toBe(
+      await output.evaluate((el) => getComputedStyle(el).lineHeight),
+    );
+    expect(await input.evaluate((el) => getComputedStyle(el).fontFamily)).toBe(
+      await output.evaluate((el) => getComputedStyle(el).fontFamily),
+    );
+    expect(await input.evaluate((el) => getComputedStyle(el).color)).toBe(
+      await output.evaluate((el) => getComputedStyle(el).color),
+    );
+    expect(await input.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe(
+      await output.evaluate((el) => getComputedStyle(el).whiteSpace),
+    );
+    expect(await input.evaluate((el) => getComputedStyle(el).paddingTop)).toBe(
+      await outputContainer.evaluate((el) => getComputedStyle(el).paddingTop),
+    );
+    expect(
+      await input.evaluate((el) => getComputedStyle(el).paddingRight),
+    ).toBe(
+      await outputContainer.evaluate((el) => getComputedStyle(el).paddingRight),
+    );
+    expect(
+      await input.evaluate((el) => getComputedStyle(el).paddingBottom),
+    ).toBe(
+      await outputContainer.evaluate(
+        (el) => getComputedStyle(el).paddingBottom,
+      ),
+    );
+    expect(await input.evaluate((el) => getComputedStyle(el).paddingLeft)).toBe(
+      await outputContainer.evaluate((el) => getComputedStyle(el).paddingLeft),
+    );
+    expect(
+      await input.evaluate((el) => getComputedStyle(el).borderRadius),
+    ).toBe(
+      await outputContainer.evaluate((el) => getComputedStyle(el).borderRadius),
+    );
+    expect(
+      await input.evaluate((el) => getComputedStyle(el).backgroundColor),
+    ).toBe(
+      await outputContainer.evaluate(
+        (el) => getComputedStyle(el).backgroundColor,
+      ),
+    );
+    expect(
+      await input.evaluate((el) => getComputedStyle(el).borderTopColor),
+    ).toBe(
+      await outputContainer.evaluate(
+        (el) => getComputedStyle(el).borderTopColor,
+      ),
+    );
+  });
 });
 
 // パターン整理
@@ -84,7 +156,7 @@ test.describe("入力欄コピーボタンクリック", () => {
   test("01 行数＝１行／各行文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("");
+    await page.locator("#input").fill("");
 
     await page.getByRole("button", { name: "入力欄をコピー" }).click();
 
@@ -94,7 +166,7 @@ test.describe("入力欄コピーボタンクリック", () => {
   test("02 行数＝１行／各行文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("A");
+    await page.locator("#input").fill("A");
 
     await page.getByRole("button", { name: "入力欄をコピー" }).click();
 
@@ -104,7 +176,7 @@ test.describe("入力欄コピーボタンクリック", () => {
   test("03 行数≧２行／各行文字数＝０文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("\n");
+    await page.locator("#input").fill("\n");
 
     await page.getByRole("button", { name: "入力欄をコピー" }).click();
 
@@ -114,7 +186,7 @@ test.describe("入力欄コピーボタンクリック", () => {
   test("04 行数≧２行／各行文字数≧１文字", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("A\nB");
+    await page.locator("#input").fill("A\nB");
 
     await page.getByRole("button", { name: "入力欄をコピー" }).click();
 
@@ -140,7 +212,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
   test("01 行数＝１行／前後空白なし／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("https://example.com");
+    await page.locator("#input").fill("https://example.com");
 
     await page
       .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
@@ -154,7 +226,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
   test("02 行数＝１行／前後空白なし／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("");
+    await page.locator("#input").fill("");
 
     await page
       .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
@@ -166,7 +238,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
   test("03 行数＝１行／前後空白あり／無効行なし", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill(" https://example.com ");
+    await page.locator("#input").fill(" https://example.com ");
 
     await page
       .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
@@ -180,7 +252,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
   test("04 行数＝１行／前後空白あり／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("  ");
+    await page.locator("#input").fill("  ");
 
     await page
       .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
@@ -193,7 +265,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page
-      .locator("#itemsInput")
+      .locator("#input")
       .fill("https://example.com\nhttps://example.org");
 
     await page
@@ -211,7 +283,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
   test("06 行数≧２行／前後空白なし／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill("https://example.com\n");
+    await page.locator("#input").fill("https://example.com\n");
 
     await page
       .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
@@ -226,7 +298,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
     await page
-      .locator("#itemsInput")
+      .locator("#input")
       .fill(" https://example.com \n https://example.org ");
 
     await page
@@ -244,7 +316,7 @@ test.describe("入力欄リンク起動ボタンクリック", () => {
   test("08 行数≧２行／前後空白あり／無効行あり", async ({ page }) => {
     await installBrowserApiStubs(page);
     await page.goto(appUrl);
-    await page.locator("#itemsInput").fill(" https://example.com \n  ");
+    await page.locator("#input").fill(" https://example.com \n  ");
 
     await page
       .getByRole("button", { name: "入力欄のリンクを新しいタブで開く" })
@@ -280,7 +352,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -293,7 +365,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("");
+      await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -306,7 +378,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -319,7 +391,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -333,7 +405,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -349,7 +421,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -363,7 +435,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -379,7 +451,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const buttonId = "#fullRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -393,7 +465,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -410,7 +482,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -427,7 +499,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -444,7 +516,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "OLD";
       });
@@ -472,7 +544,7 @@ test.describe("完全ランダムボタンクリック", () => {
       const trials = 100;
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(items.join("\n"));
+      await page.locator("#input").fill(items.join("\n"));
 
       for (let i = 0; i < trials; i += 1) {
         await page.locator(buttonId).click();
@@ -575,7 +647,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -590,7 +662,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -605,7 +677,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("");
+      await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -620,7 +692,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -635,7 +707,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -650,7 +722,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -665,7 +737,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -680,7 +752,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -695,7 +767,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("");
+      await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -710,7 +782,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -725,7 +797,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -740,7 +812,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -755,7 +827,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -770,7 +842,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A");
+      await page.locator("#input").fill("A");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -785,7 +857,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("");
+      await page.locator("#input").fill("");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -800,7 +872,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -815,7 +887,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A ");
+      await page.locator("#input").fill(" A ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -830,7 +902,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("  ");
+      await page.locator("#input").fill("  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -846,7 +918,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -864,7 +936,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -879,7 +951,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -894,7 +966,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -910,7 +982,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -928,7 +1000,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -943,7 +1015,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -958,7 +1030,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -974,7 +1046,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -992,7 +1064,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1007,7 +1079,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1022,7 +1094,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1038,7 +1110,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1056,7 +1128,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1071,7 +1143,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1086,7 +1158,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1102,7 +1174,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1120,7 +1192,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB");
+      await page.locator("#input").fill("A\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1135,7 +1207,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1150,7 +1222,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n");
+      await page.locator("#input").fill("A\n");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1166,7 +1238,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1184,7 +1256,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B ");
+      await page.locator("#input").fill(" A \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1199,7 +1271,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1214,7 +1286,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  ");
+      await page.locator("#input").fill(" A \n  ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1230,7 +1302,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -1249,7 +1321,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -1268,7 +1340,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -1286,7 +1358,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -1302,7 +1374,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -1321,7 +1393,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -1340,7 +1412,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X";
       });
@@ -1358,7 +1430,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A";
       });
@@ -1374,7 +1446,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1393,7 +1465,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1412,7 +1484,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1430,7 +1502,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1446,7 +1518,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1465,7 +1537,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1484,7 +1556,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY";
       });
@@ -1502,7 +1574,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX";
       });
@@ -1518,7 +1590,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1537,7 +1609,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\nB\nC");
+      await page.locator("#input").fill("A\nB\nC");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1556,7 +1628,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1574,7 +1646,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill("A\n\nB");
+      await page.locator("#input").fill("A\n\nB");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1590,7 +1662,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1609,7 +1681,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["B", "C"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n B \n C ");
+      await page.locator("#input").fill(" A \n B \n C ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1628,7 +1700,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const items = ["A", "B"];
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "X\nY\nZ";
       });
@@ -1646,7 +1718,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const buttonId = "#exclusiveRandomBtn";
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(" A \n  \n B ");
+      await page.locator("#input").fill(" A \n  \n B ");
       await page.locator("#output").evaluate((el) => {
         el.textContent = "A\nX\nY";
       });
@@ -1674,7 +1746,7 @@ test.describe("排他ランダムボタンクリック", () => {
       const trials = 100;
 
       await page.goto(appUrl);
-      await page.locator("#itemsInput").fill(items.join("\n"));
+      await page.locator("#input").fill(items.join("\n"));
 
       for (let i = 0; i < trials; i += 1) {
         const previous = (

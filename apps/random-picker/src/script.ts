@@ -120,12 +120,12 @@ export function openUrls(urls: string[]): void {
 
 // DOM/UI
 type UI = {
-  inputArea: HTMLTextAreaElement;
+  input: HTMLTextAreaElement;
   inputCopyBtn: HTMLButtonElement;
   inputOpenBtn: HTMLButtonElement;
   fullRandomBtn: HTMLButtonElement;
   exclusiveRandomBtn: HTMLButtonElement;
-  outputDisplay: HTMLDivElement;
+  output: HTMLDivElement;
   outputCopyBtn: HTMLButtonElement;
   outputOpenBtn: HTMLButtonElement;
 };
@@ -135,7 +135,7 @@ type UI = {
  */
 export function createUi(root: Document = document): UI {
   return {
-    inputArea: getElementByIdOrThrow<HTMLTextAreaElement>(root, "itemsInput"),
+    input: getElementByIdOrThrow<HTMLTextAreaElement>(root, "input"),
     inputCopyBtn: getElementByIdOrThrow<HTMLButtonElement>(
       root,
       "inputCopyBtn",
@@ -152,7 +152,7 @@ export function createUi(root: Document = document): UI {
       root,
       "exclusiveRandomBtn",
     ),
-    outputDisplay: getElementByIdOrThrow<HTMLDivElement>(root, "output"),
+    output: getElementByIdOrThrow<HTMLDivElement>(root, "output"),
     outputCopyBtn: getElementByIdOrThrow<HTMLButtonElement>(
       root,
       "outputCopyBtn",
@@ -185,7 +185,7 @@ export function getElementByIdOrThrow<T extends HTMLElement>(
 export function initApp(ui: UI = createUi()): UI {
   ui.inputCopyBtn.onclick = async () => {
     // 入力文字列を取得する
-    const inputText = ui.inputArea.value;
+    const inputText = ui.input.value;
 
     // 入力文字列をコピーする
     await copyTextToClipboard(inputText);
@@ -193,7 +193,7 @@ export function initApp(ui: UI = createUi()): UI {
 
   ui.inputOpenBtn.onclick = () => {
     // 入力文字列を取得する
-    const inputText = ui.inputArea.value;
+    const inputText = ui.input.value;
 
     // 入力文字列を入力文字列配列に分割する
     const inputLines = splitByNewline(inputText);
@@ -210,7 +210,7 @@ export function initApp(ui: UI = createUi()): UI {
 
   ui.fullRandomBtn.onclick = () => {
     // 入力文字列を取得する
-    const inputText = ui.inputArea.value;
+    const inputText = ui.input.value;
 
     // 入力文字列を入力文字列配列に分割する
     const inputLines = splitByNewline(inputText);
@@ -226,12 +226,12 @@ export function initApp(ui: UI = createUi()): UI {
     const outputText = joinByNewline(outputLines);
 
     // 出力文字列を出力欄に設定する
-    renderOutput(ui.outputDisplay, outputText);
+    renderOutput(ui.output, outputText);
   };
 
   ui.exclusiveRandomBtn.onclick = () => {
     // 入力文字列を取得する
-    const inputText = ui.inputArea.value;
+    const inputText = ui.input.value;
 
     // 入力文字列を入力文字列配列に分割する
     const inputLines = splitByNewline(inputText);
@@ -241,7 +241,7 @@ export function initApp(ui: UI = createUi()): UI {
       trimStrings,
       filterEmptyStrings,
       createRemoveExcludedItemsProcessor(
-        splitByNewline(ui.outputDisplay.textContent ?? ""),
+        splitByNewline(ui.output.textContent ?? ""),
       ),
       createPickRandomItemsProcessor(1),
     ]);
@@ -250,12 +250,12 @@ export function initApp(ui: UI = createUi()): UI {
     const outputText = joinByNewline(outputLines);
 
     // 出力文字列を出力欄に設定する
-    renderOutput(ui.outputDisplay, outputText);
+    renderOutput(ui.output, outputText);
   };
 
   ui.outputCopyBtn.onclick = async () => {
     // 出力文字列を取得する
-    const outputText = ui.outputDisplay.textContent ?? "";
+    const outputText = ui.output.textContent ?? "";
 
     // 出力文字列をコピーする
     await copyTextToClipboard(outputText);
@@ -263,7 +263,7 @@ export function initApp(ui: UI = createUi()): UI {
 
   ui.outputOpenBtn.onclick = () => {
     // 出力文字列を取得する
-    const outputText = ui.outputDisplay.textContent ?? "";
+    const outputText = ui.output.textContent ?? "";
 
     // 出力文字列を出力文字列配列に分割する
     const outputLines = splitByNewline(outputText);

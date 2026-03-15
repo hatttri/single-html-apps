@@ -130,36 +130,42 @@
         stroke-linecap: round;
         stroke-linejoin: round;
       }
-      textarea {
+      #input,
+      .output-container {
         width: 100%;
-        height: 180px;
         background: rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 16px;
         padding: 16px;
-        color: var(--text-primary);
         font-family: var(--font-family);
         font-size: 1rem;
         line-height: 1.6;
-        resize: vertical;
         transition: var(--transition-smooth);
+      }
+      #input {
+        height: 180px;
+        color: var(--text-primary);
+        resize: vertical;
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
       }
-      textarea::-webkit-scrollbar {
+      #input::-webkit-scrollbar,
+      .output-container::-webkit-scrollbar {
         width: 8px;
       }
-      textarea::-webkit-scrollbar-track {
+      #input::-webkit-scrollbar-track,
+      .output-container::-webkit-scrollbar-track {
         background: transparent;
       }
-      textarea::-webkit-scrollbar-thumb {
+      #input::-webkit-scrollbar-thumb,
+      .output-container::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
-      textarea::placeholder {
+      #input::placeholder {
         color: var(--text-placeholder);
       }
-      textarea:focus {
+      #input:focus {
         border-color: rgba(0, 212, 255, 0.5);
         background: rgba(0, 0, 0, 0.3);
         box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
@@ -207,25 +213,24 @@
       }
       .output-container {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        background: var(--output-bg);
-        border-radius: 16px;
-        min-height: 120px;
-        padding: 24px;
+        justify-content: flex-start;
+        align-items: stretch;
+        min-height: 180px;
         margin-top: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: var(--transition-smooth);
         position: relative;
+        overflow: auto;
       }
       #output {
-        font-size: 1.8rem;
-        font-weight: 900;
-        text-align: center;
+        width: 100%;
         color: var(--text-primary);
+        font-family: var(--font-family);
+        font-size: 1rem;
+        font-weight: 400;
+        text-align: left;
         word-break: break-word;
-        line-height: 1.4;
-        transition: all 0.2s ease;
+        overflow-wrap: anywhere;
+        line-height: 1.6;
+        white-space: pre-wrap;
       }
       @media (max-width: 600px) {
         .glass-container {
@@ -246,9 +251,6 @@
         button {
           padding: 16px 24px;
           font-size: 1.1rem;
-        }
-        #output {
-          font-size: 1.5rem;
         }
       }
     </style>
@@ -297,7 +299,7 @@
           </div>
         </div>
         <textarea
-          id="itemsInput"
+          id="input"
           placeholder="選択肢を入力してください...&#10;（例）&#10;りんご&#10;みかん&#10;バナナ&#10;ぶどう"
         ></textarea>
       </div>
@@ -465,7 +467,7 @@
         }
         function createUi(root = document) {
           return {
-            inputArea: getElementByIdOrThrow(root, "itemsInput"),
+            input: getElementByIdOrThrow(root, "input"),
             inputCopyBtn: getElementByIdOrThrow(root, "inputCopyBtn"),
             inputOpenBtn: getElementByIdOrThrow(root, "inputOpenBtn"),
             fullRandomBtn: getElementByIdOrThrow(root, "fullRandomBtn"),
@@ -473,7 +475,7 @@
               root,
               "exclusiveRandomBtn",
             ),
-            outputDisplay: getElementByIdOrThrow(root, "output"),
+            output: getElementByIdOrThrow(root, "output"),
             outputCopyBtn: getElementByIdOrThrow(root, "outputCopyBtn"),
             outputOpenBtn: getElementByIdOrThrow(root, "outputOpenBtn"),
           };
@@ -487,11 +489,11 @@
         }
         function initApp(ui = createUi()) {
           ui.inputCopyBtn.onclick = async () => {
-            const inputText = ui.inputArea.value;
+            const inputText = ui.input.value;
             await copyTextToClipboard(inputText);
           };
           ui.inputOpenBtn.onclick = () => {
-            const inputText = ui.inputArea.value;
+            const inputText = ui.input.value;
             const inputLines = splitByNewline(inputText);
             const urls = applyStringArrayProcessors(inputLines, [
               trimStrings,
@@ -500,7 +502,7 @@
             openUrls(urls);
           };
           ui.fullRandomBtn.onclick = () => {
-            const inputText = ui.inputArea.value;
+            const inputText = ui.input.value;
             const inputLines = splitByNewline(inputText);
             const outputLines = applyStringArrayProcessors(inputLines, [
               trimStrings,
@@ -508,28 +510,28 @@
               createPickRandomItemsProcessor(1),
             ]);
             const outputText = joinByNewline(outputLines);
-            renderOutput(ui.outputDisplay, outputText);
+            renderOutput(ui.output, outputText);
           };
           ui.exclusiveRandomBtn.onclick = () => {
-            const inputText = ui.inputArea.value;
+            const inputText = ui.input.value;
             const inputLines = splitByNewline(inputText);
             const outputLines = applyStringArrayProcessors(inputLines, [
               trimStrings,
               filterEmptyStrings,
               createRemoveExcludedItemsProcessor(
-                splitByNewline(ui.outputDisplay.textContent ?? ""),
+                splitByNewline(ui.output.textContent ?? ""),
               ),
               createPickRandomItemsProcessor(1),
             ]);
             const outputText = joinByNewline(outputLines);
-            renderOutput(ui.outputDisplay, outputText);
+            renderOutput(ui.output, outputText);
           };
           ui.outputCopyBtn.onclick = async () => {
-            const outputText = ui.outputDisplay.textContent ?? "";
+            const outputText = ui.output.textContent ?? "";
             await copyTextToClipboard(outputText);
           };
           ui.outputOpenBtn.onclick = () => {
-            const outputText = ui.outputDisplay.textContent ?? "";
+            const outputText = ui.output.textContent ?? "";
             const outputLines = splitByNewline(outputText);
             const urls = applyStringArrayProcessors(outputLines, [
               trimStrings,

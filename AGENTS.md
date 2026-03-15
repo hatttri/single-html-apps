@@ -143,6 +143,8 @@
 - 必要に応じて本文で背景や制約を補足する
 - Codex を利用した変更では、共同作成者として以下を利用する:
   - `Co-authored-by: Codex <noreply@openai.com>`
+- Antigravity を利用した変更では、共同作成者として以下を利用する:
+  - `Co-authored-by: gemini-code-assist[bot] <176961590+gemini-code-assist[bot]@users.noreply.github.com>`
 
 ## 9. 将来アプリ追加時の最小手順
 
