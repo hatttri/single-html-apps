@@ -1,21 +1,62 @@
 import { describe, expect, test, vi } from "vitest";
 import {
+  // 純粋ロジック
+  PROCESSOR_REGISTRY,
   applyStringArrayProcessors,
   createPickRandomItemsProcessor,
   createRemoveExcludedItemsProcessor,
+  executePipeline,
   filterEmptyStrings,
-  getElementByIdOrThrow,
   joinByNewline,
   pickRandomItems,
   removeExcludedItems,
+  resolveParams,
   splitByNewline,
   trimStrings,
+  // ブラウザ副作用（非DOM）
   copyTextToClipboard,
   openUrls,
+  // DOM/UI
+  createUi,
+  getElementByIdOrThrow,
+  initApp,
   renderOutput,
 } from "../src/script.ts";
 
 describe("Random Picker Unit Tests", () => {
+  // 純粋ロジック
+
+  describe("PROCESSOR_REGISTRY", () => {
+    describe("正常系", () => {
+      test("必要なキーがすべて存在する", () => {
+        expect(PROCESSOR_REGISTRY.excludePrevious).toBeDefined();
+        expect(PROCESSOR_REGISTRY.filterEmpty).toBeDefined();
+        expect(PROCESSOR_REGISTRY.pickRandom).toBeDefined();
+        expect(PROCESSOR_REGISTRY.trim).toBeDefined();
+      });
+
+      test("各 execute が正常に動作する (正常系)", () => {
+        const context = { previousOutput: "A" };
+        expect(PROCESSOR_REGISTRY.trim.execute([" A "], {}, context)).toEqual([
+          "A",
+        ]);
+        expect(
+          PROCESSOR_REGISTRY.filterEmpty.execute(["A", "", "B"], {}, context),
+        ).toEqual(["A", "B"]);
+        expect(
+          PROCESSOR_REGISTRY.pickRandom.execute(
+            ["A", "B"],
+            { count: 1 },
+            context,
+          ),
+        ).toHaveLength(1);
+        expect(
+          PROCESSOR_REGISTRY.excludePrevious.execute(["A", "B"], {}, context),
+        ).toEqual(["B"]);
+      });
+    });
+  });
+
   // パターン整理
   // 01. 要素数／＝０件／≧１件
   // 02. 処理数／＝０件／≧１件
@@ -119,6 +160,77 @@ describe("Random Picker Unit Tests", () => {
         inputItems,
         excludedItems,
       );
+    });
+  });
+
+  describe("executePipeline", () => {
+    describe("正常系", () => {
+      test("paramsによるパラメータ指定（pickRandomでcount: 2を指定）", () => {
+        const context = { previousOutput: "" };
+        const randomSpy = vi
+          .spyOn(Math, "random")
+          .mockReturnValueOnce(0)
+          .mockReturnValueOnce(0);
+        try {
+          expect(
+            executePipeline(
+              "A\nB\nC",
+              [{ id: "pickRandom", params: { count: 2 } }],
+              context,
+            ),
+          ).toBe("A\nB");
+        } finally {
+          randomSpy.mockRestore();
+        }
+      });
+
+      test("resolveParamsによるデフォルト値適用（paramsなし→count: 1）", () => {
+        const context = { previousOutput: "" };
+        const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+        try {
+          expect(executePipeline("A\nB", [{ id: "pickRandom" }], context)).toBe(
+            "A",
+          );
+        } finally {
+          randomSpy.mockRestore();
+        }
+      });
+    });
+
+    describe("境界系", () => {
+      test("inputTextが1行", () => {
+        const context = { previousOutput: "" };
+        expect(executePipeline("A", [], context)).toBe("A");
+      });
+
+      test("inputTextが2行", () => {
+        const context = { previousOutput: "" };
+        expect(executePipeline("A\nB", [], context)).toBe("A\nB");
+      });
+
+      test("steps空", () => {
+        const context = { previousOutput: "" };
+        expect(executePipeline("A\nB", [], context)).toBe("A\nB");
+      });
+
+      test("stepsが1件（trimステップ単独）", () => {
+        const context = { previousOutput: "" };
+        expect(executePipeline(" A ", [{ id: "trim" }], context)).toBe("A");
+      });
+
+      test("stepsが1件（filterEmptyステップ単独）", () => {
+        const context = { previousOutput: "" };
+        expect(
+          executePipeline("A\n\nB", [{ id: "filterEmpty" }], context),
+        ).toBe("A\nB");
+      });
+    });
+
+    describe("異常系", () => {
+      test("存在しないidが含まれる場合はスキップされる", () => {
+        const context = { previousOutput: "" };
+        expect(executePipeline("A", [{ id: "unknown" }], context)).toBe("A");
+      });
     });
   });
 
@@ -554,6 +666,46 @@ describe("Random Picker Unit Tests", () => {
     });
   });
 
+  describe("resolveParams", () => {
+    describe("正常系", () => {
+      test("paramsSchema が undefined のとき空オブジェクトを返す", () => {
+        const def = {
+          id: "test",
+          name: "test",
+          description: "test",
+          execute: (i: string[]) => i,
+        };
+        expect(resolveParams(def, { a: 1 })).toEqual({ a: 1 });
+      });
+
+      test("stepParams が undefined のときデフォルト値のみ返す", () => {
+        const def = {
+          id: "test",
+          name: "test",
+          description: "test",
+          paramsSchema: {
+            count: { type: "number" as const, label: "count", default: 1 },
+          },
+          execute: (i: string[]) => i,
+        };
+        expect(resolveParams(def)).toEqual({ count: 1 });
+      });
+
+      test("stepParams が指定されているときデフォルト値をオーバーライドする", () => {
+        const def = {
+          id: "test",
+          name: "test",
+          description: "test",
+          paramsSchema: {
+            count: { type: "number" as const, label: "count", default: 1 },
+          },
+          execute: (i: string[]) => i,
+        };
+        expect(resolveParams(def, { count: 5 })).toEqual({ count: 5 });
+      });
+    });
+  });
+
   // パターン整理
   // 01. 文字数／＝０文字／≧１文字
   // 02. 改行／なし／あり
@@ -608,6 +760,8 @@ describe("Random Picker Unit Tests", () => {
       expect(trimStrings([" A ", " B "])).toEqual(["A", "B"]);
     });
   });
+
+  // ブラウザ副作用（非DOM）
 
   // パターン整理
   // 01. 文字数／＝０文字／≧１文字
@@ -681,6 +835,8 @@ describe("Random Picker Unit Tests", () => {
       expect(open).toHaveBeenNthCalledWith(2, "b", "_blank");
     });
   });
+
+  // DOM/UI
 
   // describe("createUi", () => {});
 

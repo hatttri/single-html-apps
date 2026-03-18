@@ -324,12 +324,14 @@
         // apps/random-picker/src/script.ts
         var script_exports = {};
         __export(script_exports, {
+          PROCESSOR_REGISTRY: () => PROCESSOR_REGISTRY,
           applyStringArrayProcessors: () => applyStringArrayProcessors,
           copyTextToClipboard: () => copyTextToClipboard,
           createPickRandomItemsProcessor: () => createPickRandomItemsProcessor,
           createRemoveExcludedItemsProcessor: () =>
             createRemoveExcludedItemsProcessor,
           createUi: () => createUi,
+          executePipeline: () => executePipeline,
           filterEmptyStrings: () => filterEmptyStrings,
           getElementByIdOrThrow: () => getElementByIdOrThrow,
           initApp: () => initApp,
@@ -338,9 +340,51 @@
           pickRandomItems: () => pickRandomItems,
           removeExcludedItems: () => removeExcludedItems,
           renderOutput: () => renderOutput,
+          resolveParams: () => resolveParams,
           splitByNewline: () => splitByNewline,
           trimStrings: () => trimStrings,
         });
+        var PROCESSOR_REGISTRY = {
+          excludePrevious: {
+            id: "excludePrevious",
+            name: "\u524D\u56DE\u51FA\u529B\u3092\u9664\u5916",
+            description:
+              "\u524D\u56DE\u306E\u51FA\u529B\u7D50\u679C\u306B\u542B\u307E\u308C\u308B\u9805\u76EE\u3092\u9664\u5916\u3057\u307E\u3059",
+            execute: (items, _params, context) =>
+              removeExcludedItems(
+                items,
+                splitByNewline(context.previousOutput),
+              ),
+          },
+          filterEmpty: {
+            id: "filterEmpty",
+            name: "\u7A7A\u884C\u9664\u5916",
+            description:
+              "\u7A7A\u306E\u884C\u3092\u9664\u5916\u3057\u307E\u3059",
+            execute: (items) => filterEmptyStrings(items),
+          },
+          pickRandom: {
+            id: "pickRandom",
+            name: "\u30E9\u30F3\u30C0\u30E0\u62BD\u51FA",
+            description:
+              "\u6307\u5B9A\u3057\u305F\u4EF6\u6570\u3060\u3051\u30E9\u30F3\u30C0\u30E0\u306B\u9078\u3073\u307E\u3059",
+            paramsSchema: {
+              count: {
+                type: "number",
+                label: "\u62BD\u51FA\u4EF6\u6570",
+                default: 1,
+              },
+            },
+            execute: (items, params) => pickRandomItems(items, params["count"]),
+          },
+          trim: {
+            id: "trim",
+            name: "\u7A7A\u767D\u524A\u9664",
+            description:
+              "\u5404\u884C\u306E\u524D\u5F8C\u306E\u7A7A\u767D\u3092\u524A\u9664\u3057\u307E\u3059",
+            execute: (items) => trimStrings(items),
+          },
+        };
         function applyStringArrayProcessors(values, processors) {
           return processors.reduce(
             (currentValues, processor) => processor(currentValues),
@@ -358,6 +402,16 @@
           removeExcludedItemsFn = removeExcludedItems,
         ) {
           return (items) => removeExcludedItemsFn(items, excludedItems);
+        }
+        function executePipeline(inputText, steps, context) {
+          let currentItems = splitByNewline(inputText);
+          for (const step of steps) {
+            const def = PROCESSOR_REGISTRY[step.id];
+            if (!def) continue;
+            const params = resolveParams(def, step.params);
+            currentItems = def.execute(currentItems, params, context);
+          }
+          return joinByNewline(currentItems);
         }
         function filterEmptyStrings(values) {
           return values.filter((value) => value !== "");
@@ -395,6 +449,15 @@
           const excludedItemSet = new Set(excludedItems);
           return items.filter((item) => !excludedItemSet.has(item));
         }
+        function resolveParams(def, stepParams) {
+          const defaults = {};
+          if (def.paramsSchema) {
+            for (const [key, field] of Object.entries(def.paramsSchema)) {
+              defaults[key] = field.default;
+            }
+          }
+          return { ...defaults, ...stepParams };
+        }
         function splitByNewline(sourceText) {
           return sourceText.split("\n");
         }
@@ -411,17 +474,17 @@
         }
         function createUi(root = document) {
           return {
-            input: getElementByIdOrThrow(root, "input"),
             inputCopyBtn: getElementByIdOrThrow(root, "inputCopyBtn"),
             inputOpenBtn: getElementByIdOrThrow(root, "inputOpenBtn"),
+            input: getElementByIdOrThrow(root, "input"),
             fullRandomBtn: getElementByIdOrThrow(root, "fullRandomBtn"),
             exclusiveRandomBtn: getElementByIdOrThrow(
               root,
               "exclusiveRandomBtn",
             ),
-            output: getElementByIdOrThrow(root, "output"),
             outputCopyBtn: getElementByIdOrThrow(root, "outputCopyBtn"),
             outputOpenBtn: getElementByIdOrThrow(root, "outputOpenBtn"),
+            output: getElementByIdOrThrow(root, "output"),
           };
         }
         function getElementByIdOrThrow(root, id) {
@@ -447,27 +510,33 @@
           };
           ui.fullRandomBtn.onclick = () => {
             const inputText = ui.input.value;
-            const inputLines = splitByNewline(inputText);
-            const outputLines = applyStringArrayProcessors(inputLines, [
-              trimStrings,
-              filterEmptyStrings,
-              createPickRandomItemsProcessor(1),
-            ]);
-            const outputText = joinByNewline(outputLines);
+            const context = { previousOutput: "" };
+            const outputText = executePipeline(
+              inputText,
+              [
+                { id: "trim" },
+                { id: "filterEmpty" },
+                { id: "pickRandom", params: { count: 1 } },
+              ],
+              context,
+            );
             renderOutput(ui.output, outputText);
           };
           ui.exclusiveRandomBtn.onclick = () => {
             const inputText = ui.input.value;
-            const inputLines = splitByNewline(inputText);
-            const outputLines = applyStringArrayProcessors(inputLines, [
-              trimStrings,
-              filterEmptyStrings,
-              createRemoveExcludedItemsProcessor(
-                splitByNewline(ui.output.value ?? ""),
-              ),
-              createPickRandomItemsProcessor(1),
-            ]);
-            const outputText = joinByNewline(outputLines);
+            const context = {
+              previousOutput: ui.output.value ?? "",
+            };
+            const outputText = executePipeline(
+              inputText,
+              [
+                { id: "trim" },
+                { id: "filterEmpty" },
+                { id: "excludePrevious" },
+                { id: "pickRandom", params: { count: 1 } },
+              ],
+              context,
+            );
             renderOutput(ui.output, outputText);
           };
           ui.outputCopyBtn.onclick = async () => {
