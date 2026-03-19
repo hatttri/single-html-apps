@@ -43,6 +43,16 @@ HTML/CSS/JavaScript が 1 つのファイルに完結しているため、サー
 `npm run build` は `scripts/build-all.ts` に並べた `node .../build.ts` を順番に実行します。
 `npm run precommit` は整形、型チェック、Vitest、build、Playwright をまとめて実行する標準コマンドです。
 
+### 補助コマンド
+
+Git 管理対象のファイルを 1 枚の Markdown にまとめたい場合は、次のコマンドを使えます。
+
+```powershell
+npm run concat
+```
+
+このコマンドはリポジトリのルートディレクトリを対象にして、`generated/concat.txt` に出力します。
+
 ### 個別コマンド
 
 ```powershell

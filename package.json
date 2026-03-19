@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "node scripts/build-all.ts",
+    "concat": "node scripts/concat-all.ts . generated/concat.txt",
     "format": "prettier --write .",
-    "precommit": "npm run format && npm run tscheck && npm run test",
+    "precommit": "npm run format && npm run tscheck && npm run test && npm run concat",
     "test": "npm run test:unit && npm run test:e2e",
     "test:e2e": "npm run build && playwright test",
     "test:e2e:headed": "npm run build && playwright test --headed",
