@@ -186,6 +186,118 @@
         transform: none;
         box-shadow: none;
       }
+      .pipeline-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+      }
+      .pipeline-label {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .pipeline-step-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 40px;
+      }
+      .pipeline-step-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: grab;
+        transition: var(--transition-smooth);
+      }
+      .pipeline-step-item.dragging {
+        opacity: 0.5;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .pipeline-step-item:active {
+        cursor: grabbing;
+      }
+      .pipeline-drag-handle {
+        color: var(--text-placeholder);
+        cursor: grab;
+        display: flex;
+        align-items: center;
+      }
+      .pipeline-step-name {
+        flex: 1;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .pipeline-step-params {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pipeline-step-params input {
+        width: 60px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        padding: 4px 8px;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+      }
+      .pipeline-delete-btn {
+        background: transparent;
+        color: var(--text-placeholder);
+        border: none;
+        padding: 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: var(--transition-smooth);
+        box-shadow: none;
+        font-size: 0;
+      }
+      .pipeline-delete-btn:hover {
+        background: rgba(255, 59, 48, 0.1);
+        color: #ff3b30;
+        box-shadow: none;
+      }
+      .pipeline-add-controls {
+        display: flex;
+        gap: 8px;
+      }
+      .pipeline-add-controls select {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 8px 12px;
+        color: var(--text-primary);
+        font-family: var(--font-family);
+        cursor: pointer;
+      }
+      .pipeline-add-controls button {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+        border-radius: 12px;
+      }
+      .pipeline-run-btn {
+        width: 100%;
+        margin-top: 8px;
+      }
+      .pipeline-empty-msg {
+        text-align: center;
+        padding: 20px;
+        color: var(--text-placeholder);
+        font-size: 0.9rem;
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+      }
       .output-group {
         display: flex;
         flex-direction: column;
@@ -248,6 +360,22 @@
           </div>
         </div>
         <textarea id="input"></textarea>
+      </div>
+
+      <div class="pipeline-section">
+        <p class="pipeline-label">パイプライン</p>
+        <div id="pipelineStepList" class="pipeline-step-list">
+          <!-- JSで動的に生成 -->
+        </div>
+        <div class="pipeline-add-controls">
+          <select id="processorSelect">
+            <!-- JSで PROCESSOR_REGISTRY からオプションを自動生成 -->
+          </select>
+          <button id="addStepBtn" type="button">追加</button>
+        </div>
+        <button id="pipelineRunBtn" class="pipeline-run-btn" type="button">
+          実行
+        </button>
       </div>
 
       <div class="button-group">
@@ -325,7 +453,9 @@
         var script_exports = {};
         __export(script_exports, {
           PROCESSOR_REGISTRY: () => PROCESSOR_REGISTRY,
+          addPipelineStep: () => addPipelineStep,
           applyStringArrayProcessors: () => applyStringArrayProcessors,
+          buildProcessorSelectOptions: () => buildProcessorSelectOptions,
           copyTextToClipboard: () => copyTextToClipboard,
           createPickRandomItemsProcessor: () => createPickRandomItemsProcessor,
           createRemoveExcludedItemsProcessor: () =>
@@ -336,14 +466,21 @@
           getElementByIdOrThrow: () => getElementByIdOrThrow,
           initApp: () => initApp,
           joinByNewline: () => joinByNewline,
+          movePipelineStep: () => movePipelineStep,
           openUrls: () => openUrls,
           pickRandomItems: () => pickRandomItems,
           removeExcludedItems: () => removeExcludedItems,
+          removePipelineStep: () => removePipelineStep,
           renderOutput: () => renderOutput,
+          renderPipelineStepList: () => renderPipelineStepList,
           resolveParams: () => resolveParams,
           splitByNewline: () => splitByNewline,
           trimStrings: () => trimStrings,
+          updatePipelineStepParam: () => updatePipelineStepParam,
         });
+        var appState = {
+          pipeline: [],
+        };
         var PROCESSOR_REGISTRY = {
           excludePrevious: {
             id: "excludePrevious",
@@ -385,6 +522,9 @@
             execute: (items) => trimStrings(items),
           },
         };
+        function addPipelineStep(steps, newStep) {
+          return [...steps, newStep];
+        }
         function applyStringArrayProcessors(values, processors) {
           return processors.reduce(
             (currentValues, processor) => processor(currentValues),
@@ -419,6 +559,12 @@
         function joinByNewline(values) {
           return values.join("\n");
         }
+        function movePipelineStep(steps, fromIndex, toIndex) {
+          const newSteps = [...steps];
+          const [removed] = newSteps.splice(fromIndex, 1);
+          newSteps.splice(toIndex, 0, removed);
+          return newSteps;
+        }
         function pickRandomItems(items, count) {
           if (!Number.isSafeInteger(count) || count < 0) {
             throw new RangeError("count must be a non-negative safe integer");
@@ -449,6 +595,9 @@
           const excludedItemSet = new Set(excludedItems);
           return items.filter((item) => !excludedItemSet.has(item));
         }
+        function removePipelineStep(steps, index) {
+          return steps.filter((_, i) => i !== index);
+        }
         function resolveParams(def, stepParams) {
           const defaults = {};
           if (def.paramsSchema) {
@@ -464,6 +613,18 @@
         function trimStrings(values) {
           return values.map((value) => value.trim());
         }
+        function updatePipelineStepParam(steps, index, key, value) {
+          return steps.map((step, i) => {
+            if (i !== index) return step;
+            return {
+              ...step,
+              params: {
+                ...(step.params ?? {}),
+                [key]: value,
+              },
+            };
+          });
+        }
         async function copyTextToClipboard(value) {
           await navigator.clipboard.writeText(value);
         }
@@ -472,11 +633,26 @@
             window.open(url, "_blank");
           });
         }
+        function buildProcessorSelectOptions(selectEl, registry) {
+          const sortedKeys = Object.keys(registry).sort();
+          selectEl.innerHTML = "";
+          sortedKeys.forEach((key) => {
+            const def = registry[key];
+            const option = document.createElement("option");
+            option.value = def.id;
+            option.textContent = def.name;
+            selectEl.appendChild(option);
+          });
+        }
         function createUi(root = document) {
           return {
             inputCopyBtn: getElementByIdOrThrow(root, "inputCopyBtn"),
             inputOpenBtn: getElementByIdOrThrow(root, "inputOpenBtn"),
             input: getElementByIdOrThrow(root, "input"),
+            pipelineStepList: getElementByIdOrThrow(root, "pipelineStepList"),
+            processorSelect: getElementByIdOrThrow(root, "processorSelect"),
+            addStepBtn: getElementByIdOrThrow(root, "addStepBtn"),
+            pipelineRunBtn: getElementByIdOrThrow(root, "pipelineRunBtn"),
             fullRandomBtn: getElementByIdOrThrow(root, "fullRandomBtn"),
             exclusiveRandomBtn: getElementByIdOrThrow(
               root,
@@ -495,6 +671,118 @@
           return element;
         }
         function initApp(ui = createUi()) {
+          appState.pipeline = [];
+          buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY);
+          renderPipelineStepList(
+            ui.pipelineStepList,
+            appState.pipeline,
+            PROCESSOR_REGISTRY,
+          );
+          let draggingIndex = null;
+          ui.pipelineStepList.onclick = (e) => {
+            const target = e.target;
+            const deleteBtn = target.closest(".pipeline-delete-btn");
+            if (deleteBtn) {
+              const index = parseInt(deleteBtn.dataset.index ?? "-1", 10);
+              if (index >= 0) {
+                appState.pipeline = removePipelineStep(
+                  appState.pipeline,
+                  index,
+                );
+                renderPipelineStepList(
+                  ui.pipelineStepList,
+                  appState.pipeline,
+                  PROCESSOR_REGISTRY,
+                );
+              }
+            }
+          };
+          ui.pipelineStepList.ondragend = (e) => {
+            const target = e.target;
+            const item = target.closest(".pipeline-step-item");
+            if (item) {
+              item.classList.remove("dragging");
+            }
+            draggingIndex = null;
+          };
+          ui.pipelineStepList.ondragover = (e) => {
+            e.preventDefault();
+            const target = e.target;
+            const overItem = target.closest(".pipeline-step-item");
+            if (overItem && draggingIndex !== null) {
+              const overIndex = parseInt(overItem.dataset.index ?? "-1", 10);
+              if (overIndex !== draggingIndex) {
+                appState.pipeline = movePipelineStep(
+                  appState.pipeline,
+                  draggingIndex,
+                  overIndex,
+                );
+                draggingIndex = overIndex;
+                renderPipelineStepList(
+                  ui.pipelineStepList,
+                  appState.pipeline,
+                  PROCESSOR_REGISTRY,
+                );
+              }
+            }
+          };
+          ui.pipelineStepList.ondragstart = (e) => {
+            const target = e.target;
+            const item = target.closest(".pipeline-step-item");
+            if (item) {
+              draggingIndex = parseInt(item.dataset.index ?? "-1", 10);
+              item.classList.add("dragging");
+              if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = "move";
+              }
+            }
+          };
+          ui.pipelineStepList.oninput = (e) => {
+            const target = e.target;
+            if (
+              target.tagName === "INPUT" &&
+              target.dataset.index &&
+              target.dataset.key
+            ) {
+              const index = parseInt(target.dataset.index, 10);
+              const key = target.dataset.key;
+              const value =
+                target.type === "number"
+                  ? parseFloat(target.value)
+                  : target.value;
+              appState.pipeline = updatePipelineStepParam(
+                appState.pipeline,
+                index,
+                key,
+                value,
+              );
+            }
+          };
+          ui.addStepBtn.onclick = () => {
+            const processorId = ui.processorSelect.value;
+            const def = PROCESSOR_REGISTRY[processorId];
+            if (!def) return;
+            appState.pipeline = addPipelineStep(appState.pipeline, {
+              id: processorId,
+            });
+            renderPipelineStepList(
+              ui.pipelineStepList,
+              appState.pipeline,
+              PROCESSOR_REGISTRY,
+            );
+          };
+          ui.pipelineRunBtn.onclick = () => {
+            const inputText = ui.input.value;
+            const context = {
+              previousOutput: ui.output.value ?? "",
+            };
+            const outputText = executePipeline(
+              inputText,
+              appState.pipeline,
+              context,
+            );
+            renderOutput(ui.output, outputText);
+          };
           ui.inputCopyBtn.onclick = async () => {
             const inputText = ui.input.value;
             await copyTextToClipboard(inputText);
@@ -556,6 +844,58 @@
         }
         function renderOutput(element, value) {
           element.value = value;
+        }
+        function renderPipelineStepList(listEl, steps, registry) {
+          listEl.innerHTML = "";
+          if (steps.length === 0) {
+            const emptyMsg = document.createElement("div");
+            emptyMsg.className = "pipeline-empty-msg";
+            emptyMsg.textContent =
+              "\u30B9\u30C6\u30C3\u30D7\u304C\u3042\u308A\u307E\u305B\u3093\u3002\u8FFD\u52A0\u3057\u3066\u304F\u3060\u3055\u3044\u3002";
+            listEl.appendChild(emptyMsg);
+            return;
+          }
+          steps.forEach((step, index) => {
+            const def = registry[step.id];
+            if (!def) return;
+            const item = document.createElement("div");
+            item.className = "pipeline-step-item";
+            item.draggable = true;
+            item.dataset.index = index.toString();
+            const handle = document.createElement("div");
+            handle.className = "pipeline-drag-handle";
+            handle.innerHTML =
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9h14M5 15h14"/></svg>';
+            item.appendChild(handle);
+            const name = document.createElement("span");
+            name.className = "pipeline-step-name";
+            name.textContent = def.name;
+            item.appendChild(name);
+            const paramsContainer = document.createElement("div");
+            paramsContainer.className = "pipeline-step-params";
+            if (def.paramsSchema) {
+              Object.entries(def.paramsSchema).forEach(([key, schema]) => {
+                const span = document.createElement("span");
+                span.textContent = schema.label;
+                paramsContainer.appendChild(span);
+                const input = document.createElement("input");
+                input.type = schema.type === "number" ? "number" : "text";
+                input.value = (step.params?.[key] ?? schema.default).toString();
+                input.dataset.index = index.toString();
+                input.dataset.key = key;
+                paramsContainer.appendChild(input);
+              });
+            }
+            item.appendChild(paramsContainer);
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "pipeline-delete-btn";
+            deleteBtn.type = "button";
+            deleteBtn.dataset.index = index.toString();
+            deleteBtn.innerHTML =
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+            item.appendChild(deleteBtn);
+            listEl.appendChild(item);
+          });
         }
         return __toCommonJS(script_exports);
       })();

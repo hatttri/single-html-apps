@@ -1,30 +1,42 @@
 import { describe, expect, test, vi } from "vitest";
 import {
-  // 純粋ロジック
+  // 変数定義
+  AppState,
   PROCESSOR_REGISTRY,
+  // 純粋ロジック
+  addPipelineStep,
   applyStringArrayProcessors,
   createPickRandomItemsProcessor,
   createRemoveExcludedItemsProcessor,
   executePipeline,
   filterEmptyStrings,
   joinByNewline,
+  movePipelineStep,
   pickRandomItems,
   removeExcludedItems,
+  removePipelineStep,
   resolveParams,
   splitByNewline,
   trimStrings,
+  updatePipelineStepParam,
   // ブラウザ副作用（非DOM）
   copyTextToClipboard,
   openUrls,
   // DOM/UI
+  buildProcessorSelectOptions,
   createUi,
   getElementByIdOrThrow,
   initApp,
   renderOutput,
+  renderPipelineStepList,
 } from "../src/script.ts";
 
 describe("Random Picker Unit Tests", () => {
-  // 純粋ロジック
+  //
+  // 変数定義
+  //
+
+  // describe("AppState", () => {});
 
   describe("PROCESSOR_REGISTRY", () => {
     describe("正常系", () => {
@@ -53,6 +65,26 @@ describe("Random Picker Unit Tests", () => {
         expect(
           PROCESSOR_REGISTRY.excludePrevious.execute(["A", "B"], {}, context),
         ).toEqual(["B"]);
+      });
+    });
+  });
+
+  //
+  // 純粋ロジック
+  //
+
+  describe("addPipelineStep", () => {
+    describe("正常系", () => {
+      test("ステップが末尾に追加される", () => {
+        const steps = [{ id: "trim" }];
+        const result = addPipelineStep(steps, { id: "filterEmpty" });
+        expect(result).toEqual([{ id: "trim" }, { id: "filterEmpty" }]);
+      });
+
+      test("元の配列が変更されない", () => {
+        const steps = [{ id: "trim" }];
+        addPipelineStep(steps, { id: "filterEmpty" });
+        expect(steps).toEqual([{ id: "trim" }]);
       });
     });
   });
@@ -285,6 +317,22 @@ describe("Random Picker Unit Tests", () => {
 
     test("05 要素数≧２件／文字数≧１文字", () => {
       expect(joinByNewline(["A", "B"])).toBe("A\nB");
+    });
+  });
+
+  describe("movePipelineStep", () => {
+    describe("正常系", () => {
+      test("要素が正しく移動する", () => {
+        const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+        const result = movePipelineStep(steps, 0, 2);
+        expect(result).toEqual([{ id: "b" }, { id: "c" }, { id: "a" }]);
+      });
+
+      test("元の配列が変更されない", () => {
+        const steps = [{ id: "a" }, { id: "b" }];
+        movePipelineStep(steps, 0, 1);
+        expect(steps).toEqual([{ id: "a" }, { id: "b" }]);
+      });
     });
   });
 
@@ -666,6 +714,22 @@ describe("Random Picker Unit Tests", () => {
     });
   });
 
+  describe("removePipelineStep", () => {
+    describe("正常系", () => {
+      test("指定インデックスが削除される", () => {
+        const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+        const result = removePipelineStep(steps, 1);
+        expect(result).toEqual([{ id: "a" }, { id: "c" }]);
+      });
+
+      test("元の配列が変更されない", () => {
+        const steps = [{ id: "a" }, { id: "b" }];
+        removePipelineStep(steps, 0);
+        expect(steps).toEqual([{ id: "a" }, { id: "b" }]);
+      });
+    });
+  });
+
   describe("resolveParams", () => {
     describe("正常系", () => {
       test("paramsSchema が undefined のとき空オブジェクトを返す", () => {
@@ -761,7 +825,25 @@ describe("Random Picker Unit Tests", () => {
     });
   });
 
+  describe("updatePipelineStepParam", () => {
+    describe("正常系", () => {
+      test("指定インデックスの params が更新される", () => {
+        const steps = [{ id: "pickRandom", params: { count: 1 } }];
+        const result = updatePipelineStepParam(steps, 0, "count", 5);
+        expect(result[0].params).toEqual({ count: 5 });
+      });
+
+      test("元の配列が変更されない", () => {
+        const steps = [{ id: "pickRandom", params: { count: 1 } }];
+        updatePipelineStepParam(steps, 0, "count", 5);
+        expect(steps[0].params).toEqual({ count: 1 });
+      });
+    });
+  });
+
+  //
   // ブラウザ副作用（非DOM）
+  //
 
   // パターン整理
   // 01. 文字数／＝０文字／≧１文字
@@ -836,9 +918,85 @@ describe("Random Picker Unit Tests", () => {
     });
   });
 
+  //
   // DOM/UI
+  //
 
-  // describe("createUi", () => {});
+  describe("buildProcessorSelectOptions", () => {
+    describe("正常系", () => {
+      test("PROCESSOR_REGISTRY の全キーがオプションとして設定される", () => {
+        const select = document.createElement("select");
+        const registry = {
+          a: {
+            id: "a",
+            name: "A",
+            description: "desc",
+            execute: (i: any) => i,
+          },
+          b: {
+            id: "b",
+            name: "B",
+            description: "desc",
+            execute: (i: any) => i,
+          },
+        };
+        buildProcessorSelectOptions(select, registry);
+        expect(select.options).toHaveLength(2);
+        expect(select.options[0].value).toBe("a");
+        expect(select.options[0].textContent).toBe("A");
+        expect(select.options[1].value).toBe("b");
+        expect(select.options[1].textContent).toBe("B");
+      });
+    });
+  });
+
+  describe("createUi", () => {
+    describe("正常系", () => {
+      test("全てのUI要素が正しく取得される", () => {
+        const root = document.implementation.createHTMLDocument("");
+        const ids = [
+          "inputCopyBtn",
+          "inputOpenBtn",
+          "input",
+          "pipelineStepList",
+          "processorSelect",
+          "addStepBtn",
+          "pipelineRunBtn",
+          "fullRandomBtn",
+          "exclusiveRandomBtn",
+          "outputCopyBtn",
+          "outputOpenBtn",
+          "output",
+        ];
+        ids.forEach((id) => {
+          const el = root.createElement("div");
+          el.id = id;
+          root.body.appendChild(el);
+        });
+
+        const ui = createUi(root);
+        expect(ui.inputCopyBtn.id).toBe("inputCopyBtn");
+        expect(ui.inputOpenBtn.id).toBe("inputOpenBtn");
+        expect(ui.input.id).toBe("input");
+        expect(ui.pipelineStepList.id).toBe("pipelineStepList");
+        expect(ui.processorSelect.id).toBe("processorSelect");
+        expect(ui.addStepBtn.id).toBe("addStepBtn");
+        expect(ui.pipelineRunBtn.id).toBe("pipelineRunBtn");
+        expect(ui.fullRandomBtn.id).toBe("fullRandomBtn");
+        expect(ui.exclusiveRandomBtn.id).toBe("exclusiveRandomBtn");
+        expect(ui.outputCopyBtn.id).toBe("outputCopyBtn");
+        expect(ui.outputOpenBtn.id).toBe("outputOpenBtn");
+        expect(ui.output.id).toBe("output");
+      });
+    });
+
+    describe("異常系", () => {
+      test("要素が1つでも欠けている場合にエラーを投げる", () => {
+        const root = document.implementation.createHTMLDocument("");
+        expect(() => createUi(root)).toThrow();
+      });
+    });
+  });
 
   // パターン整理
   // 01. 対象要素／なし／あり
@@ -890,6 +1048,54 @@ describe("Random Picker Unit Tests", () => {
       renderOutput(dummyDiv, "テスト結果");
 
       expect(dummyDiv.value).toBe("テスト結果");
+    });
+  });
+
+  describe("renderPipelineStepList", () => {
+    describe("正常系", () => {
+      test("steps空のとき空メッセージが表示される", () => {
+        const div = document.createElement("div");
+        renderPipelineStepList(div, [], {});
+        expect(div.querySelector(".pipeline-empty-msg")).not.toBeNull();
+      });
+
+      test("steps1件のときアイテムが1件描画される", () => {
+        const div = document.createElement("div");
+        const registry = {
+          trim: {
+            id: "trim",
+            name: "Trim",
+            description: "desc",
+            execute: (i: any) => i,
+          },
+        };
+        renderPipelineStepList(div, [{ id: "trim" }], registry);
+        expect(div.querySelectorAll(".pipeline-step-item")).toHaveLength(1);
+        expect(div.querySelector(".pipeline-step-name")?.textContent).toBe(
+          "Trim",
+        );
+      });
+
+      test("paramsSchemaありのとき入力欄が生成される", () => {
+        const div = document.createElement("div");
+        const registry = {
+          pickRandom: {
+            id: "pickRandom",
+            name: "Pick",
+            description: "desc",
+            paramsSchema: {
+              count: { type: "number" as const, label: "Count", default: 1 },
+            },
+            execute: (i: any) => i,
+          },
+        };
+        renderPipelineStepList(div, [{ id: "pickRandom" }], registry);
+        const input = div.querySelector(
+          'input[type="number"]',
+        ) as HTMLInputElement;
+        expect(input).not.toBeNull();
+        expect(input.value).toBe("1");
+      });
     });
   });
 });

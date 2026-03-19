@@ -214,6 +214,136 @@ button:disabled {
   box-shadow: none;
 }
 
+/* パイプラインビルダー */
+.pipeline-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+}
+
+.pipeline-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pipeline-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.pipeline-step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: grab;
+  transition: var(--transition-smooth);
+}
+
+.pipeline-step-item.dragging {
+  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pipeline-step-item:active {
+  cursor: grabbing;
+}
+
+.pipeline-drag-handle {
+  color: var(--text-placeholder);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.pipeline-step-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.pipeline-step-params {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pipeline-step-params input {
+  width: 60px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.pipeline-delete-btn {
+  background: transparent;
+  color: var(--text-placeholder);
+  border: none;
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: var(--transition-smooth);
+  box-shadow: none;
+  font-size: 0; /* アイコンのみ */
+}
+
+.pipeline-delete-btn:hover {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+  box-shadow: none;
+}
+
+.pipeline-add-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.pipeline-add-controls select {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.pipeline-add-controls button {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  border-radius: 12px;
+}
+
+.pipeline-run-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.pipeline-empty-msg {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-placeholder);
+  font-size: 0.9rem;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
 /* 出力欄エリア */
 .output-group {
   display: flex;

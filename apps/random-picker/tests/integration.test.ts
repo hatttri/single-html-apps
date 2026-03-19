@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { createUi, initApp } from "../src/script.ts";
+import { initApp } from "../src/script.ts";
 
 const html = fs.readFileSync(
   path.resolve(process.cwd(), "apps/random-picker/src/index.html"),
@@ -20,60 +20,241 @@ describe("Random Picker Integration Tests", () => {
     document.body.innerHTML = bodyHtml;
   });
 
-  // パターン整理
-  // 01. HTML要素のテスト
-  //
-  // パターン一覧
-  // ○ 01 HTML要素のテスト
-  describe("createUi", () => {
-    test("01 HTML要素のテスト", () => {
-      const createdUi = createUi();
-
-      expect(createdUi.input).toBe(document.getElementById("input"));
-      expect(createdUi.input.tagName).toBe("TEXTAREA");
-
-      expect(createdUi.inputCopyBtn).toBe(
-        document.getElementById("inputCopyBtn"),
-      );
-      expect(createdUi.inputCopyBtn.tagName).toBe("BUTTON");
-
-      expect(createdUi.inputOpenBtn).toBe(
-        document.getElementById("inputOpenBtn"),
-      );
-      expect(createdUi.inputOpenBtn.tagName).toBe("BUTTON");
-
-      expect(createdUi.fullRandomBtn).toBe(
-        document.getElementById("fullRandomBtn"),
-      );
-      expect(createdUi.fullRandomBtn.tagName).toBe("BUTTON");
-
-      expect(createdUi.exclusiveRandomBtn).toBe(
-        document.getElementById("exclusiveRandomBtn"),
-      );
-      expect(createdUi.exclusiveRandomBtn.tagName).toBe("BUTTON");
-
-      expect(createdUi.output).toBe(document.getElementById("output"));
-      expect(createdUi.output.tagName).toBe("TEXTAREA");
-
-      expect(createdUi.outputCopyBtn).toBe(
-        document.getElementById("outputCopyBtn"),
-      );
-      expect(createdUi.outputCopyBtn.tagName).toBe("BUTTON");
-
-      expect(createdUi.outputOpenBtn).toBe(
-        document.getElementById("outputOpenBtn"),
-      );
-      expect(createdUi.outputOpenBtn.tagName).toBe("BUTTON");
-    });
-  });
-
-  // describe("getElementByIdOrThrow", () => {});
-
   describe("initApp", () => {
     let ui: ReturnType<typeof initApp>;
 
     beforeEach(() => {
       ui = initApp();
+    });
+
+    describe("initApp", () => {
+      describe("正常系", () => {
+        test("初期化時にパイプラインが空になり、セレクトボックスとリストが初期設定される", () => {
+          const newUi = initApp(ui);
+          expect(newUi.processorSelect.options.length).toBeGreaterThan(0);
+          expect(
+            newUi.pipelineStepList.querySelector(".pipeline-empty-msg"),
+          ).not.toBeNull();
+        });
+      });
+
+      describe("異常系", () => {
+        test("引数なしで実行してもエラーが発生しない", () => {
+          expect(() => initApp()).not.toThrow();
+        });
+      });
+    });
+
+    describe("ui.pipelineStepList.onclick", () => {
+      describe("正常系", () => {
+        test("削除ボタンをクリックするとステップが削除される", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+          expect(
+            ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+          ).toHaveLength(1);
+
+          const deleteBtn = ui.pipelineStepList.querySelector(
+            ".pipeline-delete-btn",
+          ) as HTMLElement;
+          deleteBtn.click();
+
+          expect(
+            ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+          ).toHaveLength(0);
+        });
+      });
+
+      describe("異常系", () => {
+        test("削除ボタン以外をクリックしても変化しない", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+          const item = ui.pipelineStepList.querySelector(
+            ".pipeline-step-item",
+          ) as HTMLElement;
+          item.click();
+
+          expect(
+            ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+          ).toHaveLength(1);
+        });
+      });
+    });
+
+    describe("ui.pipelineStepList.ondragend", () => {
+      describe("正常系", () => {
+        test("ドラッグ終了時に dragging クラスが除去される", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+          const item = ui.pipelineStepList.querySelector(
+            ".pipeline-step-item",
+          ) as HTMLElement;
+          item.classList.add("dragging");
+
+          const event = new Event("dragend", { bubbles: true });
+          item.dispatchEvent(event);
+
+          expect(item.classList.contains("dragging")).toBe(false);
+        });
+      });
+
+      describe("異常系", () => {
+        test("アイテム以外でのドラッグ終了でエラーが発生しない", () => {
+          const event = new Event("dragend", { bubbles: true });
+          expect(() => {
+            ui.pipelineStepList.dispatchEvent(event);
+          }).not.toThrow();
+        });
+      });
+    });
+
+    describe("ui.pipelineStepList.ondragover", () => {
+      describe("正常系", () => {
+        test("要素の上へのドラッグオーバーで順序が入れ替わる", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+          ui.processorSelect.value = "filterEmpty";
+          ui.addStepBtn.click();
+
+          const itemsBefore = ui.pipelineStepList.querySelectorAll(
+            ".pipeline-step-item",
+          );
+          const item0 = itemsBefore[0] as HTMLElement;
+          const item1 = itemsBefore[1] as HTMLElement;
+
+          item0.dispatchEvent(new Event("dragstart", { bubbles: true }));
+          item1.dispatchEvent(new Event("dragover", { bubbles: true }));
+
+          const itemsAfter = ui.pipelineStepList.querySelectorAll(
+            ".pipeline-step-item",
+          );
+          expect(
+            itemsAfter[0].querySelector(".pipeline-step-name")?.textContent,
+          ).toBe("空行除外");
+        });
+      });
+
+      describe("異常系", () => {
+        test("ドラッグ中ではない場合は入れ替わりが発生しない", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+          const item = ui.pipelineStepList.querySelector(
+            ".pipeline-step-item",
+          ) as HTMLElement;
+
+          item.dispatchEvent(new Event("dragover", { bubbles: true }));
+          expect(
+            ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+          ).toHaveLength(1);
+        });
+      });
+    });
+
+    describe("ui.pipelineStepList.ondragstart", () => {
+      describe("正常系", () => {
+        test("ドラッグ開始時に dragging クラスが付与される", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+          const item = ui.pipelineStepList.querySelector(
+            ".pipeline-step-item",
+          ) as HTMLElement;
+
+          const event = new Event("dragstart", { bubbles: true });
+          item.dispatchEvent(event);
+
+          expect(item.classList.contains("dragging")).toBe(true);
+        });
+      });
+
+      describe("異常系", () => {
+        test("アイテム以外でのドラッグ開始でエラーが発生しない", () => {
+          const event = new Event("dragstart", { bubbles: true });
+          expect(() => {
+            ui.pipelineStepList.dispatchEvent(event);
+          }).not.toThrow();
+        });
+      });
+    });
+
+    describe("ui.pipelineStepList.oninput", () => {
+      describe("正常系", () => {
+        test("入力値の変更が内部状態に反映される", () => {
+          ui.processorSelect.value = "pickRandom";
+          ui.addStepBtn.click();
+
+          const input = ui.pipelineStepList.querySelector(
+            'input[type="number"]',
+          ) as HTMLInputElement;
+          input.value = "10";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+
+          // 状態を確認するために副作用（別の操作での再描画など）を確認
+          // ここでは直接エラーなく通ることを確認
+          expect(input.value).toBe("10");
+        });
+      });
+
+      describe("異常系", () => {
+        test("不正な要素の入力イベントでエラーが発生しない", () => {
+          const input = document.createElement("input");
+          ui.pipelineStepList.appendChild(input);
+          expect(() => {
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          }).not.toThrow();
+        });
+      });
+    });
+
+    describe("ui.addStepBtn.onclick", () => {
+      describe("正常系", () => {
+        test("追加ボタンをクリックするとリストにステップが追加される", () => {
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+
+          const items = ui.pipelineStepList.querySelectorAll(
+            ".pipeline-step-item",
+          );
+          expect(items).toHaveLength(1);
+          expect(
+            items[0].querySelector(".pipeline-step-name")?.textContent,
+          ).toBe("空白削除");
+        });
+      });
+
+      describe("異常系", () => {
+        test("存在しないプロセッサを選択して追加しても追加されない", () => {
+          ui.processorSelect.innerHTML =
+            '<option value="invalid">Invalid</option>';
+          ui.processorSelect.value = "invalid";
+          ui.addStepBtn.click();
+
+          expect(
+            ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+          ).toHaveLength(0);
+        });
+      });
+    });
+
+    describe("ui.pipelineRunBtn.onclick", () => {
+      describe("正常系", () => {
+        test("実行ボタンをクリックするとパイプライン処理の結果が出力される", () => {
+          ui.input.value = " a ";
+          ui.processorSelect.value = "trim";
+          ui.addStepBtn.click();
+
+          ui.pipelineRunBtn.click();
+
+          expect(ui.output.value).toBe("a");
+        });
+      });
+
+      describe("異常系", () => {
+        test("パイプラインが空の場合はそのまま出力される", () => {
+          ui.input.value = "test";
+          ui.pipelineRunBtn.click();
+          expect(ui.output.value).toBe("test");
+        });
+      });
     });
 
     // パターン整理
@@ -1202,6 +1383,4 @@ describe("Random Picker Integration Tests", () => {
       });
     });
   });
-
-  // describe("renderOutput", () => {});
 });

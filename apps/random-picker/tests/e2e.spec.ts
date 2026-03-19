@@ -1957,3 +1957,47 @@ test.describe("出力欄リンク起動ボタンクリック", () => {
       .toEqual([{ url: "https://example.com/output", target: "_blank" }]);
   });
 });
+
+test.describe("パイプラインビルダー", () => {
+  test("ステップの追加、パラメータ変更、実行、削除", async ({ page }) => {
+    await page.goto(appUrl);
+
+    // 1. 空白削除ステップを追加
+    await page.locator("#processorSelect").selectOption("trim");
+    await page.locator("#addStepBtn").click();
+    await expect(page.locator(".pipeline-step-item")).toHaveCount(1);
+    await expect(page.locator(".pipeline-step-name")).toHaveText("空白削除");
+
+    // 2. 空行除外ステップを追加
+    await page.locator("#processorSelect").selectOption("filterEmpty");
+    await page.locator("#addStepBtn").click();
+    await expect(page.locator(".pipeline-step-item")).toHaveCount(2);
+
+    // 3. ランダム抽出ステップを追加
+    await page.locator("#processorSelect").selectOption("pickRandom");
+    await page.locator("#addStepBtn").click();
+    await expect(page.locator(".pipeline-step-item")).toHaveCount(3);
+
+    // 4. パラメータ変更 (抽出件数を 2 に)
+    const pickRandomItem = page.locator(".pipeline-step-item").nth(2);
+    const countInput = pickRandomItem.locator('input[type="number"]');
+    await countInput.fill("2");
+
+    // 5. 実行
+    await page.locator("#input").fill("  A  \n\n  B  \n  C  \n  D  ");
+    await page.locator("#pipelineRunBtn").click();
+
+    // 結果の検証 (A,B,C,D から 2 つ選ばれるはず)
+    const result = await page.locator("#output").inputValue();
+    const resultLines = result.split("\n").filter((l) => l.trim() !== "");
+    expect(resultLines).toHaveLength(2);
+    for (const line of resultLines) {
+      expect(["A", "B", "C", "D"]).toContain(line);
+    }
+
+    // 6. 削除 (2番目のステップを削除)
+    const secondItem = page.locator(".pipeline-step-item").nth(1);
+    await secondItem.locator(".pipeline-delete-btn").click();
+    await expect(page.locator(".pipeline-step-item")).toHaveCount(2);
+  });
+});
