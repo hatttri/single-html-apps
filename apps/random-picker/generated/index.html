@@ -163,13 +163,6 @@
         transition: all 0.2s ease;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
-      .button-group {
-        display: flex;
-        gap: 12px;
-      }
-      .button-group button {
-        flex: 1;
-      }
       button:hover {
         transform: translateY(-1px);
         box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
@@ -378,11 +371,6 @@
         </button>
       </div>
 
-      <div class="button-group">
-        <button id="fullRandomBtn" type="button">完全ランダム</button>
-        <button id="exclusiveRandomBtn" type="button">排他ランダム</button>
-      </div>
-
       <div class="output-group">
         <div class="output-header">
           <p class="output-label">出力欄</p>
@@ -457,9 +445,6 @@
           applyStringArrayProcessors: () => applyStringArrayProcessors,
           buildProcessorSelectOptions: () => buildProcessorSelectOptions,
           copyTextToClipboard: () => copyTextToClipboard,
-          createPickRandomItemsProcessor: () => createPickRandomItemsProcessor,
-          createRemoveExcludedItemsProcessor: () =>
-            createRemoveExcludedItemsProcessor,
           createUi: () => createUi,
           executePipeline: () => executePipeline,
           filterEmptyStrings: () => filterEmptyStrings,
@@ -530,18 +515,6 @@
             (currentValues, processor) => processor(currentValues),
             values,
           );
-        }
-        function createPickRandomItemsProcessor(
-          count,
-          pickRandomItemsFn = pickRandomItems,
-        ) {
-          return (items) => pickRandomItemsFn(items, count);
-        }
-        function createRemoveExcludedItemsProcessor(
-          excludedItems,
-          removeExcludedItemsFn = removeExcludedItems,
-        ) {
-          return (items) => removeExcludedItemsFn(items, excludedItems);
         }
         function executePipeline(inputText, steps, context) {
           let currentItems = splitByNewline(inputText);
@@ -653,11 +626,6 @@
             processorSelect: getElementByIdOrThrow(root, "processorSelect"),
             addStepBtn: getElementByIdOrThrow(root, "addStepBtn"),
             pipelineRunBtn: getElementByIdOrThrow(root, "pipelineRunBtn"),
-            fullRandomBtn: getElementByIdOrThrow(root, "fullRandomBtn"),
-            exclusiveRandomBtn: getElementByIdOrThrow(
-              root,
-              "exclusiveRandomBtn",
-            ),
             outputCopyBtn: getElementByIdOrThrow(root, "outputCopyBtn"),
             outputOpenBtn: getElementByIdOrThrow(root, "outputOpenBtn"),
             output: getElementByIdOrThrow(root, "output"),
@@ -795,37 +763,6 @@
               filterEmptyStrings,
             ]);
             openUrls(urls);
-          };
-          ui.fullRandomBtn.onclick = () => {
-            const inputText = ui.input.value;
-            const context = { previousOutput: "" };
-            const outputText = executePipeline(
-              inputText,
-              [
-                { id: "trim" },
-                { id: "filterEmpty" },
-                { id: "pickRandom", params: { count: 1 } },
-              ],
-              context,
-            );
-            renderOutput(ui.output, outputText);
-          };
-          ui.exclusiveRandomBtn.onclick = () => {
-            const inputText = ui.input.value;
-            const context = {
-              previousOutput: ui.output.value ?? "",
-            };
-            const outputText = executePipeline(
-              inputText,
-              [
-                { id: "trim" },
-                { id: "filterEmpty" },
-                { id: "excludePrevious" },
-                { id: "pickRandom", params: { count: 1 } },
-              ],
-              context,
-            );
-            renderOutput(ui.output, outputText);
           };
           ui.outputCopyBtn.onclick = async () => {
             const outputText = ui.output.value ?? "";

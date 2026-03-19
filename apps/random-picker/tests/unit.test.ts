@@ -6,8 +6,6 @@ import {
   // 純粋ロジック
   addPipelineStep,
   applyStringArrayProcessors,
-  createPickRandomItemsProcessor,
-  createRemoveExcludedItemsProcessor,
   executePipeline,
   filterEmptyStrings,
   joinByNewline,
@@ -141,57 +139,6 @@ describe("Random Picker Unit Tests", () => {
       ).toEqual(["A", "B"]);
       expect(trimValues).toHaveBeenCalledWith([" A ", " ", " B "]);
       expect(filterValues).toHaveBeenCalledWith(["A", "", "B"]);
-    });
-  });
-
-  // パターン整理
-  // 01. 依存関数の入出力テスト
-  //
-  // パターン一覧
-  // ○ 01 依存関数の入出力テスト
-  describe("createPickRandomItemsProcessor", () => {
-    test("01 依存関数の入出力テスト", () => {
-      const inputItems = ["A", "B"];
-      const count = 42;
-      const returnedItems = ["only-one"];
-      const pickRandomItemsFn = vi
-        .fn<(items: string[], count: number) => string[]>()
-        .mockReturnValue(returnedItems);
-      const processor = createPickRandomItemsProcessor(
-        count,
-        pickRandomItemsFn,
-      );
-
-      expect(processor(inputItems)).toBe(returnedItems);
-      expect(pickRandomItemsFn).toHaveBeenCalledTimes(1);
-      expect(pickRandomItemsFn).toHaveBeenCalledWith(inputItems, count);
-    });
-  });
-
-  // パターン整理
-  // 01. 依存関数の入出力テスト
-  //
-  // パターン一覧
-  // ○ 01 依存関数の入出力テスト
-  describe("createRemoveExcludedItemsProcessor", () => {
-    test("01 依存関数の入出力テスト", () => {
-      const inputItems = ["A", "B"];
-      const excludedItems = ["B"];
-      const returnedItems = ["A"];
-      const removeExcludedItemsFn = vi
-        .fn<(items: string[], excludedItems: string[]) => string[]>()
-        .mockReturnValue(returnedItems);
-      const processor = createRemoveExcludedItemsProcessor(
-        excludedItems,
-        removeExcludedItemsFn,
-      );
-
-      expect(processor(inputItems)).toBe(returnedItems);
-      expect(removeExcludedItemsFn).toHaveBeenCalledTimes(1);
-      expect(removeExcludedItemsFn).toHaveBeenCalledWith(
-        inputItems,
-        excludedItems,
-      );
     });
   });
 
@@ -962,8 +909,6 @@ describe("Random Picker Unit Tests", () => {
           "processorSelect",
           "addStepBtn",
           "pipelineRunBtn",
-          "fullRandomBtn",
-          "exclusiveRandomBtn",
           "outputCopyBtn",
           "outputOpenBtn",
           "output",
@@ -982,8 +927,6 @@ describe("Random Picker Unit Tests", () => {
         expect(ui.processorSelect.id).toBe("processorSelect");
         expect(ui.addStepBtn.id).toBe("addStepBtn");
         expect(ui.pipelineRunBtn.id).toBe("pipelineRunBtn");
-        expect(ui.fullRandomBtn.id).toBe("fullRandomBtn");
-        expect(ui.exclusiveRandomBtn.id).toBe("exclusiveRandomBtn");
         expect(ui.outputCopyBtn.id).toBe("outputCopyBtn");
         expect(ui.outputOpenBtn.id).toBe("outputOpenBtn");
         expect(ui.output.id).toBe("output");

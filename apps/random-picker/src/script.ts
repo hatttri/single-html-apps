@@ -53,8 +53,6 @@ export type UI = {
   processorSelect: HTMLSelectElement;
   addStepBtn: HTMLButtonElement;
   pipelineRunBtn: HTMLButtonElement;
-  fullRandomBtn: HTMLButtonElement;
-  exclusiveRandomBtn: HTMLButtonElement;
   outputCopyBtn: HTMLButtonElement;
   outputOpenBtn: HTMLButtonElement;
   output: HTMLTextAreaElement;
@@ -127,26 +125,6 @@ export function applyStringArrayProcessors(
     (currentValues, processor) => processor(currentValues),
     values,
   );
-}
-
-/**
- * 指定件数ぶんランダム選択する処理関数を返す。既定では pickRandomItems を使う。
- */
-export function createPickRandomItemsProcessor(
-  count: number,
-  pickRandomItemsFn: typeof pickRandomItems = pickRandomItems,
-): StringArrayProcessor {
-  return (items) => pickRandomItemsFn(items, count);
-}
-
-/**
- * 除外リストを適用する処理関数を返す。既定では removeExcludedItems を使う。
- */
-export function createRemoveExcludedItemsProcessor(
-  excludedItems: string[],
-  removeExcludedItemsFn: typeof removeExcludedItems = removeExcludedItems,
-): StringArrayProcessor {
-  return (items) => removeExcludedItemsFn(items, excludedItems);
 }
 
 /**
@@ -366,14 +344,6 @@ export function createUi(root: Document = document): UI {
       root,
       "pipelineRunBtn",
     ),
-    fullRandomBtn: getElementByIdOrThrow<HTMLButtonElement>(
-      root,
-      "fullRandomBtn",
-    ),
-    exclusiveRandomBtn: getElementByIdOrThrow<HTMLButtonElement>(
-      root,
-      "exclusiveRandomBtn",
-    ),
     outputCopyBtn: getElementByIdOrThrow<HTMLButtonElement>(
       root,
       "outputCopyBtn",
@@ -545,39 +515,6 @@ export function initApp(ui: UI = createUi()): UI {
 
     // URL 配列を開く
     openUrls(urls);
-  };
-
-  ui.fullRandomBtn.onclick = () => {
-    const inputText = ui.input.value;
-    const context: PipelineContext = { previousOutput: "" };
-    const outputText = executePipeline(
-      inputText,
-      [
-        { id: "trim" },
-        { id: "filterEmpty" },
-        { id: "pickRandom", params: { count: 1 } },
-      ],
-      context,
-    );
-    renderOutput(ui.output, outputText);
-  };
-
-  ui.exclusiveRandomBtn.onclick = () => {
-    const inputText = ui.input.value;
-    const context: PipelineContext = {
-      previousOutput: ui.output.value ?? "",
-    };
-    const outputText = executePipeline(
-      inputText,
-      [
-        { id: "trim" },
-        { id: "filterEmpty" },
-        { id: "excludePrevious" },
-        { id: "pickRandom", params: { count: 1 } },
-      ],
-      context,
-    );
-    renderOutput(ui.output, outputText);
   };
 
   ui.outputCopyBtn.onclick = async () => {
