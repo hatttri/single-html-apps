@@ -1,56 +1,63 @@
-# Random Picker リファクタリング実装指示書
+# Random Picker リファクタリング実装指示書（段階実行版）
 
 ## 目的
 
-`apps/random-picker/src/script.ts` に集中している型定義・状態・プロセッサ・パイプラインロジック・ブラウザ副作用・DOM描画・イベント結線を分割し、**責務ごとに別ファイルへ移動**する。
-同時に `apps/random-picker/tests/unit.test.ts` と `apps/random-picker/tests/integration.test.ts` を廃止し、**unit と integration を明確に分離した複数ファイル構成**へ変更する。
-**挙動変更はしない。UI・仕様・文言・HTML ID・CSS class は変えない。**
+`apps/random-picker/src/script.ts` に集中している責務を、型定義・状態・プロセッサ・パイプライン・ブラウザ副作用・DOM・イベント・初期化に分割する。
+同時に、`apps/random-picker/tests/unit.test.ts` と `apps/random-picker/tests/integration.test.ts` を廃止し、`unit` / `integration` をディレクトリ単位で明確に分離する。
+
+**これは挙動維持のためのリファクタリングである。仕様変更・UI変更・文言変更・バグ修正を同時に入れてはいけない。**
 
 ---
 
-## 最重要ルール
+## この指示書の使い方
 
-1. **これは挙動維持のためのリファクタリングである。**
-   仕様変更・UI変更・文言変更・バグ修正を同時に入れないこと。
+この作業は **必ず 1 ステップずつ** 実施すること。
 
-2. **`apps/random-picker/build/build.ts` のエントリーポイントは変えない。**
-   引き続き `../src/script.ts` を bundle 対象にすること。
-   `script.ts` は最終的に **エントリーポイント専用** にする。
-
-3. **`index.html` と `style.css` は変更しない。**
-   今回の作業は TypeScript とテストと設定ファイルだけに限定する。
-
-4. **`appState` は `state.ts` にだけ定義する。**
-   他ファイルで新たに状態変数を定義しない。
-
-5. **`PROCESSOR_REGISTRY` は `processor-registry.ts` にだけ定義する。**
-   `state.ts` に置かない。
-
-6. **`event.ts` は `appState` や `PROCESSOR_REGISTRY` を直接 import しない。**
-   `deps` 経由で受け取ること。
-   ただし、純粋関数や描画関数は通常 import してよい。
-
-7. **`pipeline.ts` は `PROCESSOR_REGISTRY` を直接 import しない。**
-   `executePipeline` は registry を引数で受け取る形に変更すること。
-   これにより循環依存を防ぐ。
-
-8. **テストはレベルで分ける。**
-   - unit: 関数単体
-   - integration: イベントと複数モジュール連携
-   - e2e: Playwright
-     この境界を崩さない。
-
-9. **旧ファイルを残さない。**
-   最終状態で `apps/random-picker/tests/unit.test.ts` と `apps/random-picker/tests/integration.test.ts` は削除されていること。
-
-10. **関数順は原則アルファベット順。**
-    ただし `event.ts` の bind/handler 群だけは **DOM の出現順** を優先する。
+- 1 回の依頼で実行してよいのは **現在指定された 1 ステップだけ**。
+- **次のステップを先回りしてはいけない。**
+- **関係ありそうに見えても、そのステップに書かれていない変更はしてはいけない。**
+- 変更後は、そのステップの完了条件だけ確認して停止すること。
+- 中間段階では未使用ファイルや旧テストとの一時的不整合が残ってよい。**それを理由に別ステップの変更へ勝手に踏み込んではいけない。**
 
 ---
 
-## 最終ディレクトリ構成
+## AI エージェントへの共通強制ルール
 
-最終状態は次の構成にすること。
+1. **今回実行してよいのは指定された Step のみ。** それ以外の変更は禁止。
+2. **未指示の最適化・cleanup・命名変更・文言変更・コメント整理・テスト改善は禁止。**
+3. **挙動変更は禁止。** UI、仕様、HTML ID、CSS class、文言は変えない。
+4. **`apps/random-picker/build/build.ts` の entry は変更禁止。**
+5. **`apps/random-picker/src/index.html` と `apps/random-picker/src/style.css` は変更禁止。**
+6. **`event.ts` で `appState` と `PROCESSOR_REGISTRY` を直接 import してはいけない。**
+7. **`pipeline.ts` で `PROCESSOR_REGISTRY` を直接 import してはいけない。**
+8. **旧テストファイルは、新テスト移植前に削除してはいけない。**
+9. **新しい helper ファイルを勝手に増やしてはいけない。** この指示書にあるファイルだけを扱うこと。
+10. 作業報告では、次だけを書け。
+    - 変更したファイル
+    - 実施した内容
+    - 完了条件を満たしたか
+    - 残課題（あれば）
+
+---
+
+## 毎回の依頼文テンプレート
+
+各ステップを依頼するときは、毎回このテンプレートを先頭に付けること。
+
+```md
+あなたが今回実行してよいのは **Step X のみ** です。
+
+- Step X に書かれていることだけ実施してください。
+- Step X に書かれていないファイル変更は禁止です。
+- 次の Step を先回りして実施することは禁止です。
+- 仕様変更・UI変更・文言変更・テストケース改変は禁止です。
+- 必要最小限の差分だけ作って、完了したら停止してください。
+- 作業後は「変更ファイル」「実施内容」「完了条件チェック結果」だけ報告してください。
+```
+
+---
+
+## 最終到達構成
 
 ```txt
 apps/random-picker/
@@ -87,8 +94,6 @@ apps/random-picker/
 
 ## 依存関係ルール
 
-以下の依存方向を守ること。これを崩すと循環依存や責務混在が発生する。
-
 | ファイル                | 役割                     | import してよいもの                                                  | import してはいけないもの                                              |
 | ----------------------- | ------------------------ | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `type.ts`               | 型定義                   | なし                                                                 | 全部                                                                   |
@@ -103,13 +108,15 @@ apps/random-picker/
 
 ---
 
-## ソースコードの実装指示
+## Step 1: `type.ts` を新規作成する
 
-## 1. `apps/random-picker/src/type.ts` を新規作成
+### 変更してよいファイル
 
-### このファイルに置くもの
+- `apps/random-picker/src/type.ts`
 
-現在の `script.ts` から以下の型定義を移動する。
+### このステップでやること
+
+現在の `script.ts` から、以下の型定義を **新規作成する `type.ts` に移す前提で** 定義する。
 
 - `AppState`
 - `ParamFieldSchema`
@@ -119,82 +126,101 @@ apps/random-picker/
 - `ProcessorParams`
 - `StringArrayProcessor`
 - `UI`
-
-### このファイルで新規追加する型
-
-新しく次を追加する。
-
 - `ProcessorRegistry = Record<string, ProcessorDef>`
 - `EventDeps`
 
-### `EventDeps` の内容
-
-`EventDeps` は次を持つこと。
+`EventDeps` は次の形にする。
 
 ```ts
-type EventDeps = {
+export type EventDeps = {
   ui: UI;
   appState: AppState;
   processorRegistry: ProcessorRegistry;
 };
 ```
 
-### 注意
+### やってはいけないこと
 
-- `type.ts` には **関数を1つも置かない**。
-- `const` や `let` を置かない。
-- DOM 要素取得処理や registry 実体を置かない。
+- `script.ts` をまだ書き換えない
+- 関数を置かない
+- `const` / `let` を置かない
 
----
+### 完了条件
 
-## 2. `apps/random-picker/src/state.ts` を新規作成
-
-### このファイルに置くもの
-
-現在の `script.ts` にある `appState` をここへ移動する。
-
-### 最終責務
-
-- `appState` の定義だけ
-
-### 注意
-
-- `PROCESSOR_REGISTRY` を置かない。
-- ここに関数を増やさない。
-- 初期値は現状維持で `pipeline: []`。
+- `type.ts` が存在する
+- 型定義だけが入っている
+- 関数・状態・registry 実体がない
 
 ---
 
-## 3. `apps/random-picker/src/processor.ts` を新規作成
+## Step 2: `state.ts` を新規作成する
 
-### このファイルに置くもの
+### 変更してよいファイル
 
-現在の `script.ts` から次の関数を移動する。
+- `apps/random-picker/src/state.ts`
+
+### このステップでやること
+
+`appState` を `state.ts` に定義する。
+責務は **`appState` の定義だけ** に限定する。
+
+初期値は現状維持。
+
+```ts
+pipeline: [];
+```
+
+### やってはいけないこと
+
+- `PROCESSOR_REGISTRY` を置かない
+- 関数を追加しない
+- `script.ts` はまだ書き換えない
+
+### 完了条件
+
+- `state.ts` が存在する
+- `appState` だけが定義されている
+
+---
+
+## Step 3: `processor.ts` を新規作成する
+
+### 変更してよいファイル
+
+- `apps/random-picker/src/processor.ts`
+
+### このステップでやること
+
+以下の関数を `processor.ts` に移す前提で新規作成する。
 
 - `filterEmptyStrings`
 - `pickRandomItems`
 - `removeExcludedItems`
 - `trimStrings`
 
-### ルール
+### やってはいけないこと
 
-- **「文字列配列を受け取って文字列配列を返す加工処理」だけ**を置くこと。
-- 関数本体のロジックは変更しない。
-- 例外条件や `Math.random` の扱いも変更しない。
+- ロジック変更禁止
+- 例外条件変更禁止
+- `Math.random` の扱い変更禁止
+- `splitByNewline` をここに置かない
 
-### 注意
+### 完了条件
 
-- `splitByNewline` はここに置かない。
-  これはユーティリティ兼パイプライン補助なので `pipeline.ts` に置く。
-- `PROCESSOR_REGISTRY` はここに置かない。
+- 上記 4 関数だけが `processor.ts` にある
+- DOM / state / registry 依存がない
 
 ---
 
-## 4. `apps/random-picker/src/pipeline.ts` を新規作成
+## Step 4: `pipeline.ts` を新規作成する
 
-### このファイルに置くもの
+### 変更してよいファイル
 
-現在の `script.ts` から次の関数を移動する。
+- `apps/random-picker/src/pipeline.ts`
+
+### このステップでやること
+
+以下の関数を `pipeline.ts` に移す前提で新規作成する。
 
 - `addPipelineStep`
 - `applyStringArrayProcessors`
@@ -206,12 +232,7 @@ type EventDeps = {
 - `splitByNewline`
 - `updatePipelineStepParam`
 
-### 重要な変更
-
-`executePipeline` は **`PROCESSOR_REGISTRY` を直接 import しない**。
-代わりに registry を引数で受け取るように変更する。
-
-### 新しい `executePipeline` の形
+`executePipeline` は **registry を第 4 引数で受け取る形** にする。
 
 ```ts
 executePipeline(
@@ -222,66 +243,89 @@ executePipeline(
 ): string
 ```
 
-### 必須ルール
+### やってはいけないこと
 
-- `pipeline.ts` から `processor-registry.ts` を import しない。
-- `pipeline.ts` から `state.ts` を import しない。
-- ここに DOM 操作を置かない。
+- `pipeline.ts` から `processor-registry.ts` を import しない
+- `state.ts` を import しない
+- DOM 操作を書かない
+
+### 完了条件
+
+- 上記関数が `pipeline.ts` にある
+- `executePipeline` が registry 引数化されている
+- `PROCESSOR_REGISTRY` 直接参照がない
 
 ---
 
-## 5. `apps/random-picker/src/processor-registry.ts` を新規作成
+## Step 5: `processor-registry.ts` を新規作成する
 
-### このファイルに置くもの
+### 変更してよいファイル
 
-現在の `script.ts` にある `PROCESSOR_REGISTRY` をここへ移動する。
+- `apps/random-picker/src/processor-registry.ts`
 
-### import 先
+### このステップでやること
 
-このファイルは次を import する。
+`PROCESSOR_REGISTRY` を新規作成する。
 
-- `ProcessorRegistry` など型 (`type.ts`)
+このファイルでは次を import して使う。
+
+- 型 (`type.ts`)
 - `filterEmptyStrings`
 - `pickRandomItems`
 - `removeExcludedItems`
 - `trimStrings`
 - `splitByNewline`
 
-### `excludePrevious` について
+`excludePrevious` の挙動は現状維持とし、`context.previousOutput` を `splitByNewline` して `removeExcludedItems` に渡す。
 
-現状と同じく、`context.previousOutput` を `splitByNewline` で分割し、`removeExcludedItems` に渡すこと。
-挙動は変えない。
+### やってはいけないこと
 
-### 注意
+- `appState` を import しない
+- DOM 関数を import しない
+- registry 以外の責務を書かない
 
-- `appState` は import しない。
-- DOM 関数は import しない。
-- ここは **定義テーブルだけ**にする。
+### 完了条件
+
+- `PROCESSOR_REGISTRY` が `processor-registry.ts` にある
+- `excludePrevious` の挙動が現状維持
 
 ---
 
-## 6. `apps/random-picker/src/browser.ts` を新規作成
+## Step 6: `browser.ts` を新規作成する
 
-### このファイルに置くもの
+### 変更してよいファイル
 
-現在の `script.ts` から次を移動する。
+- `apps/random-picker/src/browser.ts`
+
+### このステップでやること
+
+以下を `browser.ts` に移す前提で新規作成する。
 
 - `copyTextToClipboard`
 - `openUrls`
 
-### 注意
+### やってはいけないこと
 
-- シグネチャは現状維持。
-- `window.open(url, "_blank")` も現状維持。
-- バリデーション追加や `noopener` 追加などの仕様変更は今回は入れない。
+- シグネチャ変更禁止
+- `window.open(url, "_blank")` の変更禁止
+- 追加バリデーション禁止
+
+### 完了条件
+
+- `browser.ts` が存在する
+- 上記 2 関数だけがある
 
 ---
 
-## 7. `apps/random-picker/src/dom.ts` を新規作成
+## Step 7: `dom.ts` を新規作成する
 
-### このファイルに置くもの
+### 変更してよいファイル
 
-現在の `script.ts` から次を移動する。
+- `apps/random-picker/src/dom.ts`
+
+### このステップでやること
+
+以下を `dom.ts` に移す前提で新規作成する。
 
 - `buildProcessorSelectOptions`
 - `createUi`
@@ -289,38 +333,37 @@ executePipeline(
 - `renderOutput`
 - `renderPipelineStepList`
 
-### ルール
+### やってはいけないこと
 
-- DOM 取得と DOM 描画だけを担当する。
-- `appState` を直接読まない。
-- 受け取った引数だけで描画する。
+- `appState` を直接読まない
+- HTML ID を変えない
+- class 名を変えない
+- `renderPipelineStepList` の DOM 構造・属性・文言を変えない
 
-### 注意
+### 完了条件
 
-- HTML ID 名は一切変更しない。
-- class 名も一切変更しない。
-- `renderPipelineStepList` の DOM 構造・属性・文言は変更しない。
+- 上記 5 関数が `dom.ts` にある
+- DOM 取得と描画だけを担当している
 
 ---
 
-## 8. `apps/random-picker/src/event.ts` を新規作成
+## Step 8: `event.ts` を新規作成する
 
-### このファイルの役割
+### 変更してよいファイル
 
-`initApp` 内に匿名関数で書かれているイベントリスナーを、**bind 関数 + private handler** に分離する。
+- `apps/random-picker/src/event.ts`
 
-### export する関数
+### このステップでやること
 
-次の3つだけを export すること。
+`initApp` 内のイベントリスナーを分離する前提で、`event.ts` を作る。
+
+export するのは **次の 3 つだけ**。
 
 - `bindInputEvent`
 - `bindPipelineEvent`
 - `bindOutputEvent`
 
-### export しない private handler
-
-次の handler を `event.ts` 内部関数として作ること。
-**export しないこと。**
+内部 private handler として以下を持つ。
 
 - `handleInputCopyBtnClick`
 - `handleInputOpenBtnClick`
@@ -334,96 +377,39 @@ executePipeline(
 - `handleOutputCopyBtnClick`
 - `handleOutputOpenBtnClick`
 
-### bind 関数の考え方
+`draggingIndex` は **`bindPipelineEvent` のローカル変数** に閉じ込める。
 
-- `bindInputEvent(deps)` は入力欄まわりのイベントだけを結線する。
-- `bindPipelineEvent(deps)` はパイプライン欄まわりのイベントだけを結線する。
-- `bindOutputEvent(deps)` は出力欄まわりのイベントだけを結線する。
+### やってはいけないこと
 
-### `deps` の扱い
+- `import { appState } from "./state.ts"` を書かない
+- `import { PROCESSOR_REGISTRY } from "./processor-registry.ts"` を書かない
+- `draggingIndex` をモジュールスコープに置かない
 
-- `event.ts` は `EventDeps` を受け取って処理する。
-- `event.ts` 自身は `appState` や `PROCESSOR_REGISTRY` を import しない。
-- `deps.ui`, `deps.appState`, `deps.processorRegistry` を使う。
+### 並び順ルール
 
-### `draggingIndex` の扱い
+このファイルだけはアルファベット順ではなく **DOM の出現順** を優先する。
 
-- これは `appState` に入れない。
-- `event.ts` のモジュールスコープにも置かない。
-- **`bindPipelineEvent` のローカル変数として閉じ込めること。**
+### 完了条件
 
-### 重要
-
-`event.ts` は **グローバル直触り禁止**。
-つまり以下のような書き方は禁止。
-
-```ts
-import { appState } from "./state.ts";
-import { PROCESSOR_REGISTRY } from "./processor-registry.ts";
-```
-
-この書き方はしないこと。
-
-### 例外
-
-純粋関数・描画関数は通常 import してよい。
-例:
-
-- `addPipelineStep`
-- `applyStringArrayProcessors`
-- `copyTextToClipboard`
-- `executePipeline`
-- `filterEmptyStrings`
-- `movePipelineStep`
-- `openUrls`
-- `removePipelineStep`
-- `renderOutput`
-- `renderPipelineStepList`
-- `splitByNewline`
-- `trimStrings`
-- `updatePipelineStepParam`
-
-### DOM順ルール
-
-`event.ts` の bind/handler は DOM の出現順に並べること。
-このファイルだけはアルファベット順ではなく DOM 順を優先してよい。
+- `bindInputEvent` / `bindPipelineEvent` / `bindOutputEvent` が export されている
+- `appState` / `PROCESSOR_REGISTRY` を direct import していない
 
 ---
 
-## 9. `apps/random-picker/src/script.ts` を置き換える
+## Step 9: `script.ts` を初期化専用へ置き換える
 
-### このファイルの最終責務
+### 変更してよいファイル
 
-- `initApp` だけを export する
-- UI 作成
-- state 初期化
-- select 初期化
-- 初期描画
-- `deps` 作成
-- `bind*` 呼び出し
+- `apps/random-picker/src/script.ts`
 
-### `script.ts` に残してよいもの
+### このステップでやること
 
-- `initApp`
+`script.ts` を **`initApp` だけを export する薄いエントリーポイント** に置き換える。
 
-### `script.ts` から削除するもの
-
-以下は **すべて他ファイルへ移動**すること。
-
-- 型定義全部
-- `appState`
-- `PROCESSOR_REGISTRY`
-- 純粋ロジック全部
-- browser 副作用全部
-- DOM 関数全部
-- イベントハンドラー全部
-
-### `initApp` の処理順
-
-`initApp` は次の順に実装すること。
+`initApp` の処理順は必ず次の順にする。
 
 1. `ui` を作る（引数がなければ `createUi()`）
-2. `appState.pipeline = []` で状態を初期化
+2. `appState.pipeline = []`
 3. `buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY)`
 4. `renderPipelineStepList(ui.pipelineStepList, appState.pipeline, PROCESSOR_REGISTRY)`
 5. `deps` を作る
@@ -432,90 +418,60 @@ import { PROCESSOR_REGISTRY } from "./processor-registry.ts";
 8. `bindOutputEvent(deps)`
 9. `ui` を返す
 
-### 注意
+### やってはいけないこと
 
-- `renderOutput` を初期化時に追加で呼ばない。現状仕様を変えないため。
-- `RandomPickerApp.initApp();` を build 時に使っているため、`initApp` export は必須。
+- `initApp` 以外を残さない
+- 型定義を残さない
+- `appState` を残さない
+- `PROCESSOR_REGISTRY` を残さない
+- 純粋関数・DOM関数・browser関数・イベントハンドラーを残さない
+- 初期化時に `renderOutput` を追加で呼ばない
 
----
+### 完了条件
 
-## テスト再編成の実装指示
-
-## 最終テスト構成
-
-```txt
-apps/random-picker/tests/
-  e2e.spec.ts
-  integration/
-    event.test.ts
-    script.test.ts
-  unit/
-    browser.test.ts
-    dom.test.ts
-    pipeline.test.ts
-    processor-registry.test.ts
-    processor.test.ts
-```
+- `script.ts` が `initApp` 専用になっている
+- build entry は変えていない
 
 ---
 
-## 旧テストファイルの扱い
+## Step 10: `unit/processor.test.ts` を作成する
 
-### 最終的に削除するファイル
+### 変更してよいファイル
 
-- `apps/random-picker/tests/unit.test.ts`
-- `apps/random-picker/tests/integration.test.ts`
+- `apps/random-picker/tests/unit/processor.test.ts`
 
-### 削除タイミング
+### このステップでやること
 
-**新しいテストファイルに内容を移したあとで削除**すること。
-先に削除しないこと。
-
----
-
-## unit テスト分割ルール
-
-## 10. `apps/random-picker/tests/unit/processor.test.ts` を新規作成
-
-### import 対象
-
-- `filterEmptyStrings`
-- `pickRandomItems`
-- `removeExcludedItems`
-- `trimStrings`
-
-### 旧 `unit.test.ts` から移す describe
+旧 `unit.test.ts` から以下の describe を移植する。
 
 - `describe("filterEmptyStrings", ...)`
 - `describe("pickRandomItems", ...)`
 - `describe("removeExcludedItems", ...)`
 - `describe("trimStrings", ...)`
 
-### ルール
+### やってはいけないこと
 
-- 他モジュールとの連携テストを書かない。
-- DOM を使わない。
-- `initApp` を import しない。
+- 他モジュール連携テストを書かない
+- DOM を使わない
+- `initApp` を import しない
+- 旧 `unit.test.ts` をまだ削除しない
+
+### 完了条件
+
+- `processor.test.ts` が存在する
+- 上記 4 関数の unit テストだけがある
 
 ---
 
-## 11. `apps/random-picker/tests/unit/pipeline.test.ts` を新規作成
+## Step 11: `unit/pipeline.test.ts` を作成する
 
-### import 対象
+### 変更してよいファイル
 
-- `addPipelineStep`
-- `applyStringArrayProcessors`
-- `executePipeline`
-- `joinByNewline`
-- `movePipelineStep`
-- `removePipelineStep`
-- `resolveParams`
-- `splitByNewline`
-- `updatePipelineStepParam`
-- `PROCESSOR_REGISTRY`
-  ※ `executePipeline` のテストで registry 引数が必要になるため
+- `apps/random-picker/tests/unit/pipeline.test.ts`
 
-### 旧 `unit.test.ts` から移す describe
+### このステップでやること
+
+旧 `unit.test.ts` から以下を移植する。
 
 - `describe("addPipelineStep", ...)`
 - `describe("applyStringArrayProcessors", ...)`
@@ -527,62 +483,59 @@ apps/random-picker/tests/
 - `describe("splitByNewline", ...)`
 - `describe("updatePipelineStepParam", ...)`
 
-### 重要変更
+`executePipeline` のテストは **すべて registry を第 4 引数で渡す形** に書き換える。
 
-`executePipeline` のテストは全件、**registry を第4引数で渡す形に書き換える**こと。
+### やってはいけないこと
 
----
+- 旧 `unit.test.ts` をまだ削除しない
+- `script.ts` からまとめて import しない
 
-## 12. `apps/random-picker/tests/unit/processor-registry.test.ts` を新規作成
+### 完了条件
 
-### import 対象
-
-- `PROCESSOR_REGISTRY`
-
-### 旧 `unit.test.ts` から移す describe
-
-- `describe("PROCESSOR_REGISTRY", ...)`
-
-### ルール
-
-- registry 定義の存在確認と `execute` の単体動作だけに限定する。
-- DOM を使わない。
+- `pipeline.test.ts` が存在する
+- `executePipeline` テストが新シグネチャに追従している
 
 ---
 
-## 13. `apps/random-picker/tests/unit/browser.test.ts` を新規作成
+## Step 12: `unit/processor-registry.test.ts` を作成する
 
-### import 対象
+### 変更してよいファイル
 
-- `copyTextToClipboard`
-- `openUrls`
+- `apps/random-picker/tests/unit/processor-registry.test.ts`
 
-### 旧 `unit.test.ts` から移す describe
+### このステップでやること
+
+旧 `unit.test.ts` から `describe("PROCESSOR_REGISTRY", ...)` を移植する。
+
+### やってはいけないこと
+
+- DOM を使わない
+- 旧 `unit.test.ts` をまだ削除しない
+
+### 完了条件
+
+- `processor-registry.test.ts` が存在する
+- registry 定義と execute の単体動作だけをテストしている
+
+---
+
+## Step 13: `unit/browser.test.ts` と `unit/dom.test.ts` を作成する
+
+### 変更してよいファイル
+
+- `apps/random-picker/tests/unit/browser.test.ts`
+- `apps/random-picker/tests/unit/dom.test.ts`
+
+### このステップでやること
+
+旧 `unit.test.ts` から以下を移植する。
+
+`browser.test.ts`
 
 - `describe("copyTextToClipboard", ...)`
 - `describe("openUrls", ...)`
 
-### ルール
-
-- `navigator.clipboard.writeText`
-- `window.open`
-  をモックして単体責務だけ確認する。
-
----
-
-## 14. `apps/random-picker/tests/unit/dom.test.ts` を新規作成
-
-### import 対象
-
-- `buildProcessorSelectOptions`
-- `createUi`
-- `getElementByIdOrThrow`
-- `renderOutput`
-- `renderPipelineStepList`
-- `PROCESSOR_REGISTRY`
-  ※ option 構築と描画で必要になるため
-
-### 旧 `unit.test.ts` から移す describe
+`dom.test.ts`
 
 - `describe("buildProcessorSelectOptions", ...)`
 - `describe("createUi", ...)`
@@ -590,69 +543,53 @@ apps/random-picker/tests/
 - `describe("renderOutput", ...)`
 - `describe("renderPipelineStepList", ...)`
 
-### 注意
+### やってはいけないこと
 
-- `initApp` のテストはここに入れない。
-- `initApp` は `script.test.ts` に置く。
+- `initApp` のテストを `dom.test.ts` に入れない
+- 旧 `unit.test.ts` をまだ削除しない
 
----
+### 完了条件
 
-## integration テスト分割ルール
-
-## 15. `apps/random-picker/tests/integration/script.test.ts` を新規作成
-
-### import 対象
-
-- `initApp`
-
-### セットアップ
-
-現在の `integration.test.ts` と同様に、`src/index.html` から `<body>` 内 HTML を取り出して `document.body.innerHTML` に入れる方式を使うこと。
-
-### 旧 `integration.test.ts` から移す describe
-
-- `describe("initApp", ...)` のみ
-
-### ルール
-
-- `script.test.ts` では **`initApp` だけを直接テストする**。
-- `bindInputEvent` などをここで直接呼ばない。
-- ここでは起動時の最低限の確認だけを行う。
-- イベント個別挙動は `event.test.ts` へ移す。
+- `browser.test.ts` が存在する
+- `dom.test.ts` が存在する
+- `initApp` テストが混ざっていない
 
 ---
 
-## 16. `apps/random-picker/tests/integration/event.test.ts` を新規作成
+## Step 14: `integration/script.test.ts` を作成する
 
-### import 対象
+### 変更してよいファイル
 
-- `appState`
-- `PROCESSOR_REGISTRY`
-- `buildProcessorSelectOptions`
-- `createUi`
-- `renderPipelineStepList`
-- `bindInputEvent`
-- `bindPipelineEvent`
-- `bindOutputEvent`
+- `apps/random-picker/tests/integration/script.test.ts`
 
-### 重要
+### このステップでやること
 
-`event.test.ts` では **`initApp` を使わない**。
-代わりに次の手順でセットアップすること。
+旧 `integration.test.ts` から **`describe("initApp", ...)` のみ** を移植する。
 
-### `beforeEach` セットアップ手順
+セットアップは現行と同様に、`src/index.html` から `<body>` 内 HTML を取り出して `document.body.innerHTML` に入れる方式を使う。
 
-1. `document.body.innerHTML = bodyHtml`
-2. `appState.pipeline = []`
-3. `const ui = createUi()`
-4. `buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY)`
-5. `renderPipelineStepList(ui.pipelineStepList, appState.pipeline, PROCESSOR_REGISTRY)`
-6. `const deps = { ui, appState, processorRegistry: PROCESSOR_REGISTRY }`
-7. `bindInputEvent(deps)`
-8. `bindPipelineEvent(deps)`
-9. `bindOutputEvent(deps)`
+### やってはいけないこと
 
-### 旧 `integration.test.ts` から移す describe
+- `bindInputEvent` などを直接テストしない
+- イベント個別挙動を書かない
+- 旧 `integration.test.ts` をまだ削除しない
+
+### 完了条件
+
+- `script.test.ts` が存在する
+- `initApp` だけを直接テストしている
+
+---
+
+## Step 15: `integration/event.test.ts` を作成する
+
+### 変更してよいファイル
+
+- `apps/random-picker/tests/integration/event.test.ts`
+
+### このステップでやること
+
+旧 `integration.test.ts` から、イベント系 describe を移植する。
 
 - `describe("ui.pipelineStepList.onclick", ...)`
 - `describe("ui.pipelineStepList.ondragend", ...)`
@@ -666,58 +603,52 @@ apps/random-picker/tests/
 - `describe("ui.outputCopyBtn.onclick", ...)`
 - `describe("ui.outputOpenBtn.onclick", ...)`
 
-### ルール
+`beforeEach` のセットアップ手順は必ず次の順にする。
 
-- ここでは DOM event を発火して連携を見る。
-- ただし Playwright は使わない。
-- ブラウザ外部副作用だけモックする。
-- `initApp` の責務と混ぜない。
+1. `document.body.innerHTML = bodyHtml`
+2. `appState.pipeline = []`
+3. `const ui = createUi()`
+4. `buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY)`
+5. `renderPipelineStepList(ui.pipelineStepList, appState.pipeline, PROCESSOR_REGISTRY)`
+6. `const deps = { ui, appState, processorRegistry: PROCESSOR_REGISTRY }`
+7. `bindInputEvent(deps)`
+8. `bindPipelineEvent(deps)`
+9. `bindOutputEvent(deps)`
 
----
+### やってはいけないこと
 
-## E2E テスト
+- `initApp` を使わない
+- Playwright を使わない
+- ブラウザ外部副作用以外をモックしない
+- 旧 `integration.test.ts` をまだ削除しない
 
-## 17. `apps/random-picker/tests/e2e.spec.ts`
+### 完了条件
 
-### 方針
-
-このファイルは **原則そのまま残す**。
-今回の作業は責務分割であり、UI の見た目・ID・文言・ユーザー挙動は変えないため、E2E のテスト内容は基本的に変更不要。
-
-### 変更してよい範囲
-
-- import 整理
-- lint/format 対応
-- 実装変更に伴って本当に必要な最小修正
-
-### 変更してはいけないこと
-
-- テストケース削除
-- 挙動変更
-- セレクタ変更
-- テスト名称変更（不要な場合）
+- `event.test.ts` が存在する
+- `initApp` を使わずにイベント連携を検証している
 
 ---
 
-## 設定ファイル変更指示
+## Step 16: 設定ファイルと README を更新する
 
-## 18. `package.json` を変更
+### 変更してよいファイル
 
-### 目的
+- `package.json`
+- `vitest.config.ts`
+- `tsconfig.vitest.json`
+- `README.md`
 
-unit / integration / e2e を明確に分けて実行できるようにする。
+### このステップでやること
 
-### 必須変更
+#### `package.json`
 
-`scripts` を次の方針に変更すること。
+`scripts` を次の意味になるよう更新する。
 
-- `test` は **unit → integration → e2e** の順に実行する
-- `test:integration` を追加する
-- `precommit` はそのまま `npm run test` を呼ぶので、結果的に integration も通るようにする
+- `test = test:unit -> test:integration -> test:e2e`
+- `test:integration` を追加
+- `precommit` は引き続き `npm run test` を呼ぶ
 
-### 期待する最終形
-
-少なくとも以下の意味になるようにすること。
+期待する形:
 
 ```json
 {
@@ -736,177 +667,99 @@ unit / integration / e2e を明確に分けて実行できるようにする。
 }
 ```
 
-### 注意
+#### `vitest.config.ts`
 
-- `test:e2e` と `test:e2e:headed` は build 前置きを維持する。
-- `test:unit` と `test:integration` で Playwright を実行しない。
-- `precommit` の順序は崩さない。
-
----
-
-## 19. `vitest.config.ts` を変更
-
-### 目的
-
-新しい unit / integration ディレクトリ構成を認識させる。
-
-### 必須変更
-
-`include` を次の2系統に置き換える。
+`include` を次にする。
 
 - `apps/**/tests/unit/**/*.test.ts`
 - `apps/**/tests/integration/**/*.test.ts`
 
-### `exclude`
+`exclude` には `apps/**/tests/e2e.spec.ts` を残す。
 
-`apps/**/tests/e2e.spec.ts` を除外対象に残す。
+#### `tsconfig.vitest.json`
 
-### 変更してはいけないもの
-
-- `environment: "jsdom"`
-- `globals: true`
-- `environmentOptions.jsdom.runScripts`
-- `environmentOptions.jsdom.resources`
-
-これらは維持すること。
-
----
-
-## 20. `tsconfig.vitest.json` を変更
-
-### 目的
-
-Vitest 用型チェック対象を新しいテスト配置に合わせる。
-
-### 必須変更
-
-`include` を次に変更すること。
+`include` を次にする。
 
 ```json
 ["apps/**/tests/unit/**/*.test.ts", "apps/**/tests/integration/**/*.test.ts"]
 ```
 
-### 維持するもの
+#### `README.md`
 
-- `module: "NodeNext"`
-- `moduleResolution: "NodeNext"`
-- `lib: ["DOM", "ES2020"]`
-- `types: ["node", "vitest/globals"]`
-- `allowImportingTsExtensions: true`
-
----
-
-## 21. `README.md` を変更
-
-### 目的
-
-開発コマンド説明を現状の scripts と一致させる。
-
-### 必須変更点
-
-README の「標準コマンド」「個別コマンド」説明に、次を反映すること。
+コマンド説明だけ最小限更新する。
 
 - `npm run test:integration` を追加
-- `npm run test` が **unit → integration → e2e** を実行する説明へ更新
-- `npm run test:unit` の説明は unit のみ
-- `npm run test:integration` の説明は integration のみ
+- `npm run test` が `unit -> integration -> e2e` を実行する説明に更新
+- `npm run test:unit` は unit のみ
+- `npm run test:integration` は integration のみ
 
-### 注意
+### やってはいけないこと
 
-README のアプリ説明や一般説明は今回は主目的ではない。
-**コマンド説明だけ最小限更新**でよい。
+- `README.md` のアプリ説明を広範囲に書き換えない
+- `build.ts` / `playwright.config.ts` / 他 tsconfig を触らない
 
----
+### 完了条件
 
-## 22. 変更しない設定ファイル
-
-以下のファイルは **今回の作業では変更しない**。
-
-- `apps/random-picker/build/build.ts`
-- `playwright.config.ts`
-- `tsconfig.browser.json`
-- `tsconfig.playwright.json`
-- `tsconfig.node.json`
-
-### 理由
-
-- build の entry は引き続き `src/script.ts`
-- E2E ファイルは `tests/e2e.spec.ts` のまま
-- browser / playwright / node の include 範囲は今回の構成変更で不足しない
+- 4 ファイルだけが更新されている
+- 新テスト構成に設定が追従している
 
 ---
 
-## import / export の厳密ルール
+## Step 17: 旧テストファイルを削除する
 
-## 23. ソース import ルール
+### 変更してよいファイル
 
-### `script.ts`
+- `apps/random-picker/tests/unit.test.ts`
+- `apps/random-picker/tests/integration.test.ts`
 
-次以外を import しないこと。
+### このステップでやること
 
-- `type.ts`
-- `state.ts`
-- `processor-registry.ts`
-- `dom.ts`
-- `event.ts`
+上記 2 ファイルを削除する。
 
-### `event.ts`
+### 削除前の前提
 
-`state.ts` と `processor-registry.ts` を import しないこと。
-`deps` から受け取ること。
+- 新しい unit テスト 5 ファイルがある
+- 新しい integration テスト 2 ファイルがある
 
-### `pipeline.ts`
+### やってはいけないこと
 
-`processor-registry.ts` を import しないこと。
+- 他のファイルをついでに消さない
+- `e2e.spec.ts` を触らない
 
-### `dom.ts`
+### 完了条件
 
-`event.ts`, `state.ts`, `script.ts` を import しないこと。
-
----
-
-## 24. テスト import ルール
-
-### unit
-
-対象モジュールだけを import すること。
-`script.ts` からまとめて import しないこと。
-
-### integration
-
-- `script.test.ts` は `script.ts` を import
-- `event.test.ts` は `event.ts` とセットアップに必要な周辺だけを import
-- `script.test.ts` と `event.test.ts` の責務を混ぜない
-
-### e2e
-
-既存のまま。source import を追加しない。
+- `unit.test.ts` が存在しない
+- `integration.test.ts` が存在しない
+- `e2e.spec.ts` は残っている
 
 ---
 
-## 実装順序
+## Step 18: 最終検証だけを行う
 
-以下の順番で進めること。これ以外の順だと壊しやすい。
+### 変更してよいファイル
 
-1. `type.ts` を作成
-2. `state.ts` を作成
-3. `processor.ts` を作成
-4. `pipeline.ts` を作成
-   ※ `executePipeline` を registry 引数化
-5. `processor-registry.ts` を作成
-6. `browser.ts` を作成
-7. `dom.ts` を作成
-8. `event.ts` を作成
-9. `script.ts` を薄いエントリーポイントへ置換
-10. 既存 unit テストを5ファイルへ分割
-11. 既存 integration テストを2ファイルへ分割
-12. `package.json` / `vitest.config.ts` / `tsconfig.vitest.json` / `README.md` を更新
-13. 旧 `unit.test.ts` と `integration.test.ts` を削除
-14. `npm run tscheck`
-15. `npm run test:unit`
-16. `npm run test:integration`
-17. `npm run test:e2e`
-18. `npm run precommit`
+- 原則なし
+
+### このステップでやること
+
+次の順にコマンドを実行して結果を報告する。
+
+1. `npm run tscheck`
+2. `npm run test:unit`
+3. `npm run test:integration`
+4. `npm run test:e2e`
+5. `npm run precommit`
+
+### やってはいけないこと
+
+- このステップを理由に仕様変更しない
+- テストを弱めない
+- 通すためだけの暫定修正を入れない
+
+### 完了条件
+
+- 上記 5 コマンドの成否が報告されている
+- 失敗した場合は、失敗箇所だけをそのまま報告して停止する
 
 ---
 
@@ -926,59 +779,26 @@ README のアプリ説明や一般説明は今回は主目的ではない。
 
 ---
 
-## 完了条件
+## 最終確認チェックリスト
 
-以下を **すべて**満たしたら完了。
-
-### ソース構成
-
-- `script.ts` が初期化専用になっている
-- 型定義が `type.ts` に集約されている
-- `appState` が `state.ts` にのみ存在する
-- `PROCESSOR_REGISTRY` が `processor-registry.ts` にのみ存在する
-- `event.ts` が bind\* 方式 + deps 方式になっている
-- `pipeline.ts` が registry 非依存になっている
-
-### テスト構成
-
-- `tests/unit/` 配下に5ファイルある
-- `tests/integration/` 配下に2ファイルある
-- `tests/unit.test.ts` が存在しない
-- `tests/integration.test.ts` が存在しない
-- `e2e.spec.ts` は残っている
-
-### コマンド
-
-- `npm run tscheck` 成功
-- `npm run test:unit` 成功
-- `npm run test:integration` 成功
-- `npm run test:e2e` 成功
-- `npm run precommit` 成功
+1. `apps/random-picker/src/script.ts` に型定義・`appState`・`PROCESSOR_REGISTRY`・純粋関数・DOM関数・browser関数が残っていない
+2. `apps/random-picker/src/event.ts` に `import { appState }` が存在しない
+3. `apps/random-picker/src/event.ts` に `import { PROCESSOR_REGISTRY }` が存在しない
+4. `apps/random-picker/src/pipeline.ts` に `import { PROCESSOR_REGISTRY }` が存在しない
+5. `apps/random-picker/tests/unit/` の各ファイルが `../src/script.ts` を import していない
+6. `apps/random-picker/tests/integration/script.test.ts` は `initApp` のみを主対象にしている
+7. `apps/random-picker/tests/integration/event.test.ts` は `initApp` を使っていない
+8. `README.md` に `test:integration` の説明がある
 
 ---
 
-## 最終確認用チェック項目
+## 期待される最終状態
 
-作業後に以下を目視確認すること。
-
-1. `apps/random-picker/src/script.ts` に `type` 定義・`appState`・`PROCESSOR_REGISTRY`・純粋関数・DOM関数・browser関数が残っていないこと
-2. `apps/random-picker/src/event.ts` に `import { appState }` が存在しないこと
-3. `apps/random-picker/src/event.ts` に `import { PROCESSOR_REGISTRY }` が存在しないこと
-4. `apps/random-picker/src/pipeline.ts` に `import { PROCESSOR_REGISTRY }` が存在しないこと
-5. `apps/random-picker/tests/unit/` の各ファイルが `../src/script.ts` を import していないこと
-6. `apps/random-picker/tests/integration/script.test.ts` は `initApp` のみを主対象にしていること
-7. `apps/random-picker/tests/integration/event.test.ts` は `initApp` を使っていないこと
-8. `README.md` に `test:integration` の説明があること
-
----
-
-## 期待される最終状態の要約
-
-- `script.ts` は細くなる
-- `event.ts` はイベント結線専用になる
-- `processor.ts` と `pipeline.ts` が分かれ、関心事が明確になる
-- unit と integration がディレクトリ単位で分離される
-- settings / scripts / typecheck 対象が新構成に追従する
+- `script.ts` は初期化専用で細い
+- `event.ts` はイベント結線専用
+- `processor.ts` と `pipeline.ts` が分離されている
+- unit と integration がディレクトリ単位で分離されている
+- 設定ファイルが新構成に追従している
 - UI と仕様は変わらない
 
-この指示書どおりに実装し、**余計な変更を一切入れずに**完了させること。
+この指示書どおりに、**1 ステップずつ、余計な変更を一切入れずに** 実施すること。
