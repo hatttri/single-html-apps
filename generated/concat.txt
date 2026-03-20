@@ -3816,76 +3816,105 @@ FILE: apps/random-picker/tests/unit/browser.test.ts
 import { describe, expect, test, vi } from "vitest";
 import { copyTextToClipboard, openUrls } from "../../src/browser.ts";
 
-// パターン整理
-// 01. 文字数／＝０文字／≧１文字
-//
-// パターン一覧
-// ○ 01 文字数＝０文字
-// ○ 02 文字数≧１文字
 describe("copyTextToClipboard", () => {
-  test("01 文字数＝０文字", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(window.navigator, "clipboard", {
-      configurable: true,
-      value: { writeText },
+  describe("正常系", () => {
+    test("文字列をコピーする", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(window.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
+
+      await copyTextToClipboard("ランダムピッカー");
+
+      expect(writeText).toHaveBeenCalledWith("ランダムピッカー");
     });
-
-    await copyTextToClipboard("");
-
-    expect(writeText).toHaveBeenCalledWith("");
   });
 
-  test("02 文字数≧１文字", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(window.navigator, "clipboard", {
-      configurable: true,
-      value: { writeText },
+  describe("異常系", () => {
+    test("文字数が0文字", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(window.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
+
+      await copyTextToClipboard("");
+
+      expect(writeText).toHaveBeenCalledWith("");
     });
 
-    await copyTextToClipboard("A");
+    test("文字数が1文字", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(window.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
 
-    expect(writeText).toHaveBeenCalledWith("A");
+      await copyTextToClipboard("A");
+
+      expect(writeText).toHaveBeenCalledWith("A");
+    });
   });
 });
 
-// パターン整理
-// 01. 要素数／＝０件／≧１件
-// 02. 文字数／＝０文字／≧１文字
-//
-// パターン一覧
-// ○ 01 要素数＝０件
-// ○ 02 要素数≧１件／文字数＝０文字
-// ○ 03 要素数≧１件／文字数≧１文字
 describe("openUrls", () => {
-  test("01 要素数＝０件", () => {
-    const open = vi.fn<typeof window.open>(() => null);
-    window.open = open;
+  describe("正常系", () => {
+    test("URLを開く", () => {
+      const open = vi.fn<typeof window.open>(() => null);
+      window.open = open;
 
-    openUrls([]);
+      openUrls(["https://example.com", "https://openai.com"]);
 
-    expect(open).not.toHaveBeenCalled();
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "https://openai.com", "_blank");
+    });
   });
 
-  test("02 要素数≧１件／文字数＝０文字", () => {
-    const open = vi.fn<typeof window.open>(() => null);
-    window.open = open;
+  describe("境界系", () => {
+    test("URLが0件", () => {
+      const open = vi.fn<typeof window.open>(() => null);
+      window.open = open;
 
-    openUrls(["", ""]);
+      openUrls([]);
 
-    expect(open).toHaveBeenCalledTimes(2);
-    expect(open).toHaveBeenNthCalledWith(1, "", "_blank");
-    expect(open).toHaveBeenNthCalledWith(2, "", "_blank");
+      expect(open).not.toHaveBeenCalled();
+    });
+
+    test("URLが1件", () => {
+      const open = vi.fn<typeof window.open>(() => null);
+      window.open = open;
+
+      openUrls(["https://example.com"]);
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+    });
   });
 
-  test("03 要素数≧１件／文字数≧１文字", () => {
-    const open = vi.fn<typeof window.open>(() => null);
-    window.open = open;
+  describe("異常系", () => {
+    test("URLが空文字列", () => {
+      const open = vi.fn<typeof window.open>(() => null);
+      window.open = open;
 
-    openUrls(["a", "b"]);
+      openUrls(["", ""]);
 
-    expect(open).toHaveBeenCalledTimes(2);
-    expect(open).toHaveBeenNthCalledWith(1, "a", "_blank");
-    expect(open).toHaveBeenNthCalledWith(2, "b", "_blank");
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "", "_blank");
+    });
+
+    test("URLが異常", () => {
+      const open = vi.fn<typeof window.open>(() => null);
+      window.open = open;
+
+      openUrls(["abc", "xyz"]);
+
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "abc", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "xyz", "_blank");
+    });
   });
 });
 
