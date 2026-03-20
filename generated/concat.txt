@@ -8672,7 +8672,11 @@ FILE: tsconfig.vitest.json
     "types": ["node", "vitest/globals"],
     "allowImportingTsExtensions": true
   },
-  "include": ["apps/**/tests/unit.test.ts", "apps/**/tests/integration.test.ts"]
+  "include": [
+    "apps/**/tests/unit/*.test.ts",
+    "apps/**/tests/unit.test.ts",
+    "apps/**/tests/integration.test.ts"
+  ]
 }
 
 
@@ -8687,6 +8691,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: [
+      "apps/**/tests/unit/*.test.ts",
       "apps/**/tests/unit.test.ts",
       "apps/**/tests/integration.test.ts",
     ],
