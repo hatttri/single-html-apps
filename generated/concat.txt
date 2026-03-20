@@ -4004,68 +4004,70 @@ describe("createUi", () => {
   });
 });
 
-// パターン整理
-// 01. 対象要素／なし／あり
-//
-// パターン一覧
-// ○ 01 対象要素なし
-// ○ 02 対象要素あり
 describe("getElementByIdOrThrow", () => {
-  test("01 対象要素なし", () => {
-    const root = document.implementation.createHTMLDocument("");
+  describe("正常系", () => {
+    test("対象要素あり", () => {
+      const root = document.implementation.createHTMLDocument("");
+      const button = root.createElement("button");
+      button.id = "target-button";
+      root.body.append(button);
 
-    expect(() => getElementByIdOrThrow(root, "missing-id")).toThrowError(
-      new Error("Element not found: #missing-id"),
-    );
+      expect(
+        getElementByIdOrThrow<HTMLButtonElement>(root, "target-button"),
+      ).toBe(button);
+    });
   });
 
-  test("02 対象要素あり", () => {
-    const root = document.implementation.createHTMLDocument("");
-    const button = root.createElement("button");
-    button.id = "target-button";
-    root.body.append(button);
+  describe("異常系", () => {
+    test("対象要素なし", () => {
+      const root = document.implementation.createHTMLDocument("");
 
-    expect(
-      getElementByIdOrThrow<HTMLButtonElement>(root, "target-button"),
-    ).toBe(button);
+      expect(() => getElementByIdOrThrow(root, "missing-id")).toThrowError(
+        new Error("Element not found: #missing-id"),
+      );
+    });
   });
 });
 
-// describe("initApp", () => {});
-
-// パターン整理
-// 01. 文字数／＝０文字／≧１文字
-//
-// パターン一覧
-// ○ 01 文字数＝０文字
-// ○ 02 文字数≧１文字
 describe("renderOutput", () => {
-  test("01 文字数＝０文字", () => {
-    const dummyDiv = document.createElement("textarea");
+  describe("正常系", () => {
+    test("文字列を出力する", () => {
+      const dummyDiv = document.createElement("textarea");
 
-    renderOutput(dummyDiv, "");
+      renderOutput(dummyDiv, "テスト結果");
 
-    expect(dummyDiv.value).toBe("");
+      expect(dummyDiv.value).toBe("テスト結果");
+    });
   });
 
-  test("02 文字数≧１文字", () => {
-    const dummyDiv = document.createElement("textarea");
+  describe("境界系", () => {
+    test("空文字列を出力する", () => {
+      const dummyDiv = document.createElement("textarea");
 
-    renderOutput(dummyDiv, "テスト結果");
+      renderOutput(dummyDiv, "");
 
-    expect(dummyDiv.value).toBe("テスト結果");
+      expect(dummyDiv.value).toBe("");
+    });
   });
 });
 
+// テストケース一覧
+// - steps.length=0 / 空メッセージを表示する
+// - steps.length=1 / registryにstep.idがない / 描画しない
+// - steps.length=1 / registryにstep.idがある / paramsSchemaがない / pipeline-step-paramsにinputを生成しない
+// - steps.length=1 / registryにstep.idがある / paramsSchemaが1件ある / step.paramsがない / defaultを使用する
+// - steps.length=1 / registryにstep.idがある / paramsSchemaが1件ある / step.paramsがある / step.paramsを優先する
+// - steps.length=1 / registryにstep.idがある / paramsSchemaが2件ある
+// - steps.length=2 / 描画する
 describe("renderPipelineStepList", () => {
   describe("正常系", () => {
-    test("steps空のとき空メッセージが表示される", () => {
+    test("steps.length=0 / 空メッセージを表示する", () => {
       const div = document.createElement("div");
       renderPipelineStepList(div, [], {});
       expect(div.querySelector(".pipeline-empty-msg")).not.toBeNull();
     });
 
-    test("steps1件のときアイテムが1件描画される", () => {
+    test("steps.length=1 / registryにstep.idがない / 描画しない", () => {
       const div = document.createElement("div");
       const registry = {
         trim: {
@@ -4075,14 +4077,31 @@ describe("renderPipelineStepList", () => {
           execute: (i: any) => i,
         },
       };
-      renderPipelineStepList(div, [{ id: "trim" }], registry);
-      expect(div.querySelectorAll(".pipeline-step-item")).toHaveLength(1);
-      expect(div.querySelector(".pipeline-step-name")?.textContent).toBe(
-        "Trim",
-      );
+
+      renderPipelineStepList(div, [{ id: "missing" }], registry);
+      expect(div.querySelector(".pipeline-step-item")).toBeNull();
     });
 
-    test("paramsSchemaありのとき入力欄が生成される", () => {
+    test("steps.length=1 / registryにstep.idがある / paramsSchemaがない / pipeline-step-paramsにinputを生成しない", () => {
+      const div = document.createElement("div");
+      const registry = {
+        trim: {
+          id: "trim",
+          name: "Trim",
+          description: "desc",
+          execute: (i: any) => i,
+        },
+      };
+
+      renderPipelineStepList(div, [{ id: "trim" }], registry);
+
+      expect(div.querySelector(".pipeline-step-params")).not.toBeNull();
+      expect(
+        div.querySelector(".pipeline-step-params")?.querySelector("input"),
+      ).toBeNull();
+    });
+
+    test("steps.length=1 / registryにstep.idがある / paramsSchemaが1件ある / step.paramsがない / defaultを使用する", () => {
       const div = document.createElement("div");
       const registry = {
         pickRandom: {
@@ -4101,6 +4120,70 @@ describe("renderPipelineStepList", () => {
       ) as HTMLInputElement;
       expect(input).not.toBeNull();
       expect(input.value).toBe("1");
+    });
+
+    test("steps.length=1 / registryにstep.idがある / paramsSchemaが1件ある / step.paramsがある / step.paramsを優先する", () => {
+      const div = document.createElement("div");
+      const registry = {
+        pickRandom: {
+          id: "pickRandom",
+          name: "Pick",
+          description: "desc",
+          paramsSchema: {
+            count: { type: "number" as const, label: "Count", default: 1 },
+          },
+          execute: (i: any) => i,
+        },
+      };
+
+      renderPipelineStepList(
+        div,
+        [{ id: "pickRandom", params: { count: 3 } }],
+        registry,
+      );
+
+      const input = div.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      expect(input).not.toBeNull();
+      expect(input.value).toBe("3");
+    });
+
+    test("steps.length=1 / registryにstep.idがある / paramsSchemaが2件ある", () => {
+      const div = document.createElement("div");
+      const registry = {
+        pickRandom: {
+          id: "pickRandom",
+          name: "Pick",
+          description: "desc",
+          paramsSchema: {
+            count: { type: "number" as const, label: "Count", default: 1 },
+            seed: { type: "string" as const, label: "Seed", default: "abc" },
+          },
+          execute: (i: any) => i,
+        },
+      };
+
+      renderPipelineStepList(div, [{ id: "pickRandom" }], registry);
+
+      const inputs = div.querySelectorAll("input");
+      expect(inputs).toHaveLength(2);
+      expect((inputs[0] as HTMLInputElement).value).toBe("1");
+      expect((inputs[1] as HTMLInputElement).value).toBe("abc");
+    });
+
+    test("steps.length=2 / 描画する", () => {
+      const div = document.createElement("div");
+      const registry = {
+        trim: {
+          id: "trim",
+          name: "Trim",
+          description: "desc",
+          execute: (i: any) => i,
+        },
+      };
+      renderPipelineStepList(div, [{ id: "trim" }, { id: "trim" }], registry);
+      expect(div.querySelectorAll(".pipeline-step-item")).toHaveLength(2);
     });
   });
 });
