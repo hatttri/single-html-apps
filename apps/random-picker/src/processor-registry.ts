@@ -1,11 +1,11 @@
-import { splitByNewline } from "./pipeline";
+import type { ProcessorRegistry } from "./type.ts";
+import { splitByNewline } from "./pipeline.ts";
 import {
   filterEmptyStrings,
   pickRandomItems,
   removeExcludedItems,
   trimStrings,
-} from "./processor";
-import type { ProcessorRegistry } from "./type.ts";
+} from "./processor.ts";
 
 /** プロセッサの登録リスト */
 export const PROCESSOR_REGISTRY: ProcessorRegistry = {

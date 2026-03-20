@@ -1,33 +1,30 @@
 import { describe, expect, test, vi } from "vitest";
+import { copyTextToClipboard, openUrls } from "../src/browser.ts";
 import {
-  // 変数定義
-  AppState,
-  PROCESSOR_REGISTRY,
-  // 純粋ロジック
-  addPipelineStep,
-  applyStringArrayProcessors,
-  executePipeline,
-  filterEmptyStrings,
-  joinByNewline,
-  movePipelineStep,
-  pickRandomItems,
-  removeExcludedItems,
-  removePipelineStep,
-  resolveParams,
-  splitByNewline,
-  trimStrings,
-  updatePipelineStepParam,
-  // ブラウザ副作用（非DOM）
-  copyTextToClipboard,
-  openUrls,
-  // DOM/UI
   buildProcessorSelectOptions,
   createUi,
   getElementByIdOrThrow,
-  initApp,
   renderOutput,
   renderPipelineStepList,
-} from "../src/script.ts";
+} from "../src/dom.ts";
+import {
+  addPipelineStep,
+  applyStringArrayProcessors,
+  executePipeline,
+  joinByNewline,
+  movePipelineStep,
+  removePipelineStep,
+  resolveParams,
+  splitByNewline,
+  updatePipelineStepParam,
+} from "../src/pipeline.ts";
+import { PROCESSOR_REGISTRY } from "../src/processor-registry.ts";
+import {
+  filterEmptyStrings,
+  pickRandomItems,
+  removeExcludedItems,
+  trimStrings,
+} from "../src/processor.ts";
 
 describe("Random Picker Unit Tests", () => {
   //
@@ -156,6 +153,7 @@ describe("Random Picker Unit Tests", () => {
               "A\nB\nC",
               [{ id: "pickRandom", params: { count: 2 } }],
               context,
+              PROCESSOR_REGISTRY,
             ),
           ).toBe("A\nB");
         } finally {
@@ -167,9 +165,14 @@ describe("Random Picker Unit Tests", () => {
         const context = { previousOutput: "" };
         const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
         try {
-          expect(executePipeline("A\nB", [{ id: "pickRandom" }], context)).toBe(
-            "A",
-          );
+          expect(
+            executePipeline(
+              "A\nB",
+              [{ id: "pickRandom" }],
+              context,
+              PROCESSOR_REGISTRY,
+            ),
+          ).toBe("A");
         } finally {
           randomSpy.mockRestore();
         }
@@ -179,28 +182,39 @@ describe("Random Picker Unit Tests", () => {
     describe("境界系", () => {
       test("inputTextが1行", () => {
         const context = { previousOutput: "" };
-        expect(executePipeline("A", [], context)).toBe("A");
+        expect(executePipeline("A", [], context, PROCESSOR_REGISTRY)).toBe("A");
       });
 
       test("inputTextが2行", () => {
         const context = { previousOutput: "" };
-        expect(executePipeline("A\nB", [], context)).toBe("A\nB");
+        expect(executePipeline("A\nB", [], context, PROCESSOR_REGISTRY)).toBe(
+          "A\nB",
+        );
       });
 
       test("steps空", () => {
         const context = { previousOutput: "" };
-        expect(executePipeline("A\nB", [], context)).toBe("A\nB");
+        expect(executePipeline("A\nB", [], context, PROCESSOR_REGISTRY)).toBe(
+          "A\nB",
+        );
       });
 
       test("stepsが1件（trimステップ単独）", () => {
         const context = { previousOutput: "" };
-        expect(executePipeline(" A ", [{ id: "trim" }], context)).toBe("A");
+        expect(
+          executePipeline(" A ", [{ id: "trim" }], context, PROCESSOR_REGISTRY),
+        ).toBe("A");
       });
 
       test("stepsが1件（filterEmptyステップ単独）", () => {
         const context = { previousOutput: "" };
         expect(
-          executePipeline("A\n\nB", [{ id: "filterEmpty" }], context),
+          executePipeline(
+            "A\n\nB",
+            [{ id: "filterEmpty" }],
+            context,
+            PROCESSOR_REGISTRY,
+          ),
         ).toBe("A\nB");
       });
     });
@@ -208,7 +222,14 @@ describe("Random Picker Unit Tests", () => {
     describe("異常系", () => {
       test("存在しないidが含まれる場合はスキップされる", () => {
         const context = { previousOutput: "" };
-        expect(executePipeline("A", [{ id: "unknown" }], context)).toBe("A");
+        expect(
+          executePipeline(
+            "A",
+            [{ id: "unknown" }],
+            context,
+            PROCESSOR_REGISTRY,
+          ),
+        ).toBe("A");
       });
     });
   });

@@ -1,5 +1,6 @@
-import { copyTextToClipboard, openUrls } from "./browser";
-import { renderOutput, renderPipelineStepList } from "./dom";
+import type { EventDeps, PipelineContext } from "./type.ts";
+import { copyTextToClipboard, openUrls } from "./browser.ts";
+import { renderOutput, renderPipelineStepList } from "./dom.ts";
 import {
   addPipelineStep,
   applyStringArrayProcessors,
@@ -8,9 +9,8 @@ import {
   removePipelineStep,
   splitByNewline,
   updatePipelineStepParam,
-} from "./pipeline";
-import { filterEmptyStrings, trimStrings } from "./processor";
-import type { EventDeps, PipelineContext } from "./type.ts";
+} from "./pipeline.ts";
+import { filterEmptyStrings, trimStrings } from "./processor.ts";
 
 /**
  * 入力欄まわりのイベントを結線する

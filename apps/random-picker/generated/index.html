@@ -440,172 +440,10 @@
         // apps/random-picker/src/script.ts
         var script_exports = {};
         __export(script_exports, {
-          PROCESSOR_REGISTRY: () => PROCESSOR_REGISTRY,
-          addPipelineStep: () => addPipelineStep,
-          applyStringArrayProcessors: () => applyStringArrayProcessors,
-          buildProcessorSelectOptions: () => buildProcessorSelectOptions,
-          copyTextToClipboard: () => copyTextToClipboard,
-          createUi: () => createUi,
-          executePipeline: () => executePipeline,
-          filterEmptyStrings: () => filterEmptyStrings,
-          getElementByIdOrThrow: () => getElementByIdOrThrow,
           initApp: () => initApp,
-          joinByNewline: () => joinByNewline,
-          movePipelineStep: () => movePipelineStep,
-          openUrls: () => openUrls,
-          pickRandomItems: () => pickRandomItems,
-          removeExcludedItems: () => removeExcludedItems,
-          removePipelineStep: () => removePipelineStep,
-          renderOutput: () => renderOutput,
-          renderPipelineStepList: () => renderPipelineStepList,
-          resolveParams: () => resolveParams,
-          splitByNewline: () => splitByNewline,
-          trimStrings: () => trimStrings,
-          updatePipelineStepParam: () => updatePipelineStepParam,
         });
-        var appState = {
-          pipeline: [],
-        };
-        var PROCESSOR_REGISTRY = {
-          excludePrevious: {
-            id: "excludePrevious",
-            name: "\u524D\u56DE\u51FA\u529B\u3092\u9664\u5916",
-            description:
-              "\u524D\u56DE\u306E\u51FA\u529B\u7D50\u679C\u306B\u542B\u307E\u308C\u308B\u9805\u76EE\u3092\u9664\u5916\u3057\u307E\u3059",
-            execute: (items, _params, context) =>
-              removeExcludedItems(
-                items,
-                splitByNewline(context.previousOutput),
-              ),
-          },
-          filterEmpty: {
-            id: "filterEmpty",
-            name: "\u7A7A\u884C\u9664\u5916",
-            description:
-              "\u7A7A\u306E\u884C\u3092\u9664\u5916\u3057\u307E\u3059",
-            execute: (items) => filterEmptyStrings(items),
-          },
-          pickRandom: {
-            id: "pickRandom",
-            name: "\u30E9\u30F3\u30C0\u30E0\u62BD\u51FA",
-            description:
-              "\u6307\u5B9A\u3057\u305F\u4EF6\u6570\u3060\u3051\u30E9\u30F3\u30C0\u30E0\u306B\u9078\u3073\u307E\u3059",
-            paramsSchema: {
-              count: {
-                type: "number",
-                label: "\u62BD\u51FA\u4EF6\u6570",
-                default: 1,
-              },
-            },
-            execute: (items, params) => pickRandomItems(items, params["count"]),
-          },
-          trim: {
-            id: "trim",
-            name: "\u7A7A\u767D\u524A\u9664",
-            description:
-              "\u5404\u884C\u306E\u524D\u5F8C\u306E\u7A7A\u767D\u3092\u524A\u9664\u3057\u307E\u3059",
-            execute: (items) => trimStrings(items),
-          },
-        };
-        function addPipelineStep(steps, newStep) {
-          return [...steps, newStep];
-        }
-        function applyStringArrayProcessors(values, processors) {
-          return processors.reduce(
-            (currentValues, processor) => processor(currentValues),
-            values,
-          );
-        }
-        function executePipeline(inputText, steps, context) {
-          let currentItems = splitByNewline(inputText);
-          for (const step of steps) {
-            const def = PROCESSOR_REGISTRY[step.id];
-            if (!def) continue;
-            const params = resolveParams(def, step.params);
-            currentItems = def.execute(currentItems, params, context);
-          }
-          return joinByNewline(currentItems);
-        }
-        function filterEmptyStrings(values) {
-          return values.filter((value) => value !== "");
-        }
-        function joinByNewline(values) {
-          return values.join("\n");
-        }
-        function movePipelineStep(steps, fromIndex, toIndex) {
-          const newSteps = [...steps];
-          const [removed] = newSteps.splice(fromIndex, 1);
-          newSteps.splice(toIndex, 0, removed);
-          return newSteps;
-        }
-        function pickRandomItems(items, count) {
-          if (!Number.isSafeInteger(count) || count < 0) {
-            throw new RangeError("count must be a non-negative safe integer");
-          }
-          const pickedCount = Math.min(count, items.length);
-          const allIndexes = items.map((_, itemIndex) => itemIndex);
-          for (
-            let currentIndex = 0;
-            currentIndex < pickedCount;
-            currentIndex += 1
-          ) {
-            const randomIndex =
-              currentIndex +
-              Math.floor(Math.random() * (allIndexes.length - currentIndex));
-            [allIndexes[currentIndex], allIndexes[randomIndex]] = [
-              allIndexes[randomIndex],
-              allIndexes[currentIndex],
-            ];
-          }
-          const pickedIndexes = allIndexes
-            .slice(0, pickedCount)
-            .sort((left, right) => {
-              return left - right;
-            });
-          return pickedIndexes.map((itemIndex) => items[itemIndex]);
-        }
-        function removeExcludedItems(items, excludedItems) {
-          const excludedItemSet = new Set(excludedItems);
-          return items.filter((item) => !excludedItemSet.has(item));
-        }
-        function removePipelineStep(steps, index) {
-          return steps.filter((_, i) => i !== index);
-        }
-        function resolveParams(def, stepParams) {
-          const defaults = {};
-          if (def.paramsSchema) {
-            for (const [key, field] of Object.entries(def.paramsSchema)) {
-              defaults[key] = field.default;
-            }
-          }
-          return { ...defaults, ...stepParams };
-        }
-        function splitByNewline(sourceText) {
-          return sourceText.split("\n");
-        }
-        function trimStrings(values) {
-          return values.map((value) => value.trim());
-        }
-        function updatePipelineStepParam(steps, index, key, value) {
-          return steps.map((step, i) => {
-            if (i !== index) return step;
-            return {
-              ...step,
-              params: {
-                ...(step.params ?? {}),
-                [key]: value,
-              },
-            };
-          });
-        }
-        async function copyTextToClipboard(value) {
-          await navigator.clipboard.writeText(value);
-        }
-        function openUrls(urls) {
-          urls.forEach((url) => {
-            window.open(url, "_blank");
-          });
-        }
+
+        // apps/random-picker/src/dom.ts
         function buildProcessorSelectOptions(selectEl, registry) {
           const sortedKeys = Object.keys(registry).sort();
           selectEl.innerHTML = "";
@@ -637,147 +475,6 @@
             throw new Error(`Element not found: #${id}`);
           }
           return element;
-        }
-        function initApp(ui = createUi()) {
-          appState.pipeline = [];
-          buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY);
-          renderPipelineStepList(
-            ui.pipelineStepList,
-            appState.pipeline,
-            PROCESSOR_REGISTRY,
-          );
-          let draggingIndex = null;
-          ui.pipelineStepList.onclick = (e) => {
-            const target = e.target;
-            const deleteBtn = target.closest(".pipeline-delete-btn");
-            if (deleteBtn) {
-              const index = parseInt(deleteBtn.dataset.index ?? "-1", 10);
-              if (index >= 0) {
-                appState.pipeline = removePipelineStep(
-                  appState.pipeline,
-                  index,
-                );
-                renderPipelineStepList(
-                  ui.pipelineStepList,
-                  appState.pipeline,
-                  PROCESSOR_REGISTRY,
-                );
-              }
-            }
-          };
-          ui.pipelineStepList.ondragend = (e) => {
-            const target = e.target;
-            const item = target.closest(".pipeline-step-item");
-            if (item) {
-              item.classList.remove("dragging");
-            }
-            draggingIndex = null;
-          };
-          ui.pipelineStepList.ondragover = (e) => {
-            e.preventDefault();
-            const target = e.target;
-            const overItem = target.closest(".pipeline-step-item");
-            if (overItem && draggingIndex !== null) {
-              const overIndex = parseInt(overItem.dataset.index ?? "-1", 10);
-              if (overIndex !== draggingIndex) {
-                appState.pipeline = movePipelineStep(
-                  appState.pipeline,
-                  draggingIndex,
-                  overIndex,
-                );
-                draggingIndex = overIndex;
-                renderPipelineStepList(
-                  ui.pipelineStepList,
-                  appState.pipeline,
-                  PROCESSOR_REGISTRY,
-                );
-              }
-            }
-          };
-          ui.pipelineStepList.ondragstart = (e) => {
-            const target = e.target;
-            const item = target.closest(".pipeline-step-item");
-            if (item) {
-              draggingIndex = parseInt(item.dataset.index ?? "-1", 10);
-              item.classList.add("dragging");
-              if (e.dataTransfer) {
-                e.dataTransfer.effectAllowed = "move";
-              }
-            }
-          };
-          ui.pipelineStepList.oninput = (e) => {
-            const target = e.target;
-            if (
-              target.tagName === "INPUT" &&
-              target.dataset.index &&
-              target.dataset.key
-            ) {
-              const index = parseInt(target.dataset.index, 10);
-              const key = target.dataset.key;
-              const value =
-                target.type === "number"
-                  ? parseFloat(target.value)
-                  : target.value;
-              appState.pipeline = updatePipelineStepParam(
-                appState.pipeline,
-                index,
-                key,
-                value,
-              );
-            }
-          };
-          ui.addStepBtn.onclick = () => {
-            const processorId = ui.processorSelect.value;
-            const def = PROCESSOR_REGISTRY[processorId];
-            if (!def) return;
-            appState.pipeline = addPipelineStep(appState.pipeline, {
-              id: processorId,
-            });
-            renderPipelineStepList(
-              ui.pipelineStepList,
-              appState.pipeline,
-              PROCESSOR_REGISTRY,
-            );
-          };
-          ui.pipelineRunBtn.onclick = () => {
-            const inputText = ui.input.value;
-            const context = {
-              previousOutput: ui.output.value ?? "",
-            };
-            const outputText = executePipeline(
-              inputText,
-              appState.pipeline,
-              context,
-            );
-            renderOutput(ui.output, outputText);
-          };
-          ui.inputCopyBtn.onclick = async () => {
-            const inputText = ui.input.value;
-            await copyTextToClipboard(inputText);
-          };
-          ui.inputOpenBtn.onclick = () => {
-            const inputText = ui.input.value;
-            const inputLines = splitByNewline(inputText);
-            const urls = applyStringArrayProcessors(inputLines, [
-              trimStrings,
-              filterEmptyStrings,
-            ]);
-            openUrls(urls);
-          };
-          ui.outputCopyBtn.onclick = async () => {
-            const outputText = ui.output.value ?? "";
-            await copyTextToClipboard(outputText);
-          };
-          ui.outputOpenBtn.onclick = () => {
-            const outputText = ui.output.value ?? "";
-            const outputLines = splitByNewline(outputText);
-            const urls = applyStringArrayProcessors(outputLines, [
-              trimStrings,
-              filterEmptyStrings,
-            ]);
-            openUrls(urls);
-          };
-          return ui;
         }
         function renderOutput(element, value) {
           element.value = value;
@@ -833,6 +530,368 @@
             item.appendChild(deleteBtn);
             listEl.appendChild(item);
           });
+        }
+
+        // apps/random-picker/src/browser.ts
+        async function copyTextToClipboard(value) {
+          await navigator.clipboard.writeText(value);
+        }
+        function openUrls(urls) {
+          urls.forEach((url) => {
+            window.open(url, "_blank");
+          });
+        }
+
+        // apps/random-picker/src/pipeline.ts
+        function addPipelineStep(steps, newStep) {
+          return [...steps, newStep];
+        }
+        function applyStringArrayProcessors(values, processors) {
+          return processors.reduce(
+            (currentValues, processor) => processor(currentValues),
+            values,
+          );
+        }
+        function executePipeline(inputText, steps, context, processorRegistry) {
+          let currentItems = splitByNewline(inputText);
+          for (const step of steps) {
+            const def = processorRegistry[step.id];
+            if (!def) continue;
+            const params = resolveParams(def, step.params);
+            currentItems = def.execute(currentItems, params, context);
+          }
+          return joinByNewline(currentItems);
+        }
+        function joinByNewline(values) {
+          return values.join("\n");
+        }
+        function movePipelineStep(steps, fromIndex, toIndex) {
+          const newSteps = [...steps];
+          const [removed] = newSteps.splice(fromIndex, 1);
+          newSteps.splice(toIndex, 0, removed);
+          return newSteps;
+        }
+        function removePipelineStep(steps, index) {
+          return steps.filter((_, i) => i !== index);
+        }
+        function resolveParams(def, stepParams) {
+          const defaults = {};
+          if (def.paramsSchema) {
+            for (const [key, field] of Object.entries(def.paramsSchema)) {
+              defaults[key] = field.default;
+            }
+          }
+          return { ...defaults, ...stepParams };
+        }
+        function splitByNewline(sourceText) {
+          return sourceText.split("\n");
+        }
+        function updatePipelineStepParam(steps, index, key, value) {
+          return steps.map((step, i) => {
+            if (i !== index) return step;
+            return {
+              ...step,
+              params: {
+                ...(step.params ?? {}),
+                [key]: value,
+              },
+            };
+          });
+        }
+
+        // apps/random-picker/src/processor.ts
+        function filterEmptyStrings(values) {
+          return values.filter((value) => value !== "");
+        }
+        function pickRandomItems(items, count) {
+          if (!Number.isSafeInteger(count) || count < 0) {
+            throw new RangeError("count must be a non-negative safe integer");
+          }
+          const pickedCount = Math.min(count, items.length);
+          const allIndexes = items.map((_, itemIndex) => itemIndex);
+          for (
+            let currentIndex = 0;
+            currentIndex < pickedCount;
+            currentIndex += 1
+          ) {
+            const randomIndex =
+              currentIndex +
+              Math.floor(Math.random() * (allIndexes.length - currentIndex));
+            [allIndexes[currentIndex], allIndexes[randomIndex]] = [
+              allIndexes[randomIndex],
+              allIndexes[currentIndex],
+            ];
+          }
+          const pickedIndexes = allIndexes
+            .slice(0, pickedCount)
+            .sort((left, right) => {
+              return left - right;
+            });
+          return pickedIndexes.map((itemIndex) => items[itemIndex]);
+        }
+        function removeExcludedItems(items, excludedItems) {
+          const excludedItemSet = new Set(excludedItems);
+          return items.filter((item) => !excludedItemSet.has(item));
+        }
+        function trimStrings(values) {
+          return values.map((value) => value.trim());
+        }
+
+        // apps/random-picker/src/event.ts
+        function bindInputEvent(deps) {
+          deps.ui.inputCopyBtn.onclick = async () => {
+            await handleInputCopyBtnClick(deps);
+          };
+          deps.ui.inputOpenBtn.onclick = () => {
+            handleInputOpenBtnClick(deps);
+          };
+        }
+        function bindPipelineEvent(deps) {
+          let draggingIndex = null;
+          deps.ui.pipelineStepList.onclick = (event) => {
+            handlePipelineStepListClick(deps, event);
+          };
+          deps.ui.pipelineStepList.ondragend = (event) => {
+            handlePipelineStepListDragEnd(deps, event, (value) => {
+              draggingIndex = value;
+            });
+          };
+          deps.ui.pipelineStepList.ondragover = (event) => {
+            handlePipelineStepListDragOver(
+              deps,
+              event,
+              draggingIndex,
+              (value) => {
+                draggingIndex = value;
+              },
+            );
+          };
+          deps.ui.pipelineStepList.ondragstart = (event) => {
+            handlePipelineStepListDragStart(deps, event, (value) => {
+              draggingIndex = value;
+            });
+          };
+          deps.ui.pipelineStepList.oninput = (event) => {
+            handlePipelineStepListInput(deps, event);
+          };
+          deps.ui.addStepBtn.onclick = () => {
+            handleAddStepBtnClick(deps);
+          };
+          deps.ui.pipelineRunBtn.onclick = () => {
+            handlePipelineRunBtnClick(deps);
+          };
+        }
+        function bindOutputEvent(deps) {
+          deps.ui.outputCopyBtn.onclick = async () => {
+            await handleOutputCopyBtnClick(deps);
+          };
+          deps.ui.outputOpenBtn.onclick = () => {
+            handleOutputOpenBtnClick(deps);
+          };
+        }
+        async function handleInputCopyBtnClick(deps) {
+          const inputText = deps.ui.input.value;
+          await copyTextToClipboard(inputText);
+        }
+        function handleInputOpenBtnClick(deps) {
+          const inputText = deps.ui.input.value;
+          const inputLines = splitByNewline(inputText);
+          const urls = applyStringArrayProcessors(inputLines, [
+            trimStrings,
+            filterEmptyStrings,
+          ]);
+          openUrls(urls);
+        }
+        function handlePipelineStepListClick(deps, event) {
+          const target = event.target;
+          const deleteBtn = target.closest(".pipeline-delete-btn");
+          if (deleteBtn) {
+            const index = parseInt(deleteBtn.dataset.index ?? "-1", 10);
+            if (index >= 0) {
+              deps.appState.pipeline = removePipelineStep(
+                deps.appState.pipeline,
+                index,
+              );
+              renderPipelineStepList(
+                deps.ui.pipelineStepList,
+                deps.appState.pipeline,
+                deps.processorRegistry,
+              );
+            }
+          }
+        }
+        function handlePipelineStepListDragEnd(_deps, event, setDraggingIndex) {
+          const target = event.target;
+          const item = target.closest(".pipeline-step-item");
+          if (item) {
+            item.classList.remove("dragging");
+          }
+          setDraggingIndex(null);
+        }
+        function handlePipelineStepListDragOver(
+          deps,
+          event,
+          draggingIndex,
+          setDraggingIndex,
+        ) {
+          event.preventDefault();
+          const target = event.target;
+          const overItem = target.closest(".pipeline-step-item");
+          if (overItem && draggingIndex !== null) {
+            const overIndex = parseInt(overItem.dataset.index ?? "-1", 10);
+            if (overIndex !== draggingIndex) {
+              deps.appState.pipeline = movePipelineStep(
+                deps.appState.pipeline,
+                draggingIndex,
+                overIndex,
+              );
+              setDraggingIndex(overIndex);
+              renderPipelineStepList(
+                deps.ui.pipelineStepList,
+                deps.appState.pipeline,
+                deps.processorRegistry,
+              );
+            }
+          }
+        }
+        function handlePipelineStepListDragStart(
+          _deps,
+          event,
+          setDraggingIndex,
+        ) {
+          const target = event.target;
+          const item = target.closest(".pipeline-step-item");
+          if (item) {
+            setDraggingIndex(parseInt(item.dataset.index ?? "-1", 10));
+            item.classList.add("dragging");
+            if (event.dataTransfer) {
+              event.dataTransfer.effectAllowed = "move";
+            }
+          }
+        }
+        function handlePipelineStepListInput(deps, event) {
+          const target = event.target;
+          if (
+            target.tagName === "INPUT" &&
+            target.dataset.index &&
+            target.dataset.key
+          ) {
+            const index = parseInt(target.dataset.index, 10);
+            const key = target.dataset.key;
+            const value =
+              target.type === "number"
+                ? parseFloat(target.value)
+                : target.value;
+            deps.appState.pipeline = updatePipelineStepParam(
+              deps.appState.pipeline,
+              index,
+              key,
+              value,
+            );
+          }
+        }
+        function handleAddStepBtnClick(deps) {
+          const processorId = deps.ui.processorSelect.value;
+          const def = deps.processorRegistry[processorId];
+          if (!def) return;
+          deps.appState.pipeline = addPipelineStep(deps.appState.pipeline, {
+            id: processorId,
+          });
+          renderPipelineStepList(
+            deps.ui.pipelineStepList,
+            deps.appState.pipeline,
+            deps.processorRegistry,
+          );
+        }
+        function handlePipelineRunBtnClick(deps) {
+          const inputText = deps.ui.input.value;
+          const context = {
+            previousOutput: deps.ui.output.value ?? "",
+          };
+          const outputText = executePipeline(
+            inputText,
+            deps.appState.pipeline,
+            context,
+            deps.processorRegistry,
+          );
+          renderOutput(deps.ui.output, outputText);
+        }
+        async function handleOutputCopyBtnClick(deps) {
+          const outputText = deps.ui.output.value ?? "";
+          await copyTextToClipboard(outputText);
+        }
+        function handleOutputOpenBtnClick(deps) {
+          const outputText = deps.ui.output.value ?? "";
+          const outputLines = splitByNewline(outputText);
+          const urls = applyStringArrayProcessors(outputLines, [
+            trimStrings,
+            filterEmptyStrings,
+          ]);
+          openUrls(urls);
+        }
+
+        // apps/random-picker/src/processor-registry.ts
+        var PROCESSOR_REGISTRY = {
+          excludePrevious: {
+            id: "excludePrevious",
+            name: "\u524D\u56DE\u51FA\u529B\u3092\u9664\u5916",
+            description:
+              "\u524D\u56DE\u306E\u51FA\u529B\u7D50\u679C\u306B\u542B\u307E\u308C\u308B\u9805\u76EE\u3092\u9664\u5916\u3057\u307E\u3059",
+            execute: (items, _params, context) =>
+              removeExcludedItems(
+                items,
+                splitByNewline(context.previousOutput),
+              ),
+          },
+          filterEmpty: {
+            id: "filterEmpty",
+            name: "\u7A7A\u884C\u9664\u5916",
+            description:
+              "\u7A7A\u306E\u884C\u3092\u9664\u5916\u3057\u307E\u3059",
+            execute: (items) => filterEmptyStrings(items),
+          },
+          pickRandom: {
+            id: "pickRandom",
+            name: "\u30E9\u30F3\u30C0\u30E0\u62BD\u51FA",
+            description:
+              "\u6307\u5B9A\u3057\u305F\u4EF6\u6570\u3060\u3051\u30E9\u30F3\u30C0\u30E0\u306B\u9078\u3073\u307E\u3059",
+            paramsSchema: {
+              count: {
+                type: "number",
+                label: "\u62BD\u51FA\u4EF6\u6570",
+                default: 1,
+              },
+            },
+            execute: (items, params) => pickRandomItems(items, params["count"]),
+          },
+          trim: {
+            id: "trim",
+            name: "\u7A7A\u767D\u524A\u9664",
+            description:
+              "\u5404\u884C\u306E\u524D\u5F8C\u306E\u7A7A\u767D\u3092\u524A\u9664\u3057\u307E\u3059",
+            execute: (items) => trimStrings(items),
+          },
+        };
+
+        // apps/random-picker/src/state.ts
+        var appState = {
+          pipeline: [],
+        };
+
+        // apps/random-picker/src/script.ts
+        function initApp(ui = createUi()) {
+          appState.pipeline = [];
+          buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY);
+          renderPipelineStepList(
+            ui.pipelineStepList,
+            appState.pipeline,
+            PROCESSOR_REGISTRY,
+          );
+          const deps = { ui, appState, processorRegistry: PROCESSOR_REGISTRY };
+          bindInputEvent(deps);
+          bindPipelineEvent(deps);
+          bindOutputEvent(deps);
+          return ui;
         }
         return __toCommonJS(script_exports);
       })();
