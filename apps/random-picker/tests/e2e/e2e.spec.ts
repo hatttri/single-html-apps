@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const appUrl = new URL("../generated/index.html", import.meta.url).href;
+const appUrl = new URL("../../generated/index.html", import.meta.url).href;
 
 type OpenedUrl = {
   url: string;
