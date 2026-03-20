@@ -38,16 +38,28 @@ function parseArguments(argv: string[]): {
 }
 
 /**
- * Git 管理対象ファイルを取得する。
+ * Git 管理対象ファイルと未追跡ファイルを取得する。
  * @param rootDirectory ルートディレクトリ
  * @returns 対象ファイル一覧
  */
 function collectTrackedFiles(rootDirectory: string): FileRecord[] {
   const outputPath = resolve(rootDirectory, "generated/concat.txt");
-  const result = spawnSync("git", ["-C", rootDirectory, "ls-files", "-z"], {
-    encoding: "buffer",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const result = spawnSync(
+    "git",
+    [
+      "-C",
+      rootDirectory,
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+    ],
+    {
+      encoding: "buffer",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
 
   if (result.error) {
     throw result.error;

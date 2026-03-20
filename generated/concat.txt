@@ -9268,6 +9268,7 @@ npm run concat
 ```
 
 このコマンドはリポジトリのルートディレクトリを対象にして、`generated/concat.txt` に出力します。
+未追跡のファイルも収集対象に含めるため、`git add` 前の新規ファイルもそのまま確認できます。
 
 ### 個別コマンド
 
@@ -9384,16 +9385,28 @@ function parseArguments(argv: string[]): {
 }
 
 /**
- * Git 管理対象ファイルを取得する。
+ * Git 管理対象ファイルと未追跡ファイルを取得する。
  * @param rootDirectory ルートディレクトリ
  * @returns 対象ファイル一覧
  */
 function collectTrackedFiles(rootDirectory: string): FileRecord[] {
   const outputPath = resolve(rootDirectory, "generated/concat.txt");
-  const result = spawnSync("git", ["-C", rootDirectory, "ls-files", "-z"], {
-    encoding: "buffer",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const result = spawnSync(
+    "git",
+    [
+      "-C",
+      rootDirectory,
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+    ],
+    {
+      encoding: "buffer",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
 
   if (result.error) {
     throw result.error;
