@@ -9,6 +9,7 @@ Directory structure:
 │       ├── generated
 │       │   └── index.html
 │       ├── src
+│       │   ├── browser.ts
 │       │   ├── index.html
 │       │   ├── pipeline.ts
 │       │   ├── processor-registry.ts
@@ -1246,6 +1247,27 @@ FILE: apps/random-picker/generated/index.html
     </script>
   </body>
 </html>
+
+
+
+================================================
+FILE: apps/random-picker/src/browser.ts
+================================================
+/**
+ * テキストをクリップボードにコピーする
+ */
+export async function copyTextToClipboard(value: string): Promise<void> {
+  await navigator.clipboard.writeText(value);
+}
+
+/**
+ * URL 配列を新しいタブで順に開く
+ */
+export function openUrls(urls: string[]): void {
+  urls.forEach((url) => {
+    window.open(url, "_blank");
+  });
+}
 
 
 
