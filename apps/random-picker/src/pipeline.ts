@@ -67,8 +67,27 @@ export function movePipelineStep(
   toIndex: number,
 ): PipelineStep[] {
   const newSteps = [...steps];
+
+  if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex)) {
+    return newSteps;
+  }
+
+  if (
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= newSteps.length ||
+    toIndex >= newSteps.length
+  ) {
+    return newSteps;
+  }
+
+  if (fromIndex === toIndex) {
+    return newSteps;
+  }
+
   const [removed] = newSteps.splice(fromIndex, 1);
   newSteps.splice(toIndex, 0, removed);
+
   return newSteps;
 }
 

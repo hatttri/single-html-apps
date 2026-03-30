@@ -9,7 +9,7 @@ import {
 
 describe("buildProcessorSelectOptions", () => {
   describe("正常系", () => {
-    test("PROCESSOR_REGISTRY の全キーがオプションとして設定される", () => {
+    test("正常 / registry から選択肢が作成される", () => {
       const select = document.createElement("select");
       const registry = {
         a: {
@@ -37,7 +37,7 @@ describe("buildProcessorSelectOptions", () => {
 
 describe("createUi", () => {
   describe("正常系", () => {
-    test("全てのUI要素が正しく取得される", () => {
+    test("全要素がある / 全要素が取得される", () => {
       const root = document.implementation.createHTMLDocument("");
       const ids = [
         "inputCopyBtn",
@@ -72,7 +72,7 @@ describe("createUi", () => {
   });
 
   describe("異常系", () => {
-    test("要素が1つでも欠けている場合にエラーを投げる", () => {
+    test("全要素がない / エラーを投げる", () => {
       const root = document.implementation.createHTMLDocument("");
       expect(() => createUi(root)).toThrow();
     });
@@ -81,7 +81,7 @@ describe("createUi", () => {
 
 describe("getElementByIdOrThrow", () => {
   describe("正常系", () => {
-    test("対象要素あり", () => {
+    test("要素がある / 要素が取得される", () => {
       const root = document.implementation.createHTMLDocument("");
       const button = root.createElement("button");
       button.id = "target-button";
@@ -94,7 +94,7 @@ describe("getElementByIdOrThrow", () => {
   });
 
   describe("異常系", () => {
-    test("対象要素なし", () => {
+    test("要素がない / エラーを投げる", () => {
       const root = document.implementation.createHTMLDocument("");
 
       expect(() => getElementByIdOrThrow(root, "missing-id")).toThrowError(
@@ -106,7 +106,7 @@ describe("getElementByIdOrThrow", () => {
 
 describe("renderOutput", () => {
   describe("正常系", () => {
-    test("文字列を出力する", () => {
+    test("正常 / 文字列を出力する", () => {
       const dummyDiv = document.createElement("textarea");
 
       renderOutput(dummyDiv, "テスト結果");
@@ -116,7 +116,7 @@ describe("renderOutput", () => {
   });
 
   describe("境界系", () => {
-    test("空文字列を出力する", () => {
+    test("value.length=0 / 文字列を出力する", () => {
       const dummyDiv = document.createElement("textarea");
 
       renderOutput(dummyDiv, "");
@@ -157,7 +157,7 @@ describe("renderPipelineStepList", () => {
       expect(div.querySelector(".pipeline-step-item")).toBeNull();
     });
 
-    test("steps.length=1 / registryにstep.idがある / paramsSchemaがない / pipeline-step-paramsにinputを生成しない", () => {
+    test("steps.length=1 / registryにstep.idがある / paramsSchemaがない / inputを生成しない", () => {
       const div = document.createElement("div");
       const registry = {
         trim: {
@@ -197,7 +197,7 @@ describe("renderPipelineStepList", () => {
       expect(input.value).toBe("1");
     });
 
-    test("steps.length=1 / registryにstep.idがある / paramsSchemaが1件ある / step.paramsがある / step.paramsを優先する", () => {
+    test("steps.length=1 / registryにstep.idがある / paramsSchemaが1件ある / step.paramsがある / step.paramsを使用する", () => {
       const div = document.createElement("div");
       const registry = {
         pickRandom: {

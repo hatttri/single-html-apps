@@ -3,7 +3,7 @@ import { copyTextToClipboard, openUrls } from "../../src/browser.ts";
 
 describe("copyTextToClipboard", () => {
   describe("正常系", () => {
-    test("文字列をコピーする", async () => {
+    test("正常 / Clipboard.writeText() が呼ばれる", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
@@ -16,8 +16,8 @@ describe("copyTextToClipboard", () => {
     });
   });
 
-  describe("異常系", () => {
-    test("文字数が0文字", async () => {
+  describe("境界系", () => {
+    test("value.length=0 / Clipboard.writeText() が呼ばれる", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
@@ -29,7 +29,7 @@ describe("copyTextToClipboard", () => {
       expect(writeText).toHaveBeenCalledWith("");
     });
 
-    test("文字数が1文字", async () => {
+    test("value.length=1 / Clipboard.writeText() が呼ばれる", async () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
       Object.defineProperty(window.navigator, "clipboard", {
         configurable: true,
@@ -45,7 +45,7 @@ describe("copyTextToClipboard", () => {
 
 describe("openUrls", () => {
   describe("正常系", () => {
-    test("URLを開く", () => {
+    test("有効な URL / Window.open() が呼ばれる", () => {
       const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
@@ -58,7 +58,7 @@ describe("openUrls", () => {
   });
 
   describe("境界系", () => {
-    test("URLが0件", () => {
+    test("urls.length=0 / Window.open() が呼ばれない", () => {
       const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
@@ -67,7 +67,7 @@ describe("openUrls", () => {
       expect(open).not.toHaveBeenCalled();
     });
 
-    test("URLが1件", () => {
+    test("urls.length=1 / Window.open() が呼ばれる", () => {
       const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
@@ -79,7 +79,7 @@ describe("openUrls", () => {
   });
 
   describe("異常系", () => {
-    test("URLが空文字列", () => {
+    test("urls[i].length=0 / Window.open() が呼ばれる", () => {
       const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
@@ -90,7 +90,7 @@ describe("openUrls", () => {
       expect(open).toHaveBeenNthCalledWith(2, "", "_blank");
     });
 
-    test("URLが異常", () => {
+    test("無効な URL / Window.open() が呼ばれる", () => {
       const open = vi.fn<typeof window.open>(() => null);
       window.open = open;
 
