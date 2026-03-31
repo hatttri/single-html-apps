@@ -37,7 +37,8 @@ Directory structure:
 ├── plans
 │   ├── 20260320_01_完全ランダム_排他ランダムボタン削除_指示書.md
 │   ├── 20260320_02_Random_Picker_リファクタリング実装指示書.md
-│   └── 20260401_01_itemsに統一する指示書.md
+│   ├── 20260401_01_itemsに統一する指示書.md
+│   └── 20260401_02_event.test.ts全面作り直し指示書.md
 ├── playwright.config.ts
 ├── README.md
 ├── scripts
@@ -8933,6 +8934,532 @@ removeExcludedItems(items, excludedItems);
 
 **やることは「命名の統一」だけ。**
 **やってはいけないことは「意味の変更」と「ロジック変更」。**
+
+
+
+================================================
+FILE: plans/20260401_02_event.test.ts全面作り直し指示書.md
+================================================
+# `apps/random-picker/tests/integration/event.test.ts` 全面作り直し指示書
+
+## 目的
+
+`apps/random-picker/tests/integration/event.test.ts` を **ゼロから作り直す**。
+**既存の `event.test.ts` の内容は一切参考にせず、全文破棄して置き換えること。**
+対象は `src/event.ts` のイベント結線とイベントハンドラーの連携確認であり、`bindInputEvent` / `bindPipelineEvent` / `bindOutputEvent` が結線する全イベントハンドラーを、`targetElement.onEvent` ごとに `正常系 / 異常系` で整理してテストする。リポジトリ上の対象ファイルと規約は `AGENTS.md` に従う。 
+
+## 変更してよいファイル
+
+* `apps/random-picker/tests/integration/event.test.ts` のみ
+
+## 絶対に変更してはいけないファイル
+
+* `apps/random-picker/src/event.ts`
+* `apps/random-picker/src/script.ts`
+* `apps/random-picker/src/dom.ts`
+* `apps/random-picker/src/pipeline.ts`
+* `apps/random-picker/src/browser.ts`
+* `apps/random-picker/src/processor-registry.ts`
+* `apps/random-picker/src/state.ts`
+* `apps/random-picker/tests/integration/script.test.ts`
+* `apps/random-picker/tests/unit/*`
+* そのほかすべてのファイル
+
+## 作業の大前提
+
+1. **既存の `apps/random-picker/tests/integration/event.test.ts` は全文削除してよい。**
+   既存ケースの移植・流用・微修正は禁止。**新規に書き直すこと。**
+
+2. この作業は **テストファイルの再構築だけ** を行う。
+   本番コードの不備を見つけても、**本番コードは絶対に変更しない**。
+
+3. `AGENTS.md` のインテグレーションテスト規約に合わせて、`describe("targetElement.onEvent", ...)` の形で整理し、各イベントごとに `describe("正常系", ...)` と `describe("異常系", ...)` を作ること。
+
+4. テスト名は、最近のユニットテストに合わせて、**条件を先頭に書く短い形式** にすること。
+   例: `steps.length=0 / そのまま出力する` のような形式。ユニットテストでも同じ方針が使われている。
+
+5. DOM まわりのテストなので、**describe の並び順はアルファベット順ではなく DOM 順** にすること。`event.ts` でも DOM 出現順で `bindInputEvent` → `bindPipelineEvent` → `bindOutputEvent` の順にイベントが並んでいる。`AGENTS.md` でも DOM 対応コードは DOM 順を優先する規約になっている。 
+
+## このテストで確認する対象
+
+`src/event.ts` では以下のイベントが結線されている。`event.test.ts` では **この 11 個をすべてテストすること。**
+
+1. `ui.inputCopyBtn.onclick`
+2. `ui.inputOpenBtn.onclick`
+3. `ui.pipelineStepList.onclick`
+4. `ui.pipelineStepList.ondragend`
+5. `ui.pipelineStepList.ondragover`
+6. `ui.pipelineStepList.ondragstart`
+7. `ui.pipelineStepList.oninput`
+8. `ui.addStepBtn.onclick`
+9. `ui.pipelineRunBtn.onclick`
+10. `ui.outputCopyBtn.onclick`
+11. `ui.outputOpenBtn.onclick`
+
+## テストファイルの基本方針
+
+### 1. `initApp` は使わない
+
+このテストファイルでは `initApp` は使わない。
+理由は、`event.ts` のイベント結線だけを明確にテストしたいから。
+テスト側で `createUi()` を呼び、`deps` を自前で作り、`bindInputEvent(deps)` / `bindPipelineEvent(deps)` / `bindOutputEvent(deps)` を直接呼ぶこと。`script.ts` の初期化全体を通すのは `script.test.ts` の責務に寄せる。`event.ts` は `deps` を受けて各イベントを結線する構造になっている。
+
+### 2. 本物を使うもの / モックするものを分ける
+
+#### 本物を使うもの
+
+以下は **実際のモジュールをそのまま使うこと**。
+
+* `bindInputEvent`
+* `bindPipelineEvent`
+* `bindOutputEvent`
+* `createUi`
+* `buildProcessorSelectOptions`
+* `renderPipelineStepList`
+* `PROCESSOR_REGISTRY`
+* `appState`
+* `addPipelineStep` など `pipeline.ts` の実処理
+* `executePipeline` の実処理
+
+理由: これはインテグレーションテストなので、イベント → 状態更新 → 再描画 → 出力更新までの連携を本物で確認したいから。
+
+#### モック / スパイしてよいもの
+
+以下は **副作用確認のためにスパイまたはモックしてよい**。
+
+* `navigator.clipboard.writeText`
+* `window.open`
+
+理由: この 2 つはブラウザ副作用であり、呼ばれた値・回数・順序だけ確認すれば十分だから。`browser.ts` の本体もこの 2 つに依存している。
+
+### 3. DOM はテスト内で最小構成を作る
+
+`createUi()` は固定 ID の要素を取得する実装なので、`beforeEach` で `document.body.innerHTML` に **必要最小限の DOM** を毎回作ること。必要なのは以下の ID を持つ要素だけ。`createUi` が実際にこれらを取得している。
+
+* `inputCopyBtn`
+* `inputOpenBtn`
+* `input`
+* `pipelineStepList`
+* `processorSelect`
+* `addStepBtn`
+* `pipelineRunBtn`
+* `outputCopyBtn`
+* `outputOpenBtn`
+* `output`
+
+見た目や CSS は不要。
+`createUi()` が成功し、イベントが結線できる最小 DOM にすること。
+
+### 4. 毎テストで初期化すること
+
+`beforeEach` で必ず以下を行うこと。
+
+1. `document.body.innerHTML = ...` で最小 DOM を再生成
+2. `appState.pipeline = []`
+3. `const ui = createUi()`
+4. `buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY)`
+5. `renderPipelineStepList(ui.pipelineStepList, appState.pipeline, PROCESSOR_REGISTRY)`
+6. `const deps = { ui, appState, processorRegistry: PROCESSOR_REGISTRY }`
+7. `bindInputEvent(deps)`
+8. `bindPipelineEvent(deps)`
+9. `bindOutputEvent(deps)`
+10. `vi.restoreAllMocks()` または必要なモック初期化
+
+この初期化順にすると、`script.ts` の初期化順とも自然にそろう。`script.ts` でも `appState.pipeline = []` → `buildProcessorSelectOptions` → `renderPipelineStepList` → `bind*Event` の順になっている。
+
+## テストファイルの外側の骨格
+
+`describe` は **必ずこの順番、この名前** にすること。
+これ以外の外側の骨格を作らないこと。
+
+```ts
+describe("ui.inputCopyBtn.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.inputOpenBtn.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.pipelineStepList.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.pipelineStepList.ondragend", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.pipelineStepList.ondragover", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.pipelineStepList.ondragstart", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.pipelineStepList.oninput", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.addStepBtn.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.pipelineRunBtn.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.outputCopyBtn.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+
+describe("ui.outputOpenBtn.onclick", () => {
+  describe("正常系", () => {});
+  describe("異常系", () => {});
+});
+```
+
+## 各 `describe` に必ず入れるテストケース
+
+以下のケース名を、そのまま `test(...)` の名前として使ってよい。
+**削ってはいけない。増やすのも不要。**
+この一覧をそのまま実装すること。
+
+---
+
+## 1. `describe("ui.inputCopyBtn.onclick", ...)`
+
+### 正常系
+
+* `input.value="" / 空文字をそのままコピーする`
+* `input.value が1行 / そのままコピーする`
+* `input.value が複数行 / 改行を維持してコピーする`
+
+### 異常系
+
+* `clipboard.writeText が失敗 / 例外をそのまま返す`
+
+実装根拠: `handleInputCopyBtnClick` は `deps.ui.input.value` をそのまま `copyTextToClipboard` に渡すだけ。
+
+---
+
+## 2. `describe("ui.inputOpenBtn.onclick", ...)`
+
+### 正常系
+
+* `input.value が1行 / 1件だけ開く`
+* `input.value が複数行 / 上から順に複数件開く`
+* `各行の前後に空白がある / trim 後の値を開く`
+* `空行を含む / 空行を除外して開く`
+* `空白だけの行と通常行が混在 / 通常行だけ開く`
+* `URLでない文字列を含む / 非空文字列としてそのまま開く`
+
+### 異常系
+
+* `input.value="" / 1件も開かない`
+* `空白だけの行しかない / 1件も開かない`
+* `window.open 側が失敗 / 例外をそのまま返す`
+
+実装根拠: `handleInputOpenBtnClick` は `splitByNewline` → `trimStrings` → `filterEmptyStrings` → `openUrls` の順で処理する。URL 判定はしていない。
+
+---
+
+## 3. `describe("ui.pipelineStepList.onclick", ...)`
+
+### 正常系
+
+* `steps.length=1 / 先頭の削除ボタン押下で削除する`
+* `steps.length=3 / 中間の削除ボタン押下で削除する`
+* `steps.length=3 / 末尾の削除ボタン押下で削除する`
+* `steps.length=1 / 削除後に空メッセージを再描画する`
+* `steps.length=3 / 削除後に残り要素の data-index が振り直される`
+
+### 異常系
+
+* `削除ボタン以外をクリック / 何もしない`
+* `data-index="-1" の削除ボタンをクリック / 何もしない`
+* `data-index="abc" の削除ボタンをクリック / 何もしない`
+
+実装根拠: `handlePipelineStepListClick` は `.pipeline-delete-btn` に closest した場合だけ `parseInt` した index を使い、`index >= 0` のときだけ `removePipelineStep` と `renderPipelineStepList` を行う。
+
+---
+
+## 4. `describe("ui.pipelineStepList.ondragend", ...)`
+
+### 正常系
+
+* `dragging クラス付きステップで dragend / dragging クラスを外す`
+* `dragstart 済みのあとに dragend / 後続 dragover で移動しなくなる`
+
+### 異常系
+
+* `ステップ要素以外で dragend / 例外にならない`
+* `dragging クラスなしで dragend / 例外にならない`
+
+実装根拠: `handlePipelineStepListDragEnd` は `.pipeline-step-item` に closest できたら `dragging` を外し、最後に必ず `setDraggingIndex(null)` を呼ぶ。
+
+---
+
+## 5. `describe("ui.pipelineStepList.ondragover", ...)`
+
+### 正常系
+
+* `draggingIndex=0 / index=1 の上で dragover / 0番目を1番目へ移動する`
+* `draggingIndex=2 / index=0 の上で dragover / 2番目を0番目へ移動する`
+* `dragover 発火 / defaultPrevented=true になる`
+* `別 index の上で dragover / 再描画後の並び順が更新される`
+
+### 異常系
+
+* `dragstart 前に dragover / 何もしない`
+* `同じ index の上で dragover / 何もしない`
+* `ステップ要素以外の上で dragover / 何もしない`
+
+**重要**
+`draggingIndex` は `bindPipelineEvent` のローカル変数であり、テストから直接触れない。
+そのため、`ondragover` の正常系テストでは **必ず先に同じテスト内で `dragstart` を発火してから `dragover` を発火すること。** `dragstart` を省略してはいけない。`bindPipelineEvent` の実装上、`draggingIndex` はクロージャで保持されている。 
+
+---
+
+## 6. `describe("ui.pipelineStepList.ondragstart", ...)`
+
+### 正常系
+
+* `有効なステップ要素で dragstart / dragging クラスを付与する`
+* `dragstart 後に別 index へ dragover / 移動できる状態になる`
+* `dataTransfer ありの dragstart / effectAllowed="move" を設定する`
+
+### 異常系
+
+* `ステップ要素以外で dragstart / 何もしない`
+* `dataTransfer なしの dragstart / 例外にならない`
+* `data-index="abc" のステップで dragstart / 例外にならない`
+
+実装根拠: `handlePipelineStepListDragStart` は `.pipeline-step-item` に closest できたときだけ `draggingIndex` を設定し、`dragging` クラスを付け、`event.dataTransfer` がある場合だけ `effectAllowed = "move"` を設定する。
+
+---
+
+## 7. `describe("ui.pipelineStepList.oninput", ...)`
+
+### 正常系
+
+* `number input の変更 / 対応 params を number で更新する`
+* `text input の変更 / 対応 params を string で更新する`
+* `既存 params あり / 指定 key だけ更新して他 params は維持する`
+* `steps.length=2 / 対象 index の step だけ更新する`
+
+### 異常系
+
+* `INPUT 以外から input イベント / 何もしない`
+* `data-index なしの INPUT / 何もしない`
+* `data-key なしの INPUT / 何もしない`
+* `data-index が範囲外 / 何もしない`
+* `number input.value="" / NaN で更新する`
+
+実装根拠: `handlePipelineStepListInput` は `target.tagName === "INPUT"` かつ `dataset.index` と `dataset.key` がある場合だけ更新する。`number` 型は `parseFloat(target.value)` を使うため、空文字は `NaN` になる。
+
+---
+
+## 8. `describe("ui.addStepBtn.onclick", ...)`
+
+### 正常系
+
+* `processorSelect.value="trim" / 末尾に1件追加する`
+* `2回連続クリック / 追加順のまま2件になる`
+* `steps.length=0 / 空メッセージ表示からステップ表示に切り替わる`
+* `追加後 / 追加した step の表示名が描画される`
+
+### 異常系
+
+* `processorSelect.value が未登録 id / 何もしない`
+* `processorSelect.value が未登録 id / pipeline を変更しない`
+
+実装根拠: `handleAddStepBtnClick` は `processorRegistry[processorId]` が存在しないと return し、存在する場合のみ `addPipelineStep` と `renderPipelineStepList` を行う。
+
+---
+
+## 9. `describe("ui.pipelineRunBtn.onclick", ...)`
+
+### 正常系
+
+* `steps.length=0 / input.value をそのまま output.value に設定する`
+* `trim 1件 / trim 結果を output.value に設定する`
+* `trim -> filterEmpty / 複数 step を順に実行する`
+* `excludePrevious 1件 / 実行前の output.value を previousOutput として使う`
+* `1回目実行後に input.value を変更 / 2回目は最新 input.value を使う`
+* `1回目実行後の output.value がある / 2回目は最新 output.value を previousOutput として使う`
+
+### 異常系
+
+* `未登録 step.id を含む / その step を無視して実行する`
+* `pickRandom の count が不正 / 例外をそのまま返す`
+
+実装根拠: `handlePipelineRunBtnClick` は `input.value` を読み、`output.value ?? ""` を `previousOutput` とした `context` を作り、`executePipeline` の結果を `renderOutput` する。`executePipeline` は未登録 `step.id` を `continue` で無視する。`pickRandomItems` は count が不正なら `RangeError` を投げる。 
+
+---
+
+## 10. `describe("ui.outputCopyBtn.onclick", ...)`
+
+### 正常系
+
+* `output.value="" / 空文字をそのままコピーする`
+* `output.value が1行 / そのままコピーする`
+* `output.value が複数行 / 改行を維持してコピーする`
+
+### 異常系
+
+* `clipboard.writeText が失敗 / 例外をそのまま返す`
+
+実装根拠: `handleOutputCopyBtnClick` は `deps.ui.output.value ?? ""` をそのままコピーする。
+
+---
+
+## 11. `describe("ui.outputOpenBtn.onclick", ...)`
+
+### 正常系
+
+* `output.value が1行 / 1件だけ開く`
+* `output.value が複数行 / 上から順に複数件開く`
+* `各行の前後に空白がある / trim 後の値を開く`
+* `空行を含む / 空行を除外して開く`
+* `空白だけの行と通常行が混在 / 通常行だけ開く`
+* `URLでない文字列を含む / 非空文字列としてそのまま開く`
+
+### 異常系
+
+* `output.value="" / 1件も開かない`
+* `空白だけの行しかない / 1件も開かない`
+* `window.open 側が失敗 / 例外をそのまま返す`
+
+実装根拠: `handleOutputOpenBtnClick` も入力欄と同じで、`splitByNewline` → `trimStrings` → `filterEmptyStrings` → `openUrls` の順で処理する。
+
+---
+
+## 実装上の細かい指示
+
+### 1. `onclick` 系の発火方法
+
+* `button.click()` を使ってよい
+* 非 button 要素は必要に応じて `dispatchEvent(new MouseEvent(...))` を使う
+
+### 2. `oninput` の発火方法
+
+* 対象の `input.value` を先に変更する
+* その後 `dispatchEvent(new Event("input", { bubbles: true }))` を使う
+* `pipelineStepList.oninput` は親要素に結線されているため、**子 input に対して bubbles=true で dispatch すること**
+
+### 3. `dragstart` / `dragover` / `dragend` の発火方法
+
+* `pipelineStepList` 自体ではなく、**実際の `.pipeline-step-item` 要素に対してイベントを発火すること**
+* すべて `{ bubbles: true, cancelable: true }` を付けること
+* `dragstart` の `dataTransfer` が必要なケースでは、イベントオブジェクトに `dataTransfer` を `defineProperty` などで生やして使うこと
+* `dragover` のテストでは `defaultPrevented` を確認すること
+* `dragover` の正常系では、**必ずその前に同じテスト内で `dragstart` を行うこと**
+
+### 4. `window.open` の確認方法
+
+* `vi.spyOn(window, "open")` でスパイする
+* 呼び出し回数だけでなく、**引数と順序** も確認すること
+* `_blank` が第2引数で渡されることも確認すること。`openUrls` は `window.open(url, "_blank")` を呼ぶ実装。
+
+### 5. `clipboard.writeText` の確認方法
+
+* `navigator.clipboard.writeText` を `vi.fn()` に差し替える
+* 呼び出し値を厳密一致で確認すること
+* 失敗系では `mockRejectedValueOnce(...)` を使い、`await expect(...).rejects.toThrow(...)` で確認すること
+
+### 6. DOM 確認と state 確認の両方を行うこと
+
+このテストはイベント連携テストなので、単に関数が呼ばれたことだけでなく、必要な箇所では **DOM と `appState.pipeline` の両方** を確認すること。
+
+例:
+
+* 削除: `appState.pipeline` の中身 + DOM の件数
+* 追加: `appState.pipeline` の中身 + DOM の表示名
+* 入力更新: `appState.pipeline[index].params` の中身
+* 実行: `output.value`
+
+## インポート方針
+
+`event.test.ts` では必要なものだけを明示的に import すること。
+最低限、以下は使ってよい。
+
+* `describe`
+
+* `test`
+
+* `expect`
+
+* `beforeEach`
+
+* `afterEach`
+
+* `vi`
+
+* `buildProcessorSelectOptions`
+
+* `createUi`
+
+* `renderPipelineStepList`
+
+* `bindInputEvent`
+
+* `bindPipelineEvent`
+
+* `bindOutputEvent`
+
+* `PROCESSOR_REGISTRY`
+
+* `appState`
+
+**不要な import は入れないこと。**
+特に `initApp` は import しないこと。
+
+## やってはいけないこと
+
+1. 既存の `event.test.ts` を部分利用すること
+2. 本番コードを変更すること
+3. `initApp` を使って雑に初期化すること
+4. 外側の `describe` 名を勝手に変えること
+5. `正常系 / 異常系` を省略すること
+6. ケース数を勝手に減らすこと
+7. ケース数を勝手に増やすこと
+8. `dragover` の正常系で `dragstart` を省略すること
+9. `window.open` や `clipboard.writeText` を実際に実行させること
+10. テスト名を抽象化しすぎること
+    例: `正しく動く`, `異常時の確認` は禁止
+11. `script.test.ts` や unit test を変更すること
+12. テスト専用ヘルパーを別ファイルに切り出すこと
+    **この作業では `event.test.ts` 1ファイルの中だけで完結させること**
+
+## 完了条件
+
+以下をすべて満たしたら完了。
+
+1. `apps/random-picker/tests/integration/event.test.ts` が全文新規作成になっている
+2. 外側の `describe` が 11 個あり、名前が指定どおりである
+3. 各 `describe` の中に `正常系` と `異常系` がある
+4. 上記の全テストケース名が実装されている
+5. `initApp` を使っていない
+6. 本番コードを1文字も変更していない
+7. 修正後に `npm run precommit` を実行する
+   これはリポジトリ規約で要求されている。
+
+## 失敗時の扱い
+
+* `npm run precommit` が **自分の変更と無関係な既存不具合** で落ちた場合は、`event.test.ts` 以外を触らずに止めること
+* 落ちた原因を直すために、本番コードや他テストへ手を広げないこと
+* まず `event.test.ts` だけを完成させることを優先すること
 
 
 
