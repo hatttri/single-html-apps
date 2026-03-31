@@ -497,17 +497,19 @@ describe("resolveParams", () => {
 });
 
 describe("splitByNewline", () => {
+  describe("正常系", () => {
+    test("改行あり", () => {
+      expect(splitByNewline("A\nB")).toEqual(["A", "B"]);
+    });
+  });
+
   describe("境界系", () => {
     test("文字数=0", () => {
       expect(splitByNewline("")).toEqual([""]);
     });
 
-    test("文字数=1以上 / 改行なし", () => {
+    test("改行なし", () => {
       expect(splitByNewline("A")).toEqual(["A"]);
-    });
-
-    test("文字数=1以上 / 改行あり", () => {
-      expect(splitByNewline("A\nB")).toEqual(["A", "B"]);
     });
   });
 });
