@@ -26,7 +26,7 @@ describe("filterEmptyStrings", () => {
   });
 
   describe("境界系", () => {
-    test("values.length=0", () => {
+    test("items.length=0", () => {
       const items: string[] = [];
       const result = filterEmptyStrings(items);
 
@@ -247,36 +247,36 @@ describe("removeExcludedItems", () => {
 describe("trimStrings", () => {
   describe("正常系", () => {
     test("先頭末尾空白なし", () => {
-      const values = ["A", "BC"];
-      const result = trimStrings(values);
+      const items = ["A", "BC"];
+      const result = trimStrings(items);
 
-      expect(values).toEqual(["A", "BC"]);
+      expect(items).toEqual(["A", "BC"]);
       expect(result).toEqual(["A", "BC"]);
     });
 
     test("先頭末尾空白あり", () => {
-      const values = [" A ", " B"];
-      const result = trimStrings(values);
+      const items = [" A ", " B"];
+      const result = trimStrings(items);
 
-      expect(values).toEqual([" A ", " B"]);
+      expect(items).toEqual([" A ", " B"]);
       expect(result).toEqual(["A", "B"]);
     });
   });
 
   describe("境界系", () => {
-    test("values.length=0", () => {
-      const values: string[] = [];
-      const result = trimStrings(values);
+    test("items.length=0", () => {
+      const items: string[] = [];
+      const result = trimStrings(items);
 
-      expect(values).toEqual([]);
+      expect(items).toEqual([]);
       expect(result).toEqual([]);
     });
 
-    test("values[i].length=0", () => {
-      const values = ["", ""];
-      const result = trimStrings(values);
+    test("items[i].length=0", () => {
+      const items = ["", ""];
+      const result = trimStrings(items);
 
-      expect(values).toEqual(["", ""]);
+      expect(items).toEqual(["", ""]);
       expect(result).toEqual(["", ""]);
     });
   });

@@ -36,7 +36,8 @@ Directory structure:
 ├── package.json
 ├── plans
 │   ├── 20260320_01_完全ランダム_排他ランダムボタン削除_指示書.md
-│   └── 20260320_02_Random_Picker_リファクタリング実装指示書.md
+│   ├── 20260320_02_Random_Picker_リファクタリング実装指示書.md
+│   └── 20260401_01_itemsに統一する指示書.md
 ├── playwright.config.ts
 ├── README.md
 ├── scripts
@@ -962,10 +963,10 @@ FILE: apps/random-picker/generated/index.html
         function addPipelineStep(steps, newStep) {
           return [...steps, newStep];
         }
-        function applyStringArrayProcessors(values, processors) {
+        function applyStringArrayProcessors(items, processors) {
           return processors.reduce(
-            (currentValues, processor) => processor(currentValues),
-            values,
+            (currentItems, processor) => processor(currentItems),
+            items,
           );
         }
         function executePipeline(inputText, steps, context, processorRegistry) {
@@ -978,8 +979,8 @@ FILE: apps/random-picker/generated/index.html
           }
           return joinByNewline(currentItems);
         }
-        function joinByNewline(values) {
-          return values.join("\n");
+        function joinByNewline(items) {
+          return items.join("\n");
         }
         function movePipelineStep(steps, fromIndex, toIndex) {
           const newSteps = [...steps];
@@ -1030,8 +1031,8 @@ FILE: apps/random-picker/generated/index.html
         }
 
         // apps/random-picker/src/processor.ts
-        function filterEmptyStrings(values) {
-          return values.filter((value) => value !== "");
+        function filterEmptyStrings(items) {
+          return items.filter((item) => item !== "");
         }
         function pickRandomItems(items, count) {
           if (!Number.isSafeInteger(count) || count < 0) {
@@ -1063,8 +1064,8 @@ FILE: apps/random-picker/generated/index.html
           const excludedItemSet = new Set(excludedItems);
           return items.filter((item) => !excludedItemSet.has(item));
         }
-        function trimStrings(values) {
-          return values.map((value) => value.trim());
+        function trimStrings(items) {
+          return items.map((item) => item.trim());
         }
 
         // apps/random-picker/src/event.ts
@@ -1947,12 +1948,12 @@ export function addPipelineStep(
  * 文字列配列に処理関数を順番に適用する
  */
 export function applyStringArrayProcessors(
-  values: string[],
+  items: string[],
   processors: StringArrayProcessor[],
 ): string[] {
   return processors.reduce(
-    (currentValues, processor) => processor(currentValues),
-    values,
+    (currentItems, processor) => processor(currentItems),
+    items,
   );
 }
 
@@ -1980,8 +1981,8 @@ export function executePipeline(
 /**
  * 文字列配列を改行文字で結合する
  */
-export function joinByNewline(values: string[]): string {
-  return values.join("\n");
+export function joinByNewline(items: string[]): string {
+  return items.join("\n");
 }
 
 /**
@@ -2126,8 +2127,8 @@ FILE: apps/random-picker/src/processor.ts
 /**
  * 空文字列を除外する
  */
-export function filterEmptyStrings(values: string[]): string[] {
-  return values.filter((value) => value !== "");
+export function filterEmptyStrings(items: string[]): string[] {
+  return items.filter((item) => item !== "");
 }
 
 /**
@@ -2172,8 +2173,8 @@ export function removeExcludedItems(
 /**
  * 文字列配列の各要素を trim する
  */
-export function trimStrings(values: string[]): string[] {
-  return values.map((value) => value.trim());
+export function trimStrings(items: string[]): string[] {
+  return items.map((item) => item.trim());
 }
 
 
@@ -2653,7 +2654,7 @@ export type ProcessorParams = Record<string, number | string>;
 export type ProcessorRegistry = Record<string, ProcessorDef>;
 
 /** 文字列配列を受け取り、加工して返す処理関数の型 */
-export type StringArrayProcessor = (values: string[]) => string[];
+export type StringArrayProcessor = (items: string[]) => string[];
 
 export type UI = {
   inputCopyBtn: HTMLButtonElement;
@@ -4264,29 +4265,29 @@ describe("addPipelineStep", () => {
 describe("applyStringArrayProcessors", () => {
   describe("正常系", () => {
     test("正常 / 配列に処理関数が順に適用される", () => {
-      const trimValues = vi
-        .fn<(values: string[]) => string[]>()
-        .mockImplementation((values) => values.map((value) => value.trim()));
+      const trimItems = vi
+        .fn<(items: string[]) => string[]>()
+        .mockImplementation((items) => items.map((item) => item.trim()));
       const addSuffix = vi
-        .fn<(values: string[]) => string[]>()
-        .mockImplementation((values) => values.map((value) => `${value}!`));
+        .fn<(items: string[]) => string[]>()
+        .mockImplementation((items) => items.map((item) => `${item}!`));
 
       expect(
-        applyStringArrayProcessors([" A ", " B "], [trimValues, addSuffix]),
+        applyStringArrayProcessors([" A ", " B "], [trimItems, addSuffix]),
       ).toEqual(["A!", "B!"]);
-      expect(trimValues).toHaveBeenCalledWith([" A ", " B "]);
+      expect(trimItems).toHaveBeenCalledWith([" A ", " B "]);
       expect(addSuffix).toHaveBeenCalledWith(["A", "B"]);
     });
   });
 
   describe("境界系", () => {
-    test("values.length=0 / 配列に処理関数が順に適用される", () => {
+    test("items.length=0 / 配列に処理関数が順に適用される", () => {
       const addFallback = vi
-        .fn<(values: string[]) => string[]>()
+        .fn<(items: string[]) => string[]>()
         .mockReturnValue(["fallback"]);
       const addSuffix = vi
-        .fn<(values: string[]) => string[]>()
-        .mockImplementation((values) => values.map((value) => `${value}!`));
+        .fn<(items: string[]) => string[]>()
+        .mockImplementation((items) => items.map((item) => `${item}!`));
 
       expect(applyStringArrayProcessors([], [addFallback, addSuffix])).toEqual([
         "fallback!",
@@ -4310,7 +4311,7 @@ describe("executePipeline", () => {
       id: "filterEmpty",
       name: "filterEmpty",
       description: "filter empty values",
-      execute: (values: string[]) => values.filter((value) => value !== ""),
+      execute: (items: string[]) => items.filter((item) => item !== ""),
     },
     pickRandom: {
       id: "pickRandom",
@@ -4323,14 +4324,14 @@ describe("executePipeline", () => {
           default: 1,
         },
       },
-      execute: (values: string[], params: { count?: number }) =>
-        values.slice(0, params.count ?? 1),
+      execute: (items: string[], params: { count?: number }) =>
+        items.slice(0, params.count ?? 1),
     },
     trim: {
       id: "trim",
       name: "trim",
       description: "trim values",
-      execute: (values: string[]) => values.map((value) => value.trim()),
+      execute: (items: string[]) => items.map((item) => item.trim()),
     },
   };
 
@@ -4420,17 +4421,17 @@ describe("executePipeline", () => {
 
 describe("joinByNewline", () => {
   describe("正常系", () => {
-    test("values.length=2 / 改行で結合する", () => {
+    test("items.length=2 / 改行で結合する", () => {
       expect(joinByNewline(["A", "B"])).toBe("A\nB");
     });
   });
 
   describe("境界系", () => {
-    test("values.length=0 / 空文字列を返す", () => {
+    test("items.length=0 / 空文字列を返す", () => {
       expect(joinByNewline([])).toBe("");
     });
 
-    test("values.length=1 / 要素をそのまま返す", () => {
+    test("items.length=1 / 要素をそのまま返す", () => {
       expect(joinByNewline(["A"])).toBe("A");
     });
   });
@@ -5022,7 +5023,7 @@ describe("filterEmptyStrings", () => {
   });
 
   describe("境界系", () => {
-    test("values.length=0", () => {
+    test("items.length=0", () => {
       const items: string[] = [];
       const result = filterEmptyStrings(items);
 
@@ -5243,36 +5244,36 @@ describe("removeExcludedItems", () => {
 describe("trimStrings", () => {
   describe("正常系", () => {
     test("先頭末尾空白なし", () => {
-      const values = ["A", "BC"];
-      const result = trimStrings(values);
+      const items = ["A", "BC"];
+      const result = trimStrings(items);
 
-      expect(values).toEqual(["A", "BC"]);
+      expect(items).toEqual(["A", "BC"]);
       expect(result).toEqual(["A", "BC"]);
     });
 
     test("先頭末尾空白あり", () => {
-      const values = [" A ", " B"];
-      const result = trimStrings(values);
+      const items = [" A ", " B"];
+      const result = trimStrings(items);
 
-      expect(values).toEqual([" A ", " B"]);
+      expect(items).toEqual([" A ", " B"]);
       expect(result).toEqual(["A", "B"]);
     });
   });
 
   describe("境界系", () => {
-    test("values.length=0", () => {
-      const values: string[] = [];
-      const result = trimStrings(values);
+    test("items.length=0", () => {
+      const items: string[] = [];
+      const result = trimStrings(items);
 
-      expect(values).toEqual([]);
+      expect(items).toEqual([]);
       expect(result).toEqual([]);
     });
 
-    test("values[i].length=0", () => {
-      const values = ["", ""];
-      const result = trimStrings(values);
+    test("items[i].length=0", () => {
+      const items = ["", ""];
+      const result = trimStrings(items);
 
-      expect(values).toEqual(["", ""]);
+      expect(items).toEqual(["", ""]);
       expect(result).toEqual(["", ""]);
     });
   });
@@ -8522,6 +8523,416 @@ export するのは **次の 3 つだけ**。
 - UI と仕様は変わらない
 
 この指示書どおりに、**1 ステップずつ、余計な変更を一切入れずに** 実施すること。
+
+
+
+================================================
+FILE: plans/20260401_01_itemsに統一する指示書.md
+================================================
+# Random Picker 修正指示書
+
+## 目的
+
+文字列配列を表す識別子が `values` と `items` で混在しているため、**文字列配列を表す名前を `items` に統一**する。
+
+今回の修正は **命名の統一のみ** が目的である。
+**挙動変更は禁止**。
+**ロジック変更は禁止**。
+**型の意味変更は禁止**。
+**関数の追加・削除は禁止**。
+**ファイル追加・削除は禁止**。
+
+---
+
+## 最重要ルール
+
+今回変更してよいのは、**「文字列配列そのもの」を表している識別子名だけ**です。
+
+### 変更してよいもの
+
+- 関数引数名
+- ローカル変数名
+- コールバック引数名
+- 型エイリアス内の引数名
+- テスト名の文字列
+- テスト内のモック関数の引数名
+
+### 変更してはいけないもの
+
+- 関数名
+- export 名
+- ファイル名
+- import/export 構造
+- 処理順
+- 条件分岐
+- 戻り値
+- 例外
+- 画面文言
+- DOM 要素を表す `item`
+- 単一値を表す `value`
+- URL 配列を表す `urls`
+- 入力行/出力行を表す `inputLines`, `outputLines`
+- `excludedItems` など、すでに意味が明確な別名
+
+特に重要:
+
+- `value` は「単一の文字列」や「単一の値」を表すことがあるので、**機械的に全部 `item` に変えないこと**
+- `item` は DOM 要素を表している箇所もあるので、**DOM の `item` には触らないこと**
+- 今回の統一対象は **「文字列配列」だけ**
+
+---
+
+## 命名方針
+
+以下に統一すること。
+
+- 文字列配列全体: `items`
+- 文字列配列の各要素: `item`
+
+今回 **`values` は使わない**。
+
+---
+
+## 修正対象ファイル
+
+以下のファイルのみ確認して修正すること。
+
+- `apps/random-picker/src/type.ts`
+- `apps/random-picker/src/pipeline.ts`
+- `apps/random-picker/src/processor.ts`
+- `apps/random-picker/tests/unit/pipeline.test.ts`
+- `apps/random-picker/tests/unit/processor.test.ts`
+
+補足:
+
+- `apps/random-picker/src/processor-registry.ts` は既に `items` なので、基本的に修正不要
+- `apps/random-picker/src/event.ts` は `inputLines` / `outputLines` / `urls` で意味が明確なので、修正不要
+- `apps/random-picker/generated/index.html` は生成物なので**直接編集禁止**
+  - 必要なら最終的にビルドで更新される
+
+---
+
+## ファイルごとの具体的な修正内容
+
+### 1. `apps/random-picker/src/type.ts`
+
+`StringArrayProcessor` の引数名を `values` から `items` に変える。
+
+#### 修正前
+
+```ts
+export type StringArrayProcessor = (values: string[]) => string[];
+```
+
+#### 修正後
+
+```ts
+export type StringArrayProcessor = (items: string[]) => string[];
+```
+
+注意:
+
+- 型自体の意味は変えない
+- `string[]` のまま
+- 戻り値も `string[]` のまま
+
+---
+
+### 2. `apps/random-picker/src/pipeline.ts`
+
+以下を修正する。
+
+#### 2-1. `applyStringArrayProcessors`
+
+引数名 `values` を `items` に変更する。
+
+また、`reduce` のアキュムレータ名 `currentValues` も `currentItems` に変更する。
+
+#### 修正前
+
+```ts
+export function applyStringArrayProcessors(
+  values: string[],
+  processors: StringArrayProcessor[],
+): string[] {
+  return processors.reduce(
+    (currentValues, processor) => processor(currentValues),
+    values,
+  );
+}
+```
+
+#### 修正後
+
+```ts
+export function applyStringArrayProcessors(
+  items: string[],
+  processors: StringArrayProcessor[],
+): string[] {
+  return processors.reduce(
+    (currentItems, processor) => processor(currentItems),
+    items,
+  );
+}
+```
+
+重要:
+
+- `reduce` の処理内容は変えない
+- ただの名前変更に留める
+
+#### 2-2. `joinByNewline`
+
+引数名 `values` を `items` に変更する。
+
+#### 修正前
+
+```ts
+export function joinByNewline(values: string[]): string {
+  return values.join("\n");
+}
+```
+
+#### 修正後
+
+```ts
+export function joinByNewline(items: string[]): string {
+  return items.join("\n");
+}
+```
+
+重要:
+
+- `.join("\n")` の処理は変えない
+
+#### 2-3. それ以外
+
+`executePipeline` の `currentItems` は既に適切なので変更不要。
+`splitByNewline` の `sourceText` も適切なので変更不要。
+
+---
+
+### 3. `apps/random-picker/src/processor.ts`
+
+以下を修正する。
+
+#### 3-1. `filterEmptyStrings`
+
+引数名 `values` を `items` に変更する。
+コールバック引数名 `value` も `item` に変更する。
+
+#### 修正前
+
+```ts
+export function filterEmptyStrings(values: string[]): string[] {
+  return values.filter((value) => value !== "");
+}
+```
+
+#### 修正後
+
+```ts
+export function filterEmptyStrings(items: string[]): string[] {
+  return items.filter((item) => item !== "");
+}
+```
+
+重要:
+
+- フィルタ条件は変えない
+- 空文字列除外の仕様はそのまま
+
+#### 3-2. `trimStrings`
+
+引数名 `values` を `items` に変更する。
+コールバック引数名 `value` も `item` に変更する。
+
+#### 修正前
+
+```ts
+export function trimStrings(values: string[]): string[] {
+  return values.map((value) => value.trim());
+}
+```
+
+#### 修正後
+
+```ts
+export function trimStrings(items: string[]): string[] {
+  return items.map((item) => item.trim());
+}
+```
+
+重要:
+
+- `trim()` の処理は変えない
+
+#### 3-3. `pickRandomItems`
+
+既に `items` なので変更不要。
+
+#### 3-4. `removeExcludedItems`
+
+既に `items` / `excludedItems` で意味が明確なので変更不要。
+
+---
+
+### 4. `apps/random-picker/tests/unit/pipeline.test.ts`
+
+`applyStringArrayProcessors` のテスト内に `values` 表記が残っているので、**文字列配列を表すものだけ** `items` に変更する。
+
+#### 修正対象
+
+- `vi.fn<(values: string[]) => string[]>()` → `vi.fn<(items: string[]) => string[]>()`
+- `.mockImplementation((values) => ...)` → `.mockImplementation((items) => ...)`
+- テスト名 `"values.length=0 / ..."` → `"items.length=0 / ..."`
+
+#### 修正イメージ
+
+```ts
+const trimItems = vi
+  .fn<(items: string[]) => string[]>()
+  .mockImplementation((items) => items.map((item) => item.trim()));
+
+const addSuffix = vi
+  .fn<(items: string[]) => string[]>()
+  .mockImplementation((items) => items.map((item) => `${item}!`));
+```
+
+重要:
+
+- モックの処理内容は変えない
+- `trimValues` という変数名も、必要なら `trimItems` に変えてよい
+- ただし `addSuffix` のように `values` を含まない名前は無理に変えなくてよい
+- `expect` の期待値は一切変えない
+
+#### 境界系テスト名
+
+```ts
+test("values.length=0 / 配列に処理関数が順に適用される", ...)
+```
+
+を
+
+```ts
+test("items.length=0 / 配列に処理関数が順に適用される", ...)
+```
+
+に変える。
+
+---
+
+### 5. `apps/random-picker/tests/unit/processor.test.ts`
+
+`values` 表記が残っている箇所だけ修正する。
+
+#### 修正対象
+
+- テスト名 `"values.length=0"` → `"items.length=0"`
+
+必要に応じて、今回修正した関数に対応するローカルな型引数やコールバック引数で `values` が残っていれば `items` に揃える。
+ただし、このファイルでは多くが既に `items` なので、**不要な変更はしないこと**。
+
+---
+
+## 修正しないことの具体例
+
+以下は修正禁止。
+
+### 修正禁止例1
+
+```ts
+export async function copyTextToClipboard(value: string): Promise<void>;
+```
+
+この `value` は配列ではないので変更禁止。
+
+### 修正禁止例2
+
+```ts
+function handlePipelineStepListDragStart(...) {
+  const item = target.closest(".pipeline-step-item") as HTMLElement;
+}
+```
+
+この `item` は DOM 要素なので変更禁止。
+
+### 修正禁止例3
+
+```ts
+const urls = applyStringArrayProcessors(inputLines, [...]);
+```
+
+この `urls` は URL 配列を表していて意味が明確なので変更禁止。
+
+### 修正禁止例4
+
+```ts
+const inputLines = splitByNewline(inputText);
+const outputLines = splitByNewline(outputText);
+```
+
+これは「行」であり、今回の統一対象ではないので変更禁止。
+
+### 修正禁止例5
+
+```ts
+removeExcludedItems(items, excludedItems);
+```
+
+`excludedItems` は除外対象の意味があるので変更禁止。
+
+---
+
+## 作業手順
+
+1. `type.ts` を修正する
+2. `pipeline.ts` を修正する
+3. `processor.ts` を修正する
+4. `tests/unit/pipeline.test.ts` を修正する
+5. `tests/unit/processor.test.ts` を修正する
+6. `values` が「文字列配列」の意味で残っていないか、対象ファイル内だけ再確認する
+7. `generated/index.html` を直接編集していないことを確認する
+8. `npm run precommit` を実行する
+9. フォーマット・型チェック・テスト・ビルドがすべて通ることを確認する
+
+---
+
+## 検索時の注意
+
+`values` で全置換すると壊れる可能性がある。
+**必ず1件ずつ意味を見て修正すること。**
+
+特に注意する検索語:
+
+- `values: string[]`
+- `(values)`
+- `currentValues`
+- `"values.length=0"`
+
+ただし、検索結果が出ても **それが文字列配列を意味していないなら変更しないこと**。
+
+---
+
+## 完了条件
+
+以下をすべて満たしたら完了。
+
+- 文字列配列を表す識別子が `items` に統一されている
+- 文字列配列を意味する `values` が対象ファイル内に残っていない
+- 不要な名前変更をしていない
+- ロジック変更がない
+- `generated/index.html` を直接編集していない
+- `npm run precommit` が成功する
+
+---
+
+## 期待する最終状態
+
+命名だけが変わり、挙動は一切変わらない状態にすること。
+
+**やることは「命名の統一」だけ。**
+**やってはいけないことは「意味の変更」と「ロジック変更」。**
 
 
 

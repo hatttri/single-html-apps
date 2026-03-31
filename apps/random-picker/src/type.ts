@@ -49,7 +49,7 @@ export type ProcessorParams = Record<string, number | string>;
 export type ProcessorRegistry = Record<string, ProcessorDef>;
 
 /** 文字列配列を受け取り、加工して返す処理関数の型 */
-export type StringArrayProcessor = (values: string[]) => string[];
+export type StringArrayProcessor = (items: string[]) => string[];
 
 export type UI = {
   inputCopyBtn: HTMLButtonElement;

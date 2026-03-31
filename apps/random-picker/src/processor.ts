@@ -1,8 +1,8 @@
 /**
  * 空文字列を除外する
  */
-export function filterEmptyStrings(values: string[]): string[] {
-  return values.filter((value) => value !== "");
+export function filterEmptyStrings(items: string[]): string[] {
+  return items.filter((item) => item !== "");
 }
 
 /**
@@ -47,6 +47,6 @@ export function removeExcludedItems(
 /**
  * 文字列配列の各要素を trim する
  */
-export function trimStrings(values: string[]): string[] {
-  return values.map((value) => value.trim());
+export function trimStrings(items: string[]): string[] {
+  return items.map((item) => item.trim());
 }

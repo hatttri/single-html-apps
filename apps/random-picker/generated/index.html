@@ -546,10 +546,10 @@
         function addPipelineStep(steps, newStep) {
           return [...steps, newStep];
         }
-        function applyStringArrayProcessors(values, processors) {
+        function applyStringArrayProcessors(items, processors) {
           return processors.reduce(
-            (currentValues, processor) => processor(currentValues),
-            values,
+            (currentItems, processor) => processor(currentItems),
+            items,
           );
         }
         function executePipeline(inputText, steps, context, processorRegistry) {
@@ -562,8 +562,8 @@
           }
           return joinByNewline(currentItems);
         }
-        function joinByNewline(values) {
-          return values.join("\n");
+        function joinByNewline(items) {
+          return items.join("\n");
         }
         function movePipelineStep(steps, fromIndex, toIndex) {
           const newSteps = [...steps];
@@ -614,8 +614,8 @@
         }
 
         // apps/random-picker/src/processor.ts
-        function filterEmptyStrings(values) {
-          return values.filter((value) => value !== "");
+        function filterEmptyStrings(items) {
+          return items.filter((item) => item !== "");
         }
         function pickRandomItems(items, count) {
           if (!Number.isSafeInteger(count) || count < 0) {
@@ -647,8 +647,8 @@
           const excludedItemSet = new Set(excludedItems);
           return items.filter((item) => !excludedItemSet.has(item));
         }
-        function trimStrings(values) {
-          return values.map((value) => value.trim());
+        function trimStrings(items) {
+          return items.map((item) => item.trim());
         }
 
         // apps/random-picker/src/event.ts

@@ -21,12 +21,12 @@ export function addPipelineStep(
  * 文字列配列に処理関数を順番に適用する
  */
 export function applyStringArrayProcessors(
-  values: string[],
+  items: string[],
   processors: StringArrayProcessor[],
 ): string[] {
   return processors.reduce(
-    (currentValues, processor) => processor(currentValues),
-    values,
+    (currentItems, processor) => processor(currentItems),
+    items,
   );
 }
 
@@ -54,8 +54,8 @@ export function executePipeline(
 /**
  * 文字列配列を改行文字で結合する
  */
-export function joinByNewline(values: string[]): string {
-  return values.join("\n");
+export function joinByNewline(items: string[]): string {
+  return items.join("\n");
 }
 
 /**

@@ -36,29 +36,29 @@ describe("addPipelineStep", () => {
 describe("applyStringArrayProcessors", () => {
   describe("正常系", () => {
     test("正常 / 配列に処理関数が順に適用される", () => {
-      const trimValues = vi
-        .fn<(values: string[]) => string[]>()
-        .mockImplementation((values) => values.map((value) => value.trim()));
+      const trimItems = vi
+        .fn<(items: string[]) => string[]>()
+        .mockImplementation((items) => items.map((item) => item.trim()));
       const addSuffix = vi
-        .fn<(values: string[]) => string[]>()
-        .mockImplementation((values) => values.map((value) => `${value}!`));
+        .fn<(items: string[]) => string[]>()
+        .mockImplementation((items) => items.map((item) => `${item}!`));
 
       expect(
-        applyStringArrayProcessors([" A ", " B "], [trimValues, addSuffix]),
+        applyStringArrayProcessors([" A ", " B "], [trimItems, addSuffix]),
       ).toEqual(["A!", "B!"]);
-      expect(trimValues).toHaveBeenCalledWith([" A ", " B "]);
+      expect(trimItems).toHaveBeenCalledWith([" A ", " B "]);
       expect(addSuffix).toHaveBeenCalledWith(["A", "B"]);
     });
   });
 
   describe("境界系", () => {
-    test("values.length=0 / 配列に処理関数が順に適用される", () => {
+    test("items.length=0 / 配列に処理関数が順に適用される", () => {
       const addFallback = vi
-        .fn<(values: string[]) => string[]>()
+        .fn<(items: string[]) => string[]>()
         .mockReturnValue(["fallback"]);
       const addSuffix = vi
-        .fn<(values: string[]) => string[]>()
-        .mockImplementation((values) => values.map((value) => `${value}!`));
+        .fn<(items: string[]) => string[]>()
+        .mockImplementation((items) => items.map((item) => `${item}!`));
 
       expect(applyStringArrayProcessors([], [addFallback, addSuffix])).toEqual([
         "fallback!",
@@ -82,7 +82,7 @@ describe("executePipeline", () => {
       id: "filterEmpty",
       name: "filterEmpty",
       description: "filter empty values",
-      execute: (values: string[]) => values.filter((value) => value !== ""),
+      execute: (items: string[]) => items.filter((item) => item !== ""),
     },
     pickRandom: {
       id: "pickRandom",
@@ -95,14 +95,14 @@ describe("executePipeline", () => {
           default: 1,
         },
       },
-      execute: (values: string[], params: { count?: number }) =>
-        values.slice(0, params.count ?? 1),
+      execute: (items: string[], params: { count?: number }) =>
+        items.slice(0, params.count ?? 1),
     },
     trim: {
       id: "trim",
       name: "trim",
       description: "trim values",
-      execute: (values: string[]) => values.map((value) => value.trim()),
+      execute: (items: string[]) => items.map((item) => item.trim()),
     },
   };
 
@@ -192,17 +192,17 @@ describe("executePipeline", () => {
 
 describe("joinByNewline", () => {
   describe("正常系", () => {
-    test("values.length=2 / 改行で結合する", () => {
+    test("items.length=2 / 改行で結合する", () => {
       expect(joinByNewline(["A", "B"])).toBe("A\nB");
     });
   });
 
   describe("境界系", () => {
-    test("values.length=0 / 空文字列を返す", () => {
+    test("items.length=0 / 空文字列を返す", () => {
       expect(joinByNewline([])).toBe("");
     });
 
-    test("values.length=1 / 要素をそのまま返す", () => {
+    test("items.length=1 / 要素をそのまま返す", () => {
       expect(joinByNewline(["A"])).toBe("A");
     });
   });
