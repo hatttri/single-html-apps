@@ -324,14 +324,6 @@ describe("movePipelineStep", () => {
       expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
     });
 
-    test("fromIndex=newSteps.length+1", () => {
-      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
-      const newSteps = movePipelineStep(steps, 4, 0);
-
-      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
-      expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
-    });
-
     test("toIndex=newSteps.length-1", () => {
       const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
       const newSteps = movePipelineStep(steps, 0, 2);
@@ -347,20 +339,20 @@ describe("movePipelineStep", () => {
       expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
       expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
     });
-
-    test("toIndex=newSteps.length+1", () => {
-      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
-      const newSteps = movePipelineStep(steps, 0, 4);
-
-      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
-      expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
-    });
   });
 
   describe("異常系", () => {
     test("fromIndex が小数 / 配列が変わらない", () => {
       const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
       const newSteps = movePipelineStep(steps, 1.2, 0);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    });
+
+    test("fromIndex がNaN / 配列が変わらない", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const newSteps = movePipelineStep(steps, Number.NaN, 0);
 
       expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
       expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
@@ -373,21 +365,93 @@ describe("movePipelineStep", () => {
       expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
       expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
     });
+
+    test("toIndex がNaN / 配列が変わらない", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const newSteps = movePipelineStep(steps, 0, Number.NaN);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(newSteps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    });
   });
 });
 
 describe("removePipelineStep", () => {
   describe("正常系", () => {
-    test("indexの要素が削除される", () => {
+    test("ステップが削除される", () => {
       const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
       const result = removePipelineStep(steps, 1);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "a" }, { id: "c" }]);
+    });
+  });
+
+  describe("境界系", () => {
+    test("index=-1", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, -1);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    });
+
+    test("index=0", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, 0);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "b" }, { id: "c" }]);
+    });
+
+    test("index=1", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, 1);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
       expect(result).toEqual([{ id: "a" }, { id: "c" }]);
     });
 
-    test("元の配列が変更されない", () => {
-      const steps = [{ id: "a" }, { id: "b" }];
-      removePipelineStep(steps, 0);
-      expect(steps).toEqual([{ id: "a" }, { id: "b" }]);
+    test("index=steps.length-1", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, steps.length - 1);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "a" }, { id: "b" }]);
+    });
+
+    test("index=steps.length", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, steps.length);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    });
+  });
+
+  describe("異常系", () => {
+    test("steps.length=0", () => {
+      const steps: { id: string }[] = [];
+      const result = removePipelineStep(steps, 0);
+
+      expect(steps).toEqual([]);
+      expect(result).toEqual([]);
+    });
+
+    test("index が小数", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, 1.2);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    });
+
+    test("index がNaN", () => {
+      const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
+      const result = removePipelineStep(steps, Number.NaN);
+
+      expect(steps).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
+      expect(result).toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
     });
   });
 });
