@@ -4616,6 +4616,22 @@ describe("removePipelineStep", () => {
   });
 
   describe("境界系", () => {
+    test("steps.length=0", () => {
+      const steps: { id: string }[] = [];
+      const result = removePipelineStep(steps, 0);
+
+      expect(steps).toEqual([]);
+      expect(result).toEqual([]);
+    });
+
+    test("steps.length=1", () => {
+      const steps = [{ id: "a" }];
+      const result = removePipelineStep(steps, 0);
+
+      expect(steps).toEqual([{ id: "a" }]);
+      expect(result).toEqual([]);
+    });
+
     test("index=-1", () => {
       const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
       const result = removePipelineStep(steps, -1);
@@ -4658,14 +4674,6 @@ describe("removePipelineStep", () => {
   });
 
   describe("異常系", () => {
-    test("steps.length=0", () => {
-      const steps: { id: string }[] = [];
-      const result = removePipelineStep(steps, 0);
-
-      expect(steps).toEqual([]);
-      expect(result).toEqual([]);
-    });
-
     test("index が小数", () => {
       const steps = [{ id: "a" }, { id: "b" }, { id: "c" }];
       const result = removePipelineStep(steps, 1.2);
@@ -4726,6 +4734,10 @@ describe("resolveParams", () => {
 
 describe("splitByNewline", () => {
   describe("正常系", () => {
+    test("改行なし", () => {
+      expect(splitByNewline("A")).toEqual(["A"]);
+    });
+
     test("改行あり", () => {
       expect(splitByNewline("A\nB")).toEqual(["A", "B"]);
     });
@@ -4735,25 +4747,205 @@ describe("splitByNewline", () => {
     test("文字数=0", () => {
       expect(splitByNewline("")).toEqual([""]);
     });
-
-    test("改行なし", () => {
-      expect(splitByNewline("A")).toEqual(["A"]);
-    });
   });
 });
 
 describe("updatePipelineStepParam", () => {
   describe("正常系", () => {
-    test("indexのparamsが更新される", () => {
+    test("keyが新規", () => {
       const steps = [{ id: "pickRandom", params: { count: 1 } }];
-      const result = updatePipelineStepParam(steps, 0, "count", 5);
-      expect(result[0].params).toEqual({ count: 5 });
+      const result = updatePipelineStepParam(steps, 0, "mode", "all");
+
+      expect(steps).toEqual([{ id: "pickRandom", params: { count: 1 } }]);
+      expect(result).toEqual([
+        { id: "pickRandom", params: { count: 1, mode: "all" } },
+      ]);
     });
 
-    test("元の配列が変更されない", () => {
+    test("paramsなし", () => {
+      const steps = [{ id: "pickRandom" }];
+      const result = updatePipelineStepParam(steps, 0, "count", 5);
+
+      expect(steps).toEqual([{ id: "pickRandom" }]);
+      expect(result).toEqual([{ id: "pickRandom", params: { count: 5 } }]);
+    });
+
+    test("paramsあり", () => {
+      const steps = [{ id: "pickRandom", params: { count: 1, mode: "all" } }];
+      const result = updatePipelineStepParam(steps, 0, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "pickRandom", params: { count: 1, mode: "all" } },
+      ]);
+      expect(result).toEqual([
+        { id: "pickRandom", params: { count: 5, mode: "all" } },
+      ]);
+    });
+  });
+
+  describe("境界系", () => {
+    test("steps.length=0", () => {
+      const steps: { id: string; params?: Record<string, number | string> }[] =
+        [];
+      const result = updatePipelineStepParam(steps, 0, "count", 5);
+
+      expect(steps).toEqual([]);
+      expect(result).toEqual([]);
+    });
+
+    test("steps.length=1", () => {
       const steps = [{ id: "pickRandom", params: { count: 1 } }];
-      updatePipelineStepParam(steps, 0, "count", 5);
-      expect(steps[0].params).toEqual({ count: 1 });
+      const result = updatePipelineStepParam(steps, 0, "count", 5);
+
+      expect(steps).toEqual([{ id: "pickRandom", params: { count: 1 } }]);
+      expect(result).toEqual([{ id: "pickRandom", params: { count: 5 } }]);
+    });
+
+    test("index=-1", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(steps, -1, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+    });
+
+    test("index=0", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(steps, 0, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 5 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+    });
+
+    test("index=1", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(steps, 1, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 5 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+    });
+
+    test("index=steps.length-1", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(
+        steps,
+        steps.length - 1,
+        "count",
+        5,
+      );
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 5 } },
+      ]);
+    });
+
+    test("index=steps.length", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(steps, steps.length, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+    });
+  });
+
+  describe("異常系", () => {
+    test("indexが小数", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(steps, 1.2, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+    });
+
+    test("index=NaN", () => {
+      const steps = [
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ];
+      const result = updatePipelineStepParam(steps, Number.NaN, "count", 5);
+
+      expect(steps).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
+      expect(result).toEqual([
+        { id: "a", params: { count: 1 } },
+        { id: "b", params: { count: 2 } },
+        { id: "c", params: { count: 3 } },
+      ]);
     });
   });
 });
