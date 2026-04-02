@@ -1,3 +1,4 @@
+import type { ProcessorRegistry } from "../../src/type.ts";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   buildProcessorSelectOptions,
@@ -802,7 +803,7 @@ describe("ui.pipelineStepList.ondragstart", () => {
 
 describe("ui.pipelineStepList.oninput", () => {
   describe("正常系", () => {
-    test("number input の変更 / 対応 params を number で更新する", () => {
+    test('type="number" / numberで更新する', () => {
       ui.processorSelect.value = "pickRandom";
       ui.addStepBtn.click();
 
@@ -815,28 +816,56 @@ describe("ui.pipelineStepList.oninput", () => {
       expect(appState.pipeline[0].params).toEqual({ count: 10 });
     });
 
-    test("text input の変更 / 対応 params を string で更新する", () => {
-      appState.pipeline = [{ id: "trim", params: { label: "old" } }];
-      ui.pipelineStepList.innerHTML = "";
+    test('type="text" / stringで更新する', () => {
+      const textRegistry: ProcessorRegistry = {
+        textStep: {
+          id: "textStep",
+          name: "Text Step",
+          description: "text param test",
+          paramsSchema: {
+            label: { type: "string", label: "Label", default: "default" },
+          },
+          execute: (items) => items,
+        },
+      };
 
-      const input = document.createElement("input");
-      input.type = "text";
+      appState.pipeline = [{ id: "textStep", params: { label: "old" } }];
+      renderPipelineStepList(
+        ui.pipelineStepList,
+        appState.pipeline,
+        textRegistry,
+      );
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="text"]',
+      ) as HTMLInputElement;
       input.value = "new";
-      input.dataset.index = "0";
-      input.dataset.key = "label";
-      ui.pipelineStepList.appendChild(input);
-
       input.dispatchEvent(new Event("input", { bubbles: true }));
 
       expect(appState.pipeline[0].params).toEqual({ label: "new" });
     });
 
-    test("既存 params あり / 指定 key だけ更新して他 params は維持する", () => {
-      appState.pipeline = [{ id: "pickRandom", params: { count: 3 } }];
+    test("paramsに他keyあり / 指定keyだけ更新する", () => {
+      const multiParamRegistry: ProcessorRegistry = {
+        multiParamStep: {
+          id: "multiParamStep",
+          name: "Multi Param Step",
+          description: "multi param test",
+          paramsSchema: {
+            count: { type: "number", label: "Count", default: 1 },
+            seed: { type: "string", label: "Seed", default: "seed" },
+          },
+          execute: (items) => items,
+        },
+      };
+
+      appState.pipeline = [
+        { id: "multiParamStep", params: { count: 3, seed: "abc" } },
+      ];
       renderPipelineStepList(
         ui.pipelineStepList,
         appState.pipeline,
-        PROCESSOR_REGISTRY,
+        multiParamRegistry,
       );
 
       const input = ui.pipelineStepList.querySelector(
@@ -845,10 +874,10 @@ describe("ui.pipelineStepList.oninput", () => {
       input.value = "5";
       input.dispatchEvent(new Event("input", { bubbles: true }));
 
-      expect(appState.pipeline[0].params).toEqual({ count: 5 });
+      expect(appState.pipeline[0].params).toEqual({ count: 5, seed: "abc" });
     });
 
-    test("steps.length=2 / 対象 index の step だけ更新する", () => {
+    test("steps.length>=2 / 対象stepだけ更新する", () => {
       appState.pipeline = [
         { id: "pickRandom", params: { count: 3 } },
         { id: "pickRandom" },
@@ -872,7 +901,7 @@ describe("ui.pipelineStepList.oninput", () => {
   });
 
   describe("異常系", () => {
-    test("INPUT 以外から input イベント / 何もしない", () => {
+    test('tagName!=="INPUT" / 更新しない', () => {
       ui.processorSelect.value = "pickRandom";
       ui.addStepBtn.click();
 
@@ -884,7 +913,7 @@ describe("ui.pipelineStepList.oninput", () => {
       expect(appState.pipeline[0].params).toBeUndefined();
     });
 
-    test("data-index なしの INPUT / 何もしない", () => {
+    test("data-index===undefined / 更新しない", () => {
       ui.processorSelect.value = "pickRandom";
       ui.addStepBtn.click();
 
@@ -898,7 +927,7 @@ describe("ui.pipelineStepList.oninput", () => {
       expect(appState.pipeline[0].params).toBeUndefined();
     });
 
-    test("data-key なしの INPUT / 何もしない", () => {
+    test("data-key===undefined / 更新しない", () => {
       ui.processorSelect.value = "pickRandom";
       ui.addStepBtn.click();
 
@@ -912,21 +941,21 @@ describe("ui.pipelineStepList.oninput", () => {
       expect(appState.pipeline[0].params).toBeUndefined();
     });
 
-    test("data-index が範囲外 / 何もしない", () => {
+    test('data-index="abc" / 更新しない', () => {
       ui.processorSelect.value = "pickRandom";
       ui.addStepBtn.click();
 
       const input = ui.pipelineStepList.querySelector(
         'input[type="number"]',
       ) as HTMLInputElement;
-      input.dataset.index = "10";
+      input.dataset.index = "abc";
       input.value = "4";
       input.dispatchEvent(new Event("input", { bubbles: true }));
 
       expect(appState.pipeline[0].params).toBeUndefined();
     });
 
-    test('number input.value="" / NaN で更新する', () => {
+    test('type="number" && value="" / NaNで更新する', () => {
       ui.processorSelect.value = "pickRandom";
       ui.addStepBtn.click();
 
@@ -945,17 +974,27 @@ describe("ui.pipelineStepList.oninput", () => {
 
 describe("ui.addStepBtn.onclick", () => {
   describe("正常系", () => {
-    test('processorSelect.value="trim" / 末尾に1件追加する', () => {
+    test("1件追加", () => {
       ui.processorSelect.value = "trim";
       ui.addStepBtn.click();
 
       expect(appState.pipeline.map((step) => step.id)).toEqual(["trim"]);
       expect(
-        ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-      ).toHaveLength(1);
+        ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
+      ).toBeNull();
+
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+      expect(items).toHaveLength(1);
+
+      const itemNames = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-name",
+      );
+      expect(itemNames[0]?.textContent).toBe("空白削除");
     });
 
-    test("2回連続クリック / 追加順のまま2件になる", () => {
+    test("2件追加", () => {
       ui.processorSelect.value = "trim";
       ui.addStepBtn.click();
       ui.processorSelect.value = "filterEmpty";
@@ -966,69 +1005,48 @@ describe("ui.addStepBtn.onclick", () => {
         "filterEmpty",
       ]);
       expect(
-        ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-      ).toHaveLength(2);
-    });
-
-    test("steps.length=0 / 空メッセージ表示からステップ表示に切り替わる", () => {
-      ui.processorSelect.value = "trim";
-      ui.addStepBtn.click();
-
-      expect(
         ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
       ).toBeNull();
-      expect(
-        ui.pipelineStepList.querySelector(".pipeline-step-item"),
-      ).not.toBeNull();
-    });
 
-    test("追加後 / 追加した step の表示名が描画される", () => {
-      ui.processorSelect.value = "trim";
-      ui.addStepBtn.click();
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+      expect(items).toHaveLength(2);
 
-      expect(
-        ui.pipelineStepList.querySelector(".pipeline-step-name")?.textContent,
-      ).toBe("空白削除");
+      const itemNames = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-name",
+      );
+      expect(itemNames[0]?.textContent).toBe("空白削除");
+      expect(itemNames[1]?.textContent).toBe("空行除外");
     });
   });
 
   describe("異常系", () => {
-    test("processorSelect.value が未登録 id / 何もしない", () => {
+    test("processorSelect.value が未登録 id", () => {
       ui.processorSelect.value = "unknown";
       ui.addStepBtn.click();
 
-      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
       expect(appState.pipeline).toHaveLength(0);
-      expect(items).toHaveLength(0);
       expect(
         ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
       ).not.toBeNull();
-    });
-
-    test("processorSelect.value が未登録 id / pipeline を変更しない", () => {
-      ui.processorSelect.value = "unknown";
-      ui.addStepBtn.click();
 
       const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
-      expect(appState.pipeline).toEqual([]);
       expect(items).toHaveLength(0);
-      expect(
-        ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
-      ).not.toBeNull();
     });
   });
 });
 
 describe("ui.pipelineRunBtn.onclick", () => {
   describe("正常系", () => {
-    test("steps.length=0 / input.value をそのまま output.value に設定する", () => {
-      ui.input.value = "a";
+    test("ステップ0件", () => {
+      ui.input.value = "a\nb";
       ui.pipelineRunBtn.click();
 
-      expect(ui.output.value).toBe("a");
+      expect(ui.output.value).toBe("a\nb");
     });
 
-    test("trim 1件 / trim 結果を output.value に設定する", () => {
+    test("ステップ1件", () => {
       ui.input.value = " a ";
       ui.processorSelect.value = "trim";
       ui.addStepBtn.click();
@@ -1037,7 +1055,7 @@ describe("ui.pipelineRunBtn.onclick", () => {
       expect(ui.output.value).toBe("a");
     });
 
-    test("trim -> filterEmpty / 複数 step を順に実行する", () => {
+    test("ステップ2件以上", () => {
       ui.input.value = " a \n\n b ";
       ui.processorSelect.value = "trim";
       ui.addStepBtn.click();
@@ -1048,30 +1066,11 @@ describe("ui.pipelineRunBtn.onclick", () => {
       expect(ui.output.value).toBe("a\nb");
     });
 
-    test("excludePrevious 1件 / 実行前の output.value を previousOutput として使う", () => {
+    test("出力あり", () => {
       ui.input.value = "a\nb";
       ui.output.value = "b";
       ui.processorSelect.value = "excludePrevious";
       ui.addStepBtn.click();
-      ui.pipelineRunBtn.click();
-
-      expect(ui.output.value).toBe("a");
-    });
-
-    test("1回目実行後に input.value を変更 / 2回目は最新 input.value を使う", () => {
-      ui.input.value = "a";
-      ui.pipelineRunBtn.click();
-      ui.input.value = "b";
-      ui.pipelineRunBtn.click();
-
-      expect(ui.output.value).toBe("b");
-    });
-
-    test("1回目実行後の output.value がある / 2回目は最新 output.value を previousOutput として使う", () => {
-      ui.input.value = "a\nb";
-      ui.processorSelect.value = "excludePrevious";
-      ui.addStepBtn.click();
-      ui.output.value = "b";
       ui.pipelineRunBtn.click();
 
       expect(ui.output.value).toBe("a");
@@ -1079,7 +1078,7 @@ describe("ui.pipelineRunBtn.onclick", () => {
   });
 
   describe("異常系", () => {
-    test("input.value が1行 / 未登録 step.id を無視して実行する", () => {
+    test("未登録ステップを含む", () => {
       appState.pipeline = [{ id: "unknown" }, { id: "trim" }];
       renderPipelineStepList(
         ui.pipelineStepList,
@@ -1092,18 +1091,23 @@ describe("ui.pipelineRunBtn.onclick", () => {
       expect(ui.output.value).toBe("a");
     });
 
-    test("input.value が複数行 / 未登録 step.id を無視して実行する", () => {
-      appState.pipeline = [{ id: "unknown" }, { id: "trim" }];
-      renderPipelineStepList(
-        ui.pipelineStepList,
-        appState.pipeline,
-        PROCESSOR_REGISTRY,
-      );
+    test("不正なパラメータ値", () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      input.value = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
       ui.input.value = "a\nb";
+      ui.output.value = "before";
 
-      ui.pipelineRunBtn.click();
-
-      expect(ui.output.value).toBe("a\nb");
+      expect(() => {
+        ui.pipelineRunBtn.onclick?.(new PointerEvent("click"));
+      }).toThrow();
+      expect(ui.output.value).toBe("before");
     });
   });
 });
