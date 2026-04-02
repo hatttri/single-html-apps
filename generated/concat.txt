@@ -38,7 +38,8 @@ Directory structure:
 │   ├── 20260320_01_完全ランダム_排他ランダムボタン削除_指示書.md
 │   ├── 20260320_02_Random_Picker_リファクタリング実装指示書.md
 │   ├── 20260401_01_itemsに統一する指示書.md
-│   └── 20260401_02_event.test.ts全面作り直し指示書.md
+│   ├── 20260401_02_event.test.ts全面作り直し指示書.md
+│   └── 20260402_01ui.pipelineStepList.oninputインテグレーションテスト修正指示書.md
 ├── playwright.config.ts
 ├── README.md
 ├── scripts
@@ -10148,6 +10149,365 @@ describe("ui.outputOpenBtn.onclick", () => {
 - `npm run precommit` が **自分の変更と無関係な既存不具合** で落ちた場合は、`event.test.ts` 以外を触らずに止めること
 - 落ちた原因を直すために、本番コードや他テストへ手を広げないこと
 - まず `event.test.ts` だけを完成させることを優先すること
+
+
+
+================================================
+FILE: plans/20260402_01ui.pipelineStepList.oninputインテグレーションテスト修正指示書.md
+================================================
+# `ui.pipelineStepList.oninput` インテグレーションテスト修正指示書
+
+## 目的
+
+`apps/random-picker/tests/integration/event.test.ts` の `describe("ui.pipelineStepList.oninput", ...)` を作り直す。  
+目的は、**テスト名だけ見れば網羅感と統一感がわかる状態** にすること。  
+現状は `text input` のケースだけ DOM を手で生やしていて流儀がずれており、`既存 params あり / 指定 key だけ更新して他 params は維持する` も名前と中身が一致していない。
+
+---
+
+## 対象ファイル
+
+- 修正対象:
+  - `apps/random-picker/tests/integration/event.test.ts`
+- 今回**修正しない**もの:
+  - `apps/random-picker/src/event.ts`
+  - `apps/random-picker/src/dom.ts`
+  - `apps/random-picker/src/pipeline.ts`
+  - それ以外の `describe(...)`
+
+`handlePipelineStepListInput` の現行仕様は、`event.target.tagName === "INPUT"` かつ `data-index` と `data-key` があるときだけ更新し、`type="number"` なら `parseFloat(target.value)`、それ以外は `target.value` を使って `updatePipelineStepParam` に渡す、というもの。今回は**この現行仕様に合わせて**テストを整理する。
+
+---
+
+## やること
+
+`describe("ui.pipelineStepList.oninput", ...)` の中身を、以下のテスト一覧に**完全に置き換える**。
+
+```ts
+describe("ui.pipelineStepList.oninput", () => {
+  describe("正常系", () => {
+    test('type="number" / numberで更新する', () => {});
+    test('type="text" / stringで更新する', () => {});
+    test("paramsに他keyあり / 指定keyだけ更新する", () => {});
+    test("steps.length>=2 / 対象stepだけ更新する", () => {});
+  });
+
+  describe("異常系", () => {
+    test('tagName!=="INPUT" / 更新しない', () => {});
+    test("data-index===undefined / 更新しない", () => {});
+    test("data-key===undefined / 更新しない", () => {});
+    test('data-index="abc" / 更新しない', () => {});
+    test('type="number" && value="" / NaNで更新する', () => {});
+  });
+});
+```
+
+### 重要
+
+- テスト名は**この文言に合わせる**
+- `data-index="1"` のような、**意味のない具体値をテスト名に書かない**
+- 主条件だけを名前に書き、それ以外は代表的正常値を使う
+- `text` ケースは**テスト用 registry を使って描画する**
+- `document.createElement("input")` で裸の input を直接ぶら下げるやり方はやめる
+
+---
+
+## 実装方針
+
+## 1. 既存の `oninput` テストは全部削除する
+
+今ある以下のケースは消す。
+
+- `number input の変更 / 対応 params を number で更新する`
+- `text input の変更 / 対応 params を string で更新する`
+- `既存 params あり / 指定 key だけ更新して他 params は維持する`
+- `steps.length=2 / 対象 index の step だけ更新する`
+- 異常系の既存5件も、名前を含めて作り直す
+
+---
+
+## 2. `type="text"` 用のテストではテスト用 registry を使う
+
+現行の本番 `PROCESSOR_REGISTRY` で params を持つのは `pickRandom.count:number` だけで、`text` 用の入力欄は本番 registry からは作れない。
+一方で `renderPipelineStepList` は `paramsSchema.type === "number"` のとき `input.type="number"`、それ以外は `input.type="text"` を生成する。だから `text` ケースは **テスト内で local registry を作って `renderPipelineStepList` する** のが正しい。
+
+### 例
+
+`oninput` の `type="text"` 系でだけ、テスト内に次のような registry を作ってよい。
+
+```ts
+const textRegistry = {
+  textStep: {
+    id: "textStep",
+    name: "Text Step",
+    description: "text param test",
+    paramsSchema: {
+      label: { type: "string", label: "Label", default: "default" },
+    },
+    execute: (items: string[]) => items,
+  },
+};
+```
+
+### 注意
+
+- `type: "string"` を設定する
+- `renderPipelineStepList(..., textRegistry)` で描画する
+- `appState.pipeline` 側の step id も `textStep` に合わせる
+- `execute` はこのテストでは使わないので、入力配列をそのまま返すだけでよい
+
+---
+
+## 3. 発火方法は全ケースで統一する
+
+`pipelineStepList.oninput` は親要素側に結線されている。
+そのため、**子 input の `value` を先に変えてから**、**`bubbles: true` の `input` イベントを dispatch** すること。これは既存の作り直し指示書でも明示されている。
+
+### 必ずこの順番にする
+
+```ts
+input.value = "10";
+input.dispatchEvent(new Event("input", { bubbles: true }));
+```
+
+---
+
+## 4. 各テストの実装内容
+
+## 正常系1: `type="number" / numberで更新する`
+
+### 目的
+
+`type="number"` の input 変更で、対応 params が `number` で更新されることを確認する。
+
+### 実装方法
+
+- `ui.processorSelect.value = "pickRandom"`
+- `ui.addStepBtn.click()`
+- `input[type="number"]` を取得
+- `input.value = "10"`
+- `input` イベントを発火
+- `expect(appState.pipeline[0].params).toEqual({ count: 10 })`
+
+### 注意
+
+- `pickRandom` は本番 registry にあるので local registry は不要
+- 期待値は文字列 `"10"` ではなく数値 `10`
+
+---
+
+## 正常系2: `type="text" / stringで更新する`
+
+### 目的
+
+`type="text"` の input 変更で、対応 params が `string` で更新されることを確認する。
+
+### 実装方法
+
+- local registry `textRegistry` を作る
+- `appState.pipeline = [{ id: "textStep", params: { label: "old" } }]`
+- `renderPipelineStepList(ui.pipelineStepList, appState.pipeline, textRegistry)` を呼ぶ
+- `input[type="text"]` を取得
+- `input.value = "new"`
+- `input` イベントを発火
+- `expect(appState.pipeline[0].params).toEqual({ label: "new" })`
+
+### 禁止
+
+- `document.createElement("input")` で input を単独生成して `pipelineStepList` に append するやり方は禁止
+
+---
+
+## 正常系3: `paramsに他keyあり / 指定keyだけ更新する`
+
+### 目的
+
+対象 key だけ更新し、同じ params 内の他 key は維持されることを確認する。
+
+### 実装方法
+
+- local registry を使って、**2つの param を持つ step** を作る
+- 例:
+  - `count: { type: "number", ... }`
+  - `seed: { type: "string", ... }`
+
+- `appState.pipeline = [{ id: "multiParamStep", params: { count: 3, seed: "abc" } }]`
+- `renderPipelineStepList(..., multiParamRegistry)` を呼ぶ
+- `input[type="number"]` のうち `count` 対応の input を取得
+- `input.value = "5"`
+- `input` イベントを発火
+- `expect(appState.pipeline[0].params).toEqual({ count: 5, seed: "abc" })`
+
+### 重要
+
+- これは現状の壊れているケースの修正
+- **本当に他 key を持たせる**
+- `{ count: 3 }` だけではダメ
+
+---
+
+## 正常系4: `steps.length>=2 / 対象stepだけ更新する`
+
+### 目的
+
+複数 step があるとき、変更した input に対応する step だけが更新されることを確認する。
+
+### 実装方法
+
+- `appState.pipeline = [{ id: "pickRandom", params: { count: 3 } }, { id: "pickRandom" }]`
+- `renderPipelineStepList(ui.pipelineStepList, appState.pipeline, PROCESSOR_REGISTRY)`
+- `input[type="number"]` を複数取得
+- **2個目**の input を変更する
+- `input.value = "7"`
+- `input` イベントを発火
+- 以下を確認する
+
+```ts
+expect(appState.pipeline[0].params).toEqual({ count: 3 });
+expect(appState.pipeline[1].params).toEqual({ count: 7 });
+```
+
+### 注意
+
+- テスト名に `data-index="1"` は書かない
+- ここで確認したいのは「1番だから」ではなく「対象 step だけ更新される」こと
+
+---
+
+## 異常系1: `tagName!=="INPUT" / 更新しない`
+
+### 目的
+
+`event.target` が `INPUT` でない場合は更新しないことを確認する。
+
+### 実装方法
+
+- `pickRandom` を1件追加
+- `.pipeline-step-item` など `INPUT` 以外の要素に対して `input` イベントを発火
+- `expect(appState.pipeline[0].params).toBeUndefined()`
+
+### 根拠
+
+`handlePipelineStepListInput` は `target.tagName === "INPUT"` を満たさないと更新しない。
+
+---
+
+## 異常系2: `data-index===undefined / 更新しない`
+
+### 目的
+
+`data-index` がない場合は更新しないことを確認する。
+
+### 実装方法
+
+- `pickRandom` を1件追加
+- `input[type="number"]` を取得
+- `delete input.dataset.index`
+- `input.value = "4"`
+- `input` イベントを発火
+- `expect(appState.pipeline[0].params).toBeUndefined()`
+
+---
+
+## 異常系3: `data-key===undefined / 更新しない`
+
+### 目的
+
+`data-key` がない場合は更新しないことを確認する。
+
+### 実装方法
+
+- `pickRandom` を1件追加
+- `input[type="number"]` を取得
+- `delete input.dataset.key`
+- `input.value = "4"`
+- `input` イベントを発火
+- `expect(appState.pipeline[0].params).toBeUndefined()`
+
+---
+
+## 異常系4: `data-index="abc" / 更新しない`
+
+### 目的
+
+`data-index` が数値でない場合、結果的に対象 step が見つからず更新しないことを確認する。
+
+### 実装方法
+
+- `pickRandom` を1件追加
+- `input[type="number"]` を取得
+- `input.dataset.index = "abc"`
+- `input.value = "4"`
+- `input` イベントを発火
+- `expect(appState.pipeline[0].params).toBeUndefined()`
+
+### 根拠
+
+実装は `parseInt(target.dataset.index, 10)` を使い、その値を `updatePipelineStepParam` に渡している。`"abc"` は数値にならず、結果として既存 step に一致しないため更新されない。
+
+---
+
+## 異常系5: `type="number" && value="" / NaNで更新する`
+
+### 目的
+
+`type="number"` で `value=""` のとき、現行実装どおり `NaN` で更新されることを確認する。
+
+### 実装方法
+
+- `pickRandom` を1件追加
+- `input[type="number"]` を取得
+- `input.value = ""`
+- `input` イベントを発火
+- 以下を確認する
+
+```ts
+expect(Number.isNaN(appState.pipeline[0].params?.count as number)).toBe(true);
+```
+
+### 注意
+
+- これは「望ましい仕様」の確認ではなく、**現行実装の固定**
+- 実装は `parseFloat(target.value)` をそのまま使っているため、この挙動になる。
+
+---
+
+## 5. テストコードの書き方ルール
+
+- `describe("ui.pipelineStepList.oninput", ...)` の外側構造は変えない
+- `describe("正常系", ...)` と `describe("異常系", ...)` を維持する
+- テスト名は上記の文言に合わせる
+- 余計なケースは追加しない
+- 既存ケースの名前だけ変えて中身を流用しない
+- `text` 系と `multiParam` 系は **必ず registry 経由で描画する**
+- `renderPipelineStepList` を使うケースでは `ui.pipelineStepList.innerHTML = ""` を手でやらない
+  `renderPipelineStepList` 自体が `listEl.innerHTML = ""` しているため不要
+
+---
+
+## 6. 完了条件
+
+以下をすべて満たしたら完了。
+
+1. `describe("ui.pipelineStepList.oninput", ...)` のテスト一覧が指定どおりになっている
+2. `text input` ケースで裸 input を append していない
+3. `paramsに他keyあり / 指定keyだけ更新する` で本当に他 key を持たせている
+4. テスト名がすべて主条件ベースになっている
+5. `npm run precommit` を実行し、成功する
+   リポジトリ規約ではコード修正後に `npm run precommit` 実行が必要
+
+---
+
+## 7. 絶対にやってはいけないこと
+
+- `src/event.ts` の実装を変更する
+- `src/dom.ts` の実装を変更する
+- `PROCESSOR_REGISTRY` 本体を変更する
+- `text` ケースのために本番コードへテスト専用 processor を追加する
+- テスト名に意味のない具体値を書く
+  - 例: `data-index="1"` のような名前
+
+- `他 params 維持` という名前なのに、実際には他 params を持たせない
 
 
 
