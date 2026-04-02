@@ -3244,9 +3244,7 @@ test.describe("パイプラインビルダー", () => {
 ================================================
 FILE: apps/random-picker/tests/integration/event.test.ts
 ================================================
-import fs from "node:fs";
-import path from "node:path";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   buildProcessorSelectOptions,
   createUi,
@@ -3260,134 +3258,130 @@ import {
 import { PROCESSOR_REGISTRY } from "../../src/processor-registry.ts";
 import { appState } from "../../src/state.ts";
 
-const html = fs.readFileSync(
-  path.resolve(process.cwd(), "apps/random-picker/src/index.html"),
-  "utf8",
-);
-const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-
-if (!bodyMatch) {
-  throw new Error("body not found in src/index.html");
+/**
+ * 最小構成の DOM を用意する
+ */
+function setupMinimalDom(): void {
+  document.body.innerHTML = `
+    <button id="inputCopyBtn" type="button"></button>
+    <button id="inputOpenBtn" type="button"></button>
+    <textarea id="input"></textarea>
+    <div id="pipelineStepList"></div>
+    <select id="processorSelect"></select>
+    <button id="addStepBtn" type="button"></button>
+    <button id="pipelineRunBtn" type="button"></button>
+    <button id="outputCopyBtn" type="button"></button>
+    <button id="outputOpenBtn" type="button"></button>
+    <textarea id="output"></textarea>
+  `;
 }
 
-const bodyHtml = bodyMatch[1];
-
-describe("initApp", () => {
-  let ui: ReturnType<typeof createUi>;
-
-  beforeEach(() => {
-    document.body.innerHTML = bodyHtml;
-    appState.pipeline = [];
-    ui = createUi();
-    buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY);
-    renderPipelineStepList(
-      ui.pipelineStepList,
-      appState.pipeline,
-      PROCESSOR_REGISTRY,
-    );
-
-    const deps = { ui, appState, processorRegistry: PROCESSOR_REGISTRY };
-    bindInputEvent(deps);
-    bindPipelineEvent(deps);
-    bindOutputEvent(deps);
+/**
+ * DragEvent 用の dataTransfer を付与して発火する
+ */
+function dispatchDragEvent(
+  target: Element,
+  type: "dragstart" | "dragover" | "dragend",
+): DragEvent {
+  const event = new Event(type, {
+    bubbles: true,
+    cancelable: true,
+  }) as DragEvent;
+  Object.defineProperty(event, "dataTransfer", {
+    configurable: true,
+    value: {
+      effectAllowed: "",
+    },
   });
+  target.dispatchEvent(event);
+  return event;
+}
 
-  // パターン整理
-  // 01. 文字数／＝０文字／≧１文字
-  //
-  // パターン一覧
-  // ○ 01 文字数＝０文字
-  // ○ 02 文字数≧１文字
-  describe("ui.inputCopyBtn.onclick", () => {
-    test("01 文字数＝０文字", async () => {
+let ui: ReturnType<typeof createUi>;
+
+beforeEach(() => {
+  setupMinimalDom();
+  appState.pipeline = [];
+  ui = createUi();
+  buildProcessorSelectOptions(ui.processorSelect, PROCESSOR_REGISTRY);
+  renderPipelineStepList(
+    ui.pipelineStepList,
+    appState.pipeline,
+    PROCESSOR_REGISTRY,
+  );
+
+  const deps = { ui, appState, processorRegistry: PROCESSOR_REGISTRY };
+  bindInputEvent(deps);
+  bindPipelineEvent(deps);
+  bindOutputEvent(deps);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("ui.inputCopyBtn.onclick", () => {
+  describe("正常系", () => {
+    test('input.value="" / 空文字をそのままコピーする', () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.defineProperty(window.navigator, "clipboard", {
+      Object.defineProperty(navigator, "clipboard", {
         configurable: true,
         value: { writeText },
       });
 
       ui.input.value = "";
-      await ui.inputCopyBtn.click();
+      ui.inputCopyBtn.click();
 
+      expect(writeText).toHaveBeenCalledTimes(1);
       expect(writeText).toHaveBeenCalledWith("");
     });
 
-    test("02 文字数≧１文字", async () => {
+    test("input.value が1行 / そのままコピーする", () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.defineProperty(window.navigator, "clipboard", {
+      Object.defineProperty(navigator, "clipboard", {
         configurable: true,
         value: { writeText },
       });
 
-      ui.input.value = "A\nB";
-      await ui.inputCopyBtn.click();
+      ui.input.value = "a";
+      ui.inputCopyBtn.click();
 
-      expect(writeText).toHaveBeenCalledWith("A\nB");
+      expect(writeText).toHaveBeenCalledTimes(1);
+      expect(writeText).toHaveBeenCalledWith("a");
+    });
+
+    test("input.value が複数行 / 改行を維持してコピーする", () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
+
+      ui.input.value = "a\nb";
+      ui.inputCopyBtn.click();
+
+      expect(writeText).toHaveBeenCalledTimes(1);
+      expect(writeText).toHaveBeenCalledWith("a\nb");
     });
   });
+});
 
-  // パターン整理
-  // 01. 行数／＝１行／≧２行
-  // 02. 前後空白／なし／あり
-  // 03. 無効行／なし／あり
-  //
-  // パターン一覧
-  // ○ 01 行数＝１行／前後空白なし／無効行なし
-  // ○ 02 行数＝１行／前後空白なし／無効行あり
-  // ○ 03 行数＝１行／前後空白あり／無効行なし
-  // ○ 04 行数＝１行／前後空白あり／無効行あり
-  // ○ 05 行数≧２行／前後空白なし／無効行なし
-  // ○ 06 行数≧２行／前後空白なし／無効行あり
-  // ○ 07 行数≧２行／前後空白あり／無効行なし
-  // ○ 08 行数≧２行／前後空白あり／無効行あり
-  describe("ui.inputOpenBtn.onclick", () => {
-    test("01 行数＝１行／前後空白なし／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
+describe("ui.inputOpenBtn.onclick", () => {
+  describe("正常系", () => {
+    test("input.value が1行 / 1件だけ開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
       ui.input.value = "https://example.com";
-
       ui.inputOpenBtn.click();
 
       expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
     });
 
-    test("02 行数＝１行／前後空白なし／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.input.value = "";
+    test("input.value が複数行 / 上から順に複数件開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-      ui.inputOpenBtn.click();
-
-      expect(open).not.toHaveBeenCalled();
-    });
-
-    test("03 行数＝１行／前後空白あり／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.input.value = " https://example.com ";
-
-      ui.inputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
-    });
-
-    test("04 行数＝１行／前後空白あり／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.input.value = "  ";
-
-      ui.inputOpenBtn.click();
-
-      expect(open).not.toHaveBeenCalled();
-    });
-
-    test("05 行数≧２行／前後空白なし／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
       ui.input.value = "https://example.com\nhttps://example.org";
-
       ui.inputOpenBtn.click();
 
       expect(open).toHaveBeenCalledTimes(2);
@@ -3395,22 +3389,10 @@ describe("initApp", () => {
       expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
     });
 
-    test("06 行数≧２行／前後空白なし／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.input.value = "https://example.com\n";
+    test("各行の前後に空白がある / trim 後の値を開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-      ui.inputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
-    });
-
-    test("07 行数≧２行／前後空白あり／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
       ui.input.value = " https://example.com \n https://example.org ";
-
       ui.inputOpenBtn.click();
 
       expect(open).toHaveBeenCalledTimes(2);
@@ -3418,383 +3400,1089 @@ describe("initApp", () => {
       expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
     });
 
-    test("08 行数≧２行／前後空白あり／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.input.value = " https://example.com \n  ";
+    test("空行を含む / 空行を除外して開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
+      ui.input.value = "https://example.com\n";
       ui.inputOpenBtn.click();
 
       expect(open).toHaveBeenCalledTimes(1);
       expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
     });
-  });
 
-  describe("ui.pipelineStepList.onclick", () => {
-    describe("正常系", () => {
-      test("削除ボタンをクリックするとステップが削除される", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
-        expect(
-          ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-        ).toHaveLength(1);
+    test("空白だけの行と通常行が混在 / 通常行だけ開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-        const deleteBtn = ui.pipelineStepList.querySelector(
-          ".pipeline-delete-btn",
-        ) as HTMLElement;
-        deleteBtn.click();
+      ui.input.value = "https://example.com\n  \nhttps://example.org";
+      ui.inputOpenBtn.click();
 
-        expect(
-          ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-        ).toHaveLength(0);
-      });
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
     });
 
-    describe("異常系", () => {
-      test("削除ボタン以外をクリックしても変化しない", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
-        const item = ui.pipelineStepList.querySelector(
-          ".pipeline-step-item",
-        ) as HTMLElement;
-        item.click();
+    test("URLでない文字列を含む / 非空文字列としてそのまま開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-        expect(
-          ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-        ).toHaveLength(1);
-      });
+      ui.input.value = "example.com";
+      ui.inputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledWith("example.com", "_blank");
     });
   });
 
-  describe("ui.pipelineStepList.ondragend", () => {
-    describe("正常系", () => {
-      test("ドラッグ終了時に dragging クラスが除去される", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
-        const item = ui.pipelineStepList.querySelector(
-          ".pipeline-step-item",
-        ) as HTMLElement;
-        item.classList.add("dragging");
+  describe("異常系", () => {
+    test('input.value="" / 1件も開かない', () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-        const event = new Event("dragend", { bubbles: true });
-        item.dispatchEvent(event);
+      ui.input.value = "";
+      ui.inputOpenBtn.click();
 
-        expect(item.classList.contains("dragging")).toBe(false);
-      });
+      expect(open).not.toHaveBeenCalled();
     });
 
-    describe("異常系", () => {
-      test("アイテム以外でのドラッグ終了でエラーが発生しない", () => {
-        const event = new Event("dragend", { bubbles: true });
-        expect(() => {
-          ui.pipelineStepList.dispatchEvent(event);
-        }).not.toThrow();
-      });
+    test("空白だけの行しかない / 1件も開かない", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.input.value = "  \n \t ";
+      ui.inputOpenBtn.click();
+
+      expect(open).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe("ui.pipelineStepList.onclick", () => {
+  describe("正常系", () => {
+    test("steps.length=3 / 先頭の削除ボタン押下で削除する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const deleteBtns = ui.pipelineStepList.querySelectorAll(
+        ".pipeline-delete-btn",
+      );
+      (deleteBtns[0] as HTMLButtonElement).click();
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "filterEmpty",
+        "excludePrevious",
+      ]);
+
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(items).toHaveLength(2);
+      expect(items[0].dataset.index).toBe("0");
+      expect(items[1].dataset.index).toBe("1");
+    });
+
+    test("steps.length=3 / 中間の削除ボタン押下で削除する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const deleteBtns = ui.pipelineStepList.querySelectorAll(
+        ".pipeline-delete-btn",
+      );
+      (deleteBtns[1] as HTMLButtonElement).click();
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "excludePrevious",
+      ]);
+
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(items).toHaveLength(2);
+      expect(items[0].dataset.index).toBe("0");
+      expect(items[1].dataset.index).toBe("1");
+    });
+
+    test("steps.length=3 / 末尾の削除ボタン押下で削除する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const deleteBtns = ui.pipelineStepList.querySelectorAll(
+        ".pipeline-delete-btn",
+      );
+      (deleteBtns[2] as HTMLButtonElement).click();
+
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(items).toHaveLength(2);
+      expect(items[0].dataset.index).toBe("0");
+      expect(items[1].dataset.index).toBe("1");
     });
   });
 
-  describe("ui.pipelineStepList.ondragover", () => {
-    describe("正常系", () => {
-      test("要素の上へのドラッグオーバーで順序が入れ替わる", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
-        ui.processorSelect.value = "filterEmpty";
-        ui.addStepBtn.click();
+  describe("異常系", () => {
+    test("削除ボタン以外をクリック / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
 
-        const itemsBefore = ui.pipelineStepList.querySelectorAll(
-          ".pipeline-step-item",
-        );
-        const item0 = itemsBefore[0] as HTMLElement;
-        const item1 = itemsBefore[1] as HTMLElement;
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLDivElement;
+      item.click();
 
-        item0.dispatchEvent(new Event("dragstart", { bubbles: true }));
-        item1.dispatchEvent(new Event("dragover", { bubbles: true }));
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+        "excludePrevious",
+      ]);
 
-        const itemsAfter = ui.pipelineStepList.querySelectorAll(
-          ".pipeline-step-item",
-        );
-        expect(
-          itemsAfter[0].querySelector(".pipeline-step-name")?.textContent,
-        ).toBe("空行除外");
-      });
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(items).toHaveLength(3);
+      expect(items[0].dataset.index).toBe("0");
+      expect(items[1].dataset.index).toBe("1");
+      expect(items[2].dataset.index).toBe("2");
     });
 
-    describe("異常系", () => {
-      test("ドラッグ中ではない場合は入れ替わりが発生しない", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
-        const item = ui.pipelineStepList.querySelector(
-          ".pipeline-step-item",
-        ) as HTMLElement;
+    test('data-index="-1" の削除ボタンをクリック / 何もしない', () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
 
-        item.dispatchEvent(new Event("dragover", { bubbles: true }));
-        expect(
-          ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-        ).toHaveLength(1);
-      });
+      const deleteBtns = ui.pipelineStepList.querySelectorAll(
+        ".pipeline-delete-btn",
+      );
+      const deleteBtn = deleteBtns[0] as HTMLButtonElement;
+      deleteBtn.dataset.index = "-1";
+      deleteBtn.click();
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+        "excludePrevious",
+      ]);
+
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(items).toHaveLength(3);
+      expect(items[0].dataset.index).toBe("0");
+      expect(items[1].dataset.index).toBe("1");
+      expect(items[2].dataset.index).toBe("2");
+    });
+
+    test('data-index="abc" の削除ボタンをクリック / 何もしない', () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const deleteBtns = ui.pipelineStepList.querySelectorAll(
+        ".pipeline-delete-btn",
+      );
+      const deleteBtn = deleteBtns[0] as HTMLButtonElement;
+      deleteBtn.dataset.index = "abc";
+      deleteBtn.click();
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+        "excludePrevious",
+      ]);
+
+      const items = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(items).toHaveLength(3);
+      expect(items[0].dataset.index).toBe("0");
+      expect(items[1].dataset.index).toBe("1");
+      expect(items[2].dataset.index).toBe("2");
+    });
+  });
+});
+
+describe("ui.pipelineStepList.ondragend", () => {
+  describe("正常系", () => {
+    test("dragging クラスありで dragend / dragging クラスを外す", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+
+      dispatchDragEvent(item, "dragstart");
+      expect(item.classList.contains("dragging")).toBe(true);
+      dispatchDragEvent(item, "dragend");
+      expect(item.classList.contains("dragging")).toBe(false);
     });
   });
 
-  describe("ui.pipelineStepList.ondragstart", () => {
-    describe("正常系", () => {
-      test("ドラッグ開始時に dragging クラスが付与される", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
-        const item = ui.pipelineStepList.querySelector(
-          ".pipeline-step-item",
-        ) as HTMLElement;
+  describe("異常系", () => {
+    test("dragging クラスなしで dragend / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
 
-        const event = new Event("dragstart", { bubbles: true });
-        item.dispatchEvent(event);
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
 
-        expect(item.classList.contains("dragging")).toBe(true);
-      });
+      expect(item.classList.contains("dragging")).toBe(false);
+      dispatchDragEvent(item, "dragend");
+      expect(item.classList.contains("dragging")).toBe(false);
     });
 
-    describe("異常系", () => {
-      test("アイテム以外でのドラッグ開始でエラーが発生しない", () => {
-        const event = new Event("dragstart", { bubbles: true });
-        expect(() => {
-          ui.pipelineStepList.dispatchEvent(event);
-        }).not.toThrow();
-      });
+    test("ステップ要素以外で dragend / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+
+      dispatchDragEvent(ui.pipelineStepList, "dragend");
+      expect(item.classList.contains("dragging")).toBe(false);
+    });
+  });
+});
+
+describe("ui.pipelineStepList.ondragover", () => {
+  describe("正常系", () => {
+    test("draggingIndex=0 / overIndex=1 / 0番目を1番目へ移動する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[0] as HTMLElement;
+      const overItem = items[1] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      const event = dispatchDragEvent(overItem, "dragover");
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "filterEmpty",
+        "trim",
+        "excludePrevious",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(3);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+      expect(reorderedItems[2].dataset.index).toBe("2");
+    });
+
+    test("draggingIndex=0 / overIndex=2 / 0番目を2番目へ移動する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[0] as HTMLElement;
+      const overItem = items[2] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      const event = dispatchDragEvent(overItem, "dragover");
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "filterEmpty",
+        "excludePrevious",
+        "trim",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(3);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+      expect(reorderedItems[2].dataset.index).toBe("2");
+    });
+
+    test("draggingIndex=1 / overIndex=0 / 1番目を0番目へ移動する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[1] as HTMLElement;
+      const overItem = items[0] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      const event = dispatchDragEvent(overItem, "dragover");
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "filterEmpty",
+        "trim",
+        "excludePrevious",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(3);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+      expect(reorderedItems[2].dataset.index).toBe("2");
+    });
+
+    test("draggingIndex=1 / overIndex=2 / 1番目を2番目へ移動する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[1] as HTMLElement;
+      const overItem = items[2] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      const event = dispatchDragEvent(overItem, "dragover");
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "excludePrevious",
+        "filterEmpty",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(3);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+      expect(reorderedItems[2].dataset.index).toBe("2");
+    });
+
+    test("draggingIndex=2 / overIndex=0 / 2番目を0番目へ移動する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[2] as HTMLElement;
+      const overItem = items[0] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      const event = dispatchDragEvent(overItem, "dragover");
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "excludePrevious",
+        "trim",
+        "filterEmpty",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(3);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+      expect(reorderedItems[2].dataset.index).toBe("2");
+    });
+
+    test("draggingIndex=2 / overIndex=1 / 2番目を1番目へ移動する", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[2] as HTMLElement;
+      const overItem = items[1] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      const event = dispatchDragEvent(overItem, "dragover");
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "excludePrevious",
+        "filterEmpty",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(3);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+      expect(reorderedItems[2].dataset.index).toBe("2");
     });
   });
 
-  describe("ui.pipelineStepList.oninput", () => {
-    describe("正常系", () => {
-      test("入力値の変更が内部状態に反映される", () => {
-        ui.processorSelect.value = "pickRandom";
-        ui.addStepBtn.click();
+  describe("異常系", () => {
+    test("draggingIndex=null / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
 
-        const input = ui.pipelineStepList.querySelector(
-          'input[type="number"]',
-        ) as HTMLInputElement;
-        input.value = "10";
-        input.dispatchEvent(new Event("input", { bubbles: true }));
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[0] as HTMLElement;
+      const overItem = items[1] as HTMLElement;
 
-        // 状態を確認するために副作用（別の操作での再描画など）を確認
-        // ここでは直接エラーなく通ることを確認
-        expect(input.value).toBe("10");
-      });
+      expect(draggingItem.dataset.index).toBe("0");
+      dispatchDragEvent(overItem, "dragover");
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(2);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
     });
 
-    describe("異常系", () => {
-      test("不正な要素の入力イベントでエラーが発生しない", () => {
-        const input = document.createElement("input");
-        ui.pipelineStepList.appendChild(input);
-        expect(() => {
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-        }).not.toThrow();
+    test("draggingIndex=overIndex / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[0] as HTMLElement;
+      const overItem = items[0] as HTMLElement;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      dispatchDragEvent(overItem, "dragover");
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(2);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+    });
+
+    test("overItem がステップ要素以外 / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      const draggingItem = items[0] as HTMLElement;
+      const overItem = ui.pipelineStepList;
+
+      dispatchDragEvent(draggingItem, "dragstart");
+      dispatchDragEvent(overItem, "dragover");
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+      ]);
+
+      const reorderedItems = ui.pipelineStepList.querySelectorAll<HTMLElement>(
+        ".pipeline-step-item",
+      );
+
+      expect(reorderedItems).toHaveLength(2);
+      expect(reorderedItems[0].dataset.index).toBe("0");
+      expect(reorderedItems[1].dataset.index).toBe("1");
+    });
+  });
+});
+
+describe("ui.pipelineStepList.ondragstart", () => {
+  describe("正常系", () => {
+    test('dragging クラスを付与 / effectAllowed="move" を設定', () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+
+      const dataTransfer = { effectAllowed: "" };
+      const event = new Event("dragstart", {
+        bubbles: true,
+        cancelable: true,
+      }) as DragEvent;
+      Object.defineProperty(event, "dataTransfer", {
+        configurable: true,
+        value: dataTransfer,
       });
+
+      item.dispatchEvent(event);
+
+      expect(item.classList.contains("dragging")).toBe(true);
+      expect(dataTransfer.effectAllowed).toBe("move");
     });
   });
 
-  describe("ui.addStepBtn.onclick", () => {
-    describe("正常系", () => {
-      test("追加ボタンをクリックするとリストにステップが追加される", () => {
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
+  describe("異常系", () => {
+    test("dataTransfer なしの dragstart / dragging クラスを付与", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
 
-        const items = ui.pipelineStepList.querySelectorAll(
-          ".pipeline-step-item",
-        );
-        expect(items).toHaveLength(1);
-        expect(items[0].querySelector(".pipeline-step-name")?.textContent).toBe(
-          "空白削除",
-        );
-      });
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+
+      const event = new Event("dragstart", {
+        bubbles: true,
+        cancelable: true,
+      }) as DragEvent;
+
+      item.dispatchEvent(event);
+
+      expect(item.classList.contains("dragging")).toBe(true);
     });
 
-    describe("異常系", () => {
-      test("存在しないプロセッサを選択して追加しても追加されない", () => {
-        ui.processorSelect.innerHTML =
-          '<option value="invalid">Invalid</option>';
-        ui.processorSelect.value = "invalid";
-        ui.addStepBtn.click();
+    test('data-index="abc" のステップで dragstart / dragging クラスを付与', () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
 
-        expect(
-          ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
-        ).toHaveLength(0);
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+      item.dataset.index = "abc";
+
+      const dataTransfer = { effectAllowed: "" };
+      const event = new Event("dragstart", {
+        bubbles: true,
+        cancelable: true,
+      }) as DragEvent;
+      Object.defineProperty(event, "dataTransfer", {
+        configurable: true,
+        value: dataTransfer,
       });
+
+      item.dispatchEvent(event);
+
+      expect(item.classList.contains("dragging")).toBe(true);
+      expect(dataTransfer.effectAllowed).toBe("move");
+    });
+
+    test("ステップ要素以外で dragstart / 何もしない", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+
+      const dataTransfer = { effectAllowed: "" };
+      const event = new Event("dragstart", {
+        bubbles: true,
+        cancelable: true,
+      }) as DragEvent;
+      Object.defineProperty(event, "dataTransfer", {
+        configurable: true,
+        value: dataTransfer,
+      });
+
+      ui.pipelineStepList.dispatchEvent(event);
+
+      expect(item.classList.contains("dragging")).toBe(false);
+    });
+  });
+});
+
+describe("ui.pipelineStepList.oninput", () => {
+  describe("正常系", () => {
+    test("number input の変更 / 対応 params を number で更新する", () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      input.value = "10";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toEqual({ count: 10 });
+    });
+
+    test("text input の変更 / 対応 params を string で更新する", () => {
+      appState.pipeline = [{ id: "trim", params: { label: "old" } }];
+      ui.pipelineStepList.innerHTML = "";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = "new";
+      input.dataset.index = "0";
+      input.dataset.key = "label";
+      ui.pipelineStepList.appendChild(input);
+
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toEqual({ label: "new" });
+    });
+
+    test("既存 params あり / 指定 key だけ更新して他 params は維持する", () => {
+      appState.pipeline = [{ id: "pickRandom", params: { count: 3 } }];
+      renderPipelineStepList(
+        ui.pipelineStepList,
+        appState.pipeline,
+        PROCESSOR_REGISTRY,
+      );
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      input.value = "5";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toEqual({ count: 5 });
+    });
+
+    test("steps.length=2 / 対象 index の step だけ更新する", () => {
+      appState.pipeline = [
+        { id: "pickRandom", params: { count: 3 } },
+        { id: "pickRandom" },
+      ];
+      renderPipelineStepList(
+        ui.pipelineStepList,
+        appState.pipeline,
+        PROCESSOR_REGISTRY,
+      );
+
+      const inputs = ui.pipelineStepList.querySelectorAll(
+        'input[type="number"]',
+      );
+      const second = inputs[1] as HTMLInputElement;
+      second.value = "7";
+      second.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toEqual({ count: 3 });
+      expect(appState.pipeline[1].params).toEqual({ count: 7 });
     });
   });
 
-  describe("ui.pipelineRunBtn.onclick", () => {
-    describe("正常系", () => {
-      test("実行ボタンをクリックするとパイプライン処理の結果が出力される", () => {
-        ui.input.value = " a ";
-        ui.processorSelect.value = "trim";
-        ui.addStepBtn.click();
+  describe("異常系", () => {
+    test("INPUT 以外から input イベント / 何もしない", () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
 
-        ui.pipelineRunBtn.click();
+      const item = ui.pipelineStepList.querySelector(
+        ".pipeline-step-item",
+      ) as HTMLElement;
+      item.dispatchEvent(new Event("input", { bubbles: true }));
 
-        expect(ui.output.value).toBe("a");
-      });
+      expect(appState.pipeline[0].params).toBeUndefined();
     });
 
-    describe("異常系", () => {
-      test("パイプラインが空の場合はそのまま出力される", () => {
-        ui.input.value = "test";
-        ui.pipelineRunBtn.click();
-        expect(ui.output.value).toBe("test");
-      });
+    test("data-index なしの INPUT / 何もしない", () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      delete input.dataset.index;
+      input.value = "4";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toBeUndefined();
+    });
+
+    test("data-key なしの INPUT / 何もしない", () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      delete input.dataset.key;
+      input.value = "4";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toBeUndefined();
+    });
+
+    test("data-index が範囲外 / 何もしない", () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      input.dataset.index = "10";
+      input.value = "4";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(appState.pipeline[0].params).toBeUndefined();
+    });
+
+    test('number input.value="" / NaN で更新する', () => {
+      ui.processorSelect.value = "pickRandom";
+      ui.addStepBtn.click();
+
+      const input = ui.pipelineStepList.querySelector(
+        'input[type="number"]',
+      ) as HTMLInputElement;
+      input.value = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      expect(Number.isNaN(appState.pipeline[0].params?.count as number)).toBe(
+        true,
+      );
+    });
+  });
+});
+
+describe("ui.addStepBtn.onclick", () => {
+  describe("正常系", () => {
+    test('processorSelect.value="trim" / 末尾に1件追加する', () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual(["trim"]);
+      expect(
+        ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+      ).toHaveLength(1);
+    });
+
+    test("2回連続クリック / 追加順のまま2件になる", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+
+      expect(appState.pipeline.map((step) => step.id)).toEqual([
+        "trim",
+        "filterEmpty",
+      ]);
+      expect(
+        ui.pipelineStepList.querySelectorAll(".pipeline-step-item"),
+      ).toHaveLength(2);
+    });
+
+    test("steps.length=0 / 空メッセージ表示からステップ表示に切り替わる", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      expect(
+        ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
+      ).toBeNull();
+      expect(
+        ui.pipelineStepList.querySelector(".pipeline-step-item"),
+      ).not.toBeNull();
+    });
+
+    test("追加後 / 追加した step の表示名が描画される", () => {
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+
+      expect(
+        ui.pipelineStepList.querySelector(".pipeline-step-name")?.textContent,
+      ).toBe("空白削除");
     });
   });
 
-  // パターン整理
-  // 01. 文字数／＝０文字／≧１文字
-  //
-  // パターン一覧
-  // ○ 01 文字数＝０文字
-  // ○ 02 文字数≧１文字
-  describe("ui.outputCopyBtn.onclick", () => {
-    test("01 文字数＝０文字", async () => {
+  describe("異常系", () => {
+    test("processorSelect.value が未登録 id / 何もしない", () => {
+      ui.processorSelect.value = "unknown";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      expect(appState.pipeline).toHaveLength(0);
+      expect(items).toHaveLength(0);
+      expect(
+        ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
+      ).not.toBeNull();
+    });
+
+    test("processorSelect.value が未登録 id / pipeline を変更しない", () => {
+      ui.processorSelect.value = "unknown";
+      ui.addStepBtn.click();
+
+      const items = ui.pipelineStepList.querySelectorAll(".pipeline-step-item");
+      expect(appState.pipeline).toEqual([]);
+      expect(items).toHaveLength(0);
+      expect(
+        ui.pipelineStepList.querySelector(".pipeline-empty-msg"),
+      ).not.toBeNull();
+    });
+  });
+});
+
+describe("ui.pipelineRunBtn.onclick", () => {
+  describe("正常系", () => {
+    test("steps.length=0 / input.value をそのまま output.value に設定する", () => {
+      ui.input.value = "a";
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a");
+    });
+
+    test("trim 1件 / trim 結果を output.value に設定する", () => {
+      ui.input.value = " a ";
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a");
+    });
+
+    test("trim -> filterEmpty / 複数 step を順に実行する", () => {
+      ui.input.value = " a \n\n b ";
+      ui.processorSelect.value = "trim";
+      ui.addStepBtn.click();
+      ui.processorSelect.value = "filterEmpty";
+      ui.addStepBtn.click();
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a\nb");
+    });
+
+    test("excludePrevious 1件 / 実行前の output.value を previousOutput として使う", () => {
+      ui.input.value = "a\nb";
+      ui.output.value = "b";
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a");
+    });
+
+    test("1回目実行後に input.value を変更 / 2回目は最新 input.value を使う", () => {
+      ui.input.value = "a";
+      ui.pipelineRunBtn.click();
+      ui.input.value = "b";
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("b");
+    });
+
+    test("1回目実行後の output.value がある / 2回目は最新 output.value を previousOutput として使う", () => {
+      ui.input.value = "a\nb";
+      ui.processorSelect.value = "excludePrevious";
+      ui.addStepBtn.click();
+      ui.output.value = "b";
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a");
+    });
+  });
+
+  describe("異常系", () => {
+    test("input.value が1行 / 未登録 step.id を無視して実行する", () => {
+      appState.pipeline = [{ id: "unknown" }, { id: "trim" }];
+      renderPipelineStepList(
+        ui.pipelineStepList,
+        appState.pipeline,
+        PROCESSOR_REGISTRY,
+      );
+      ui.input.value = " a ";
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a");
+    });
+
+    test("input.value が複数行 / 未登録 step.id を無視して実行する", () => {
+      appState.pipeline = [{ id: "unknown" }, { id: "trim" }];
+      renderPipelineStepList(
+        ui.pipelineStepList,
+        appState.pipeline,
+        PROCESSOR_REGISTRY,
+      );
+      ui.input.value = "a\nb";
+
+      ui.pipelineRunBtn.click();
+
+      expect(ui.output.value).toBe("a\nb");
+    });
+  });
+});
+
+describe("ui.outputCopyBtn.onclick", () => {
+  describe("正常系", () => {
+    test('output.value="" / 空文字をそのままコピーする', () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.defineProperty(window.navigator, "clipboard", {
+      Object.defineProperty(navigator, "clipboard", {
         configurable: true,
         value: { writeText },
       });
 
       ui.output.value = "";
-      await ui.outputCopyBtn.click();
+      ui.outputCopyBtn.click();
 
+      expect(writeText).toHaveBeenCalledTimes(1);
       expect(writeText).toHaveBeenCalledWith("");
     });
 
-    test("02 文字数≧１文字", async () => {
+    test("output.value が1行 / そのままコピーする", () => {
       const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.defineProperty(window.navigator, "clipboard", {
+      Object.defineProperty(navigator, "clipboard", {
         configurable: true,
         value: { writeText },
       });
 
-      ui.output.value = "出力テキスト";
-      await ui.outputCopyBtn.click();
+      ui.output.value = "a";
+      ui.outputCopyBtn.click();
 
-      expect(writeText).toHaveBeenCalledWith("出力テキスト");
+      expect(writeText).toHaveBeenCalledTimes(1);
+      expect(writeText).toHaveBeenCalledWith("a");
+    });
+
+    test("output.value が複数行 / 改行を維持してコピーする", () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText },
+      });
+
+      ui.output.value = "a\nb";
+      ui.outputCopyBtn.click();
+
+      expect(writeText).toHaveBeenCalledTimes(1);
+      expect(writeText).toHaveBeenCalledWith("a\nb");
+    });
+  });
+});
+
+describe("ui.outputOpenBtn.onclick", () => {
+  describe("正常系", () => {
+    test("output.value が1行 / 1件だけ開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.output.value = "https://example.com";
+      ui.outputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+    });
+
+    test("output.value が複数行 / 上から順に複数件開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.output.value = "https://example.com\nhttps://example.org";
+      ui.outputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
+    });
+
+    test("各行の前後に空白がある / trim 後の値を開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.output.value = " https://example.com \n https://example.org ";
+      ui.outputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
+    });
+
+    test("空行を含む / 空行を除外して開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.output.value = "https://example.com\n";
+      ui.outputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledWith("https://example.com", "_blank");
+    });
+
+    test("空白だけの行と通常行が混在 / 通常行だけ開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.output.value = "https://example.com\n  \nhttps://example.org";
+      ui.outputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenNthCalledWith(1, "https://example.com", "_blank");
+      expect(open).toHaveBeenNthCalledWith(2, "https://example.org", "_blank");
+    });
+
+    test("URLでない文字列を含む / 非空文字列としてそのまま開く", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+
+      ui.output.value = "example.com";
+      ui.outputOpenBtn.click();
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledWith("example.com", "_blank");
     });
   });
 
-  // パターン整理
-  // 01. 行数／＝１行／≧２行
-  // 02. 前後空白／なし／あり
-  // 03. 無効行／なし／あり
-  //
-  // パターン一覧
-  // ○ 01 行数＝１行／前後空白なし／無効行なし
-  // ○ 02 行数＝１行／前後空白なし／無効行あり
-  // ○ 03 行数＝１行／前後空白あり／無効行なし
-  // ○ 04 行数＝１行／前後空白あり／無効行あり
-  // ○ 05 行数≧２行／前後空白なし／無効行なし
-  // ○ 06 行数≧２行／前後空白なし／無効行あり
-  // ○ 07 行数≧２行／前後空白あり／無効行なし
-  // ○ 08 行数≧２行／前後空白あり／無効行あり
-  describe("ui.outputOpenBtn.onclick", () => {
-    test("01 行数＝１行／前後空白なし／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value = "https://example.com/output";
+  describe("異常系", () => {
+    test('output.value="" / 1件も開かない', () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-      ui.outputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com/output", "_blank");
-    });
-
-    test("02 行数＝１行／前後空白なし／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
       ui.output.value = "";
-
       ui.outputOpenBtn.click();
 
       expect(open).not.toHaveBeenCalled();
     });
 
-    test("03 行数＝１行／前後空白あり／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value = " https://example.com/output ";
+    test("空白だけの行しかない / 1件も開かない", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
 
-      ui.outputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com/output", "_blank");
-    });
-
-    test("04 行数＝１行／前後空白あり／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value = "  ";
-
+      ui.output.value = "  \n \t ";
       ui.outputOpenBtn.click();
 
       expect(open).not.toHaveBeenCalled();
-    });
-
-    test("05 行数≧２行／前後空白なし／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value =
-        "https://example.com/output\nhttps://example.org/output";
-
-      ui.outputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(2);
-      expect(open).toHaveBeenNthCalledWith(
-        1,
-        "https://example.com/output",
-        "_blank",
-      );
-      expect(open).toHaveBeenNthCalledWith(
-        2,
-        "https://example.org/output",
-        "_blank",
-      );
-    });
-
-    test("06 行数≧２行／前後空白なし／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value = "https://example.com/output\n";
-
-      ui.outputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com/output", "_blank");
-    });
-
-    test("07 行数≧２行／前後空白あり／無効行なし", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value =
-        " https://example.com/output \n https://example.org/output ";
-
-      ui.outputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(2);
-      expect(open).toHaveBeenNthCalledWith(
-        1,
-        "https://example.com/output",
-        "_blank",
-      );
-      expect(open).toHaveBeenNthCalledWith(
-        2,
-        "https://example.org/output",
-        "_blank",
-      );
-    });
-
-    test("08 行数≧２行／前後空白あり／無効行あり", () => {
-      const open = vi.fn<typeof window.open>(() => null);
-      window.open = open;
-      ui.output.value = " https://example.com/output \n  ";
-
-      ui.outputOpenBtn.click();
-
-      expect(open).toHaveBeenCalledTimes(1);
-      expect(open).toHaveBeenCalledWith("https://example.com/output", "_blank");
     });
   });
 });
@@ -8946,24 +9634,24 @@ FILE: plans/20260401_02_event.test.ts全面作り直し指示書.md
 
 `apps/random-picker/tests/integration/event.test.ts` を **ゼロから作り直す**。
 **既存の `event.test.ts` の内容は一切参考にせず、全文破棄して置き換えること。**
-対象は `src/event.ts` のイベント結線とイベントハンドラーの連携確認であり、`bindInputEvent` / `bindPipelineEvent` / `bindOutputEvent` が結線する全イベントハンドラーを、`targetElement.onEvent` ごとに `正常系 / 異常系` で整理してテストする。リポジトリ上の対象ファイルと規約は `AGENTS.md` に従う。 
+対象は `src/event.ts` のイベント結線とイベントハンドラーの連携確認であり、`bindInputEvent` / `bindPipelineEvent` / `bindOutputEvent` が結線する全イベントハンドラーを、`targetElement.onEvent` ごとに `正常系 / 異常系` で整理してテストする。リポジトリ上の対象ファイルと規約は `AGENTS.md` に従う。
 
 ## 変更してよいファイル
 
-* `apps/random-picker/tests/integration/event.test.ts` のみ
+- `apps/random-picker/tests/integration/event.test.ts` のみ
 
 ## 絶対に変更してはいけないファイル
 
-* `apps/random-picker/src/event.ts`
-* `apps/random-picker/src/script.ts`
-* `apps/random-picker/src/dom.ts`
-* `apps/random-picker/src/pipeline.ts`
-* `apps/random-picker/src/browser.ts`
-* `apps/random-picker/src/processor-registry.ts`
-* `apps/random-picker/src/state.ts`
-* `apps/random-picker/tests/integration/script.test.ts`
-* `apps/random-picker/tests/unit/*`
-* そのほかすべてのファイル
+- `apps/random-picker/src/event.ts`
+- `apps/random-picker/src/script.ts`
+- `apps/random-picker/src/dom.ts`
+- `apps/random-picker/src/pipeline.ts`
+- `apps/random-picker/src/browser.ts`
+- `apps/random-picker/src/processor-registry.ts`
+- `apps/random-picker/src/state.ts`
+- `apps/random-picker/tests/integration/script.test.ts`
+- `apps/random-picker/tests/unit/*`
+- そのほかすべてのファイル
 
 ## 作業の大前提
 
@@ -8978,7 +9666,7 @@ FILE: plans/20260401_02_event.test.ts全面作り直し指示書.md
 4. テスト名は、最近のユニットテストに合わせて、**条件を先頭に書く短い形式** にすること。
    例: `steps.length=0 / そのまま出力する` のような形式。ユニットテストでも同じ方針が使われている。
 
-5. DOM まわりのテストなので、**describe の並び順はアルファベット順ではなく DOM 順** にすること。`event.ts` でも DOM 出現順で `bindInputEvent` → `bindPipelineEvent` → `bindOutputEvent` の順にイベントが並んでいる。`AGENTS.md` でも DOM 対応コードは DOM 順を優先する規約になっている。 
+5. DOM まわりのテストなので、**describe の並び順はアルファベット順ではなく DOM 順** にすること。`event.ts` でも DOM 出現順で `bindInputEvent` → `bindPipelineEvent` → `bindOutputEvent` の順にイベントが並んでいる。`AGENTS.md` でも DOM 対応コードは DOM 順を優先する規約になっている。
 
 ## このテストで確認する対象
 
@@ -9010,16 +9698,16 @@ FILE: plans/20260401_02_event.test.ts全面作り直し指示書.md
 
 以下は **実際のモジュールをそのまま使うこと**。
 
-* `bindInputEvent`
-* `bindPipelineEvent`
-* `bindOutputEvent`
-* `createUi`
-* `buildProcessorSelectOptions`
-* `renderPipelineStepList`
-* `PROCESSOR_REGISTRY`
-* `appState`
-* `addPipelineStep` など `pipeline.ts` の実処理
-* `executePipeline` の実処理
+- `bindInputEvent`
+- `bindPipelineEvent`
+- `bindOutputEvent`
+- `createUi`
+- `buildProcessorSelectOptions`
+- `renderPipelineStepList`
+- `PROCESSOR_REGISTRY`
+- `appState`
+- `addPipelineStep` など `pipeline.ts` の実処理
+- `executePipeline` の実処理
 
 理由: これはインテグレーションテストなので、イベント → 状態更新 → 再描画 → 出力更新までの連携を本物で確認したいから。
 
@@ -9027,8 +9715,8 @@ FILE: plans/20260401_02_event.test.ts全面作り直し指示書.md
 
 以下は **副作用確認のためにスパイまたはモックしてよい**。
 
-* `navigator.clipboard.writeText`
-* `window.open`
+- `navigator.clipboard.writeText`
+- `window.open`
 
 理由: この 2 つはブラウザ副作用であり、呼ばれた値・回数・順序だけ確認すれば十分だから。`browser.ts` の本体もこの 2 つに依存している。
 
@@ -9036,16 +9724,16 @@ FILE: plans/20260401_02_event.test.ts全面作り直し指示書.md
 
 `createUi()` は固定 ID の要素を取得する実装なので、`beforeEach` で `document.body.innerHTML` に **必要最小限の DOM** を毎回作ること。必要なのは以下の ID を持つ要素だけ。`createUi` が実際にこれらを取得している。
 
-* `inputCopyBtn`
-* `inputOpenBtn`
-* `input`
-* `pipelineStepList`
-* `processorSelect`
-* `addStepBtn`
-* `pipelineRunBtn`
-* `outputCopyBtn`
-* `outputOpenBtn`
-* `output`
+- `inputCopyBtn`
+- `inputOpenBtn`
+- `input`
+- `pipelineStepList`
+- `processorSelect`
+- `addStepBtn`
+- `pipelineRunBtn`
+- `outputCopyBtn`
+- `outputOpenBtn`
+- `output`
 
 見た目や CSS は不要。
 `createUi()` が成功し、イベントが結線できる最小 DOM にすること。
@@ -9141,13 +9829,13 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `input.value="" / 空文字をそのままコピーする`
-* `input.value が1行 / そのままコピーする`
-* `input.value が複数行 / 改行を維持してコピーする`
+- `input.value="" / 空文字をそのままコピーする`
+- `input.value が1行 / そのままコピーする`
+- `input.value が複数行 / 改行を維持してコピーする`
 
 ### 異常系
 
-* `clipboard.writeText が失敗 / 例外をそのまま返す`
+- `clipboard.writeText が失敗 / 例外をそのまま返す`
 
 実装根拠: `handleInputCopyBtnClick` は `deps.ui.input.value` をそのまま `copyTextToClipboard` に渡すだけ。
 
@@ -9157,18 +9845,18 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `input.value が1行 / 1件だけ開く`
-* `input.value が複数行 / 上から順に複数件開く`
-* `各行の前後に空白がある / trim 後の値を開く`
-* `空行を含む / 空行を除外して開く`
-* `空白だけの行と通常行が混在 / 通常行だけ開く`
-* `URLでない文字列を含む / 非空文字列としてそのまま開く`
+- `input.value が1行 / 1件だけ開く`
+- `input.value が複数行 / 上から順に複数件開く`
+- `各行の前後に空白がある / trim 後の値を開く`
+- `空行を含む / 空行を除外して開く`
+- `空白だけの行と通常行が混在 / 通常行だけ開く`
+- `URLでない文字列を含む / 非空文字列としてそのまま開く`
 
 ### 異常系
 
-* `input.value="" / 1件も開かない`
-* `空白だけの行しかない / 1件も開かない`
-* `window.open 側が失敗 / 例外をそのまま返す`
+- `input.value="" / 1件も開かない`
+- `空白だけの行しかない / 1件も開かない`
+- `window.open 側が失敗 / 例外をそのまま返す`
 
 実装根拠: `handleInputOpenBtnClick` は `splitByNewline` → `trimStrings` → `filterEmptyStrings` → `openUrls` の順で処理する。URL 判定はしていない。
 
@@ -9178,17 +9866,17 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `steps.length=1 / 先頭の削除ボタン押下で削除する`
-* `steps.length=3 / 中間の削除ボタン押下で削除する`
-* `steps.length=3 / 末尾の削除ボタン押下で削除する`
-* `steps.length=1 / 削除後に空メッセージを再描画する`
-* `steps.length=3 / 削除後に残り要素の data-index が振り直される`
+- `steps.length=1 / 先頭の削除ボタン押下で削除する`
+- `steps.length=3 / 中間の削除ボタン押下で削除する`
+- `steps.length=3 / 末尾の削除ボタン押下で削除する`
+- `steps.length=1 / 削除後に空メッセージを再描画する`
+- `steps.length=3 / 削除後に残り要素の data-index が振り直される`
 
 ### 異常系
 
-* `削除ボタン以外をクリック / 何もしない`
-* `data-index="-1" の削除ボタンをクリック / 何もしない`
-* `data-index="abc" の削除ボタンをクリック / 何もしない`
+- `削除ボタン以外をクリック / 何もしない`
+- `data-index="-1" の削除ボタンをクリック / 何もしない`
+- `data-index="abc" の削除ボタンをクリック / 何もしない`
 
 実装根拠: `handlePipelineStepListClick` は `.pipeline-delete-btn` に closest した場合だけ `parseInt` した index を使い、`index >= 0` のときだけ `removePipelineStep` と `renderPipelineStepList` を行う。
 
@@ -9198,13 +9886,13 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `dragging クラス付きステップで dragend / dragging クラスを外す`
-* `dragstart 済みのあとに dragend / 後続 dragover で移動しなくなる`
+- `dragging クラス付きステップで dragend / dragging クラスを外す`
+- `dragstart 済みのあとに dragend / 後続 dragover で移動しなくなる`
 
 ### 異常系
 
-* `ステップ要素以外で dragend / 例外にならない`
-* `dragging クラスなしで dragend / 例外にならない`
+- `ステップ要素以外で dragend / 例外にならない`
+- `dragging クラスなしで dragend / 例外にならない`
 
 実装根拠: `handlePipelineStepListDragEnd` は `.pipeline-step-item` に closest できたら `dragging` を外し、最後に必ず `setDraggingIndex(null)` を呼ぶ。
 
@@ -9214,20 +9902,20 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `draggingIndex=0 / index=1 の上で dragover / 0番目を1番目へ移動する`
-* `draggingIndex=2 / index=0 の上で dragover / 2番目を0番目へ移動する`
-* `dragover 発火 / defaultPrevented=true になる`
-* `別 index の上で dragover / 再描画後の並び順が更新される`
+- `draggingIndex=0 / index=1 の上で dragover / 0番目を1番目へ移動する`
+- `draggingIndex=2 / index=0 の上で dragover / 2番目を0番目へ移動する`
+- `dragover 発火 / defaultPrevented=true になる`
+- `別 index の上で dragover / 再描画後の並び順が更新される`
 
 ### 異常系
 
-* `dragstart 前に dragover / 何もしない`
-* `同じ index の上で dragover / 何もしない`
-* `ステップ要素以外の上で dragover / 何もしない`
+- `dragstart 前に dragover / 何もしない`
+- `同じ index の上で dragover / 何もしない`
+- `ステップ要素以外の上で dragover / 何もしない`
 
 **重要**
 `draggingIndex` は `bindPipelineEvent` のローカル変数であり、テストから直接触れない。
-そのため、`ondragover` の正常系テストでは **必ず先に同じテスト内で `dragstart` を発火してから `dragover` を発火すること。** `dragstart` を省略してはいけない。`bindPipelineEvent` の実装上、`draggingIndex` はクロージャで保持されている。 
+そのため、`ondragover` の正常系テストでは **必ず先に同じテスト内で `dragstart` を発火してから `dragover` を発火すること。** `dragstart` を省略してはいけない。`bindPipelineEvent` の実装上、`draggingIndex` はクロージャで保持されている。
 
 ---
 
@@ -9235,15 +9923,15 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `有効なステップ要素で dragstart / dragging クラスを付与する`
-* `dragstart 後に別 index へ dragover / 移動できる状態になる`
-* `dataTransfer ありの dragstart / effectAllowed="move" を設定する`
+- `有効なステップ要素で dragstart / dragging クラスを付与する`
+- `dragstart 後に別 index へ dragover / 移動できる状態になる`
+- `dataTransfer ありの dragstart / effectAllowed="move" を設定する`
 
 ### 異常系
 
-* `ステップ要素以外で dragstart / 何もしない`
-* `dataTransfer なしの dragstart / 例外にならない`
-* `data-index="abc" のステップで dragstart / 例外にならない`
+- `ステップ要素以外で dragstart / 何もしない`
+- `dataTransfer なしの dragstart / 例外にならない`
+- `data-index="abc" のステップで dragstart / 例外にならない`
 
 実装根拠: `handlePipelineStepListDragStart` は `.pipeline-step-item` に closest できたときだけ `draggingIndex` を設定し、`dragging` クラスを付け、`event.dataTransfer` がある場合だけ `effectAllowed = "move"` を設定する。
 
@@ -9253,18 +9941,18 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `number input の変更 / 対応 params を number で更新する`
-* `text input の変更 / 対応 params を string で更新する`
-* `既存 params あり / 指定 key だけ更新して他 params は維持する`
-* `steps.length=2 / 対象 index の step だけ更新する`
+- `number input の変更 / 対応 params を number で更新する`
+- `text input の変更 / 対応 params を string で更新する`
+- `既存 params あり / 指定 key だけ更新して他 params は維持する`
+- `steps.length=2 / 対象 index の step だけ更新する`
 
 ### 異常系
 
-* `INPUT 以外から input イベント / 何もしない`
-* `data-index なしの INPUT / 何もしない`
-* `data-key なしの INPUT / 何もしない`
-* `data-index が範囲外 / 何もしない`
-* `number input.value="" / NaN で更新する`
+- `INPUT 以外から input イベント / 何もしない`
+- `data-index なしの INPUT / 何もしない`
+- `data-key なしの INPUT / 何もしない`
+- `data-index が範囲外 / 何もしない`
+- `number input.value="" / NaN で更新する`
 
 実装根拠: `handlePipelineStepListInput` は `target.tagName === "INPUT"` かつ `dataset.index` と `dataset.key` がある場合だけ更新する。`number` 型は `parseFloat(target.value)` を使うため、空文字は `NaN` になる。
 
@@ -9274,15 +9962,15 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `processorSelect.value="trim" / 末尾に1件追加する`
-* `2回連続クリック / 追加順のまま2件になる`
-* `steps.length=0 / 空メッセージ表示からステップ表示に切り替わる`
-* `追加後 / 追加した step の表示名が描画される`
+- `processorSelect.value="trim" / 末尾に1件追加する`
+- `2回連続クリック / 追加順のまま2件になる`
+- `steps.length=0 / 空メッセージ表示からステップ表示に切り替わる`
+- `追加後 / 追加した step の表示名が描画される`
 
 ### 異常系
 
-* `processorSelect.value が未登録 id / 何もしない`
-* `processorSelect.value が未登録 id / pipeline を変更しない`
+- `processorSelect.value が未登録 id / 何もしない`
+- `processorSelect.value が未登録 id / pipeline を変更しない`
 
 実装根拠: `handleAddStepBtnClick` は `processorRegistry[processorId]` が存在しないと return し、存在する場合のみ `addPipelineStep` と `renderPipelineStepList` を行う。
 
@@ -9292,19 +9980,19 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `steps.length=0 / input.value をそのまま output.value に設定する`
-* `trim 1件 / trim 結果を output.value に設定する`
-* `trim -> filterEmpty / 複数 step を順に実行する`
-* `excludePrevious 1件 / 実行前の output.value を previousOutput として使う`
-* `1回目実行後に input.value を変更 / 2回目は最新 input.value を使う`
-* `1回目実行後の output.value がある / 2回目は最新 output.value を previousOutput として使う`
+- `steps.length=0 / input.value をそのまま output.value に設定する`
+- `trim 1件 / trim 結果を output.value に設定する`
+- `trim -> filterEmpty / 複数 step を順に実行する`
+- `excludePrevious 1件 / 実行前の output.value を previousOutput として使う`
+- `1回目実行後に input.value を変更 / 2回目は最新 input.value を使う`
+- `1回目実行後の output.value がある / 2回目は最新 output.value を previousOutput として使う`
 
 ### 異常系
 
-* `未登録 step.id を含む / その step を無視して実行する`
-* `pickRandom の count が不正 / 例外をそのまま返す`
+- `未登録 step.id を含む / その step を無視して実行する`
+- `pickRandom の count が不正 / 例外をそのまま返す`
 
-実装根拠: `handlePipelineRunBtnClick` は `input.value` を読み、`output.value ?? ""` を `previousOutput` とした `context` を作り、`executePipeline` の結果を `renderOutput` する。`executePipeline` は未登録 `step.id` を `continue` で無視する。`pickRandomItems` は count が不正なら `RangeError` を投げる。 
+実装根拠: `handlePipelineRunBtnClick` は `input.value` を読み、`output.value ?? ""` を `previousOutput` とした `context` を作り、`executePipeline` の結果を `renderOutput` する。`executePipeline` は未登録 `step.id` を `continue` で無視する。`pickRandomItems` は count が不正なら `RangeError` を投げる。
 
 ---
 
@@ -9312,13 +10000,13 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `output.value="" / 空文字をそのままコピーする`
-* `output.value が1行 / そのままコピーする`
-* `output.value が複数行 / 改行を維持してコピーする`
+- `output.value="" / 空文字をそのままコピーする`
+- `output.value が1行 / そのままコピーする`
+- `output.value が複数行 / 改行を維持してコピーする`
 
 ### 異常系
 
-* `clipboard.writeText が失敗 / 例外をそのまま返す`
+- `clipboard.writeText が失敗 / 例外をそのまま返す`
 
 実装根拠: `handleOutputCopyBtnClick` は `deps.ui.output.value ?? ""` をそのままコピーする。
 
@@ -9328,18 +10016,18 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 正常系
 
-* `output.value が1行 / 1件だけ開く`
-* `output.value が複数行 / 上から順に複数件開く`
-* `各行の前後に空白がある / trim 後の値を開く`
-* `空行を含む / 空行を除外して開く`
-* `空白だけの行と通常行が混在 / 通常行だけ開く`
-* `URLでない文字列を含む / 非空文字列としてそのまま開く`
+- `output.value が1行 / 1件だけ開く`
+- `output.value が複数行 / 上から順に複数件開く`
+- `各行の前後に空白がある / trim 後の値を開く`
+- `空行を含む / 空行を除外して開く`
+- `空白だけの行と通常行が混在 / 通常行だけ開く`
+- `URLでない文字列を含む / 非空文字列としてそのまま開く`
 
 ### 異常系
 
-* `output.value="" / 1件も開かない`
-* `空白だけの行しかない / 1件も開かない`
-* `window.open 側が失敗 / 例外をそのまま返す`
+- `output.value="" / 1件も開かない`
+- `空白だけの行しかない / 1件も開かない`
+- `window.open 側が失敗 / 例外をそのまま返す`
 
 実装根拠: `handleOutputOpenBtnClick` も入力欄と同じで、`splitByNewline` → `trimStrings` → `filterEmptyStrings` → `openUrls` の順で処理する。
 
@@ -9349,34 +10037,34 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ### 1. `onclick` 系の発火方法
 
-* `button.click()` を使ってよい
-* 非 button 要素は必要に応じて `dispatchEvent(new MouseEvent(...))` を使う
+- `button.click()` を使ってよい
+- 非 button 要素は必要に応じて `dispatchEvent(new MouseEvent(...))` を使う
 
 ### 2. `oninput` の発火方法
 
-* 対象の `input.value` を先に変更する
-* その後 `dispatchEvent(new Event("input", { bubbles: true }))` を使う
-* `pipelineStepList.oninput` は親要素に結線されているため、**子 input に対して bubbles=true で dispatch すること**
+- 対象の `input.value` を先に変更する
+- その後 `dispatchEvent(new Event("input", { bubbles: true }))` を使う
+- `pipelineStepList.oninput` は親要素に結線されているため、**子 input に対して bubbles=true で dispatch すること**
 
 ### 3. `dragstart` / `dragover` / `dragend` の発火方法
 
-* `pipelineStepList` 自体ではなく、**実際の `.pipeline-step-item` 要素に対してイベントを発火すること**
-* すべて `{ bubbles: true, cancelable: true }` を付けること
-* `dragstart` の `dataTransfer` が必要なケースでは、イベントオブジェクトに `dataTransfer` を `defineProperty` などで生やして使うこと
-* `dragover` のテストでは `defaultPrevented` を確認すること
-* `dragover` の正常系では、**必ずその前に同じテスト内で `dragstart` を行うこと**
+- `pipelineStepList` 自体ではなく、**実際の `.pipeline-step-item` 要素に対してイベントを発火すること**
+- すべて `{ bubbles: true, cancelable: true }` を付けること
+- `dragstart` の `dataTransfer` が必要なケースでは、イベントオブジェクトに `dataTransfer` を `defineProperty` などで生やして使うこと
+- `dragover` のテストでは `defaultPrevented` を確認すること
+- `dragover` の正常系では、**必ずその前に同じテスト内で `dragstart` を行うこと**
 
 ### 4. `window.open` の確認方法
 
-* `vi.spyOn(window, "open")` でスパイする
-* 呼び出し回数だけでなく、**引数と順序** も確認すること
-* `_blank` が第2引数で渡されることも確認すること。`openUrls` は `window.open(url, "_blank")` を呼ぶ実装。
+- `vi.spyOn(window, "open")` でスパイする
+- 呼び出し回数だけでなく、**引数と順序** も確認すること
+- `_blank` が第2引数で渡されることも確認すること。`openUrls` は `window.open(url, "_blank")` を呼ぶ実装。
 
 ### 5. `clipboard.writeText` の確認方法
 
-* `navigator.clipboard.writeText` を `vi.fn()` に差し替える
-* 呼び出し値を厳密一致で確認すること
-* 失敗系では `mockRejectedValueOnce(...)` を使い、`await expect(...).rejects.toThrow(...)` で確認すること
+- `navigator.clipboard.writeText` を `vi.fn()` に差し替える
+- 呼び出し値を厳密一致で確認すること
+- 失敗系では `mockRejectedValueOnce(...)` を使い、`await expect(...).rejects.toThrow(...)` で確認すること
 
 ### 6. DOM 確認と state 確認の両方を行うこと
 
@@ -9384,43 +10072,43 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 例:
 
-* 削除: `appState.pipeline` の中身 + DOM の件数
-* 追加: `appState.pipeline` の中身 + DOM の表示名
-* 入力更新: `appState.pipeline[index].params` の中身
-* 実行: `output.value`
+- 削除: `appState.pipeline` の中身 + DOM の件数
+- 追加: `appState.pipeline` の中身 + DOM の表示名
+- 入力更新: `appState.pipeline[index].params` の中身
+- 実行: `output.value`
 
 ## インポート方針
 
 `event.test.ts` では必要なものだけを明示的に import すること。
 最低限、以下は使ってよい。
 
-* `describe`
+- `describe`
 
-* `test`
+- `test`
 
-* `expect`
+- `expect`
 
-* `beforeEach`
+- `beforeEach`
 
-* `afterEach`
+- `afterEach`
 
-* `vi`
+- `vi`
 
-* `buildProcessorSelectOptions`
+- `buildProcessorSelectOptions`
 
-* `createUi`
+- `createUi`
 
-* `renderPipelineStepList`
+- `renderPipelineStepList`
 
-* `bindInputEvent`
+- `bindInputEvent`
 
-* `bindPipelineEvent`
+- `bindPipelineEvent`
 
-* `bindOutputEvent`
+- `bindOutputEvent`
 
-* `PROCESSOR_REGISTRY`
+- `PROCESSOR_REGISTRY`
 
-* `appState`
+- `appState`
 
 **不要な import は入れないこと。**
 特に `initApp` は import しないこと。
@@ -9457,9 +10145,9 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 ## 失敗時の扱い
 
-* `npm run precommit` が **自分の変更と無関係な既存不具合** で落ちた場合は、`event.test.ts` 以外を触らずに止めること
-* 落ちた原因を直すために、本番コードや他テストへ手を広げないこと
-* まず `event.test.ts` だけを完成させることを優先すること
+- `npm run precommit` が **自分の変更と無関係な既存不具合** で落ちた場合は、`event.test.ts` 以外を触らずに止めること
+- 落ちた原因を直すために、本番コードや他テストへ手を広げないこと
+- まず `event.test.ts` だけを完成させることを優先すること
 
 
 
