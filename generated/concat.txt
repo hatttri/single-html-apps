@@ -39,7 +39,7 @@ Directory structure:
 │   ├── 20260320_02_Random_Picker_リファクタリング実装指示書.md
 │   ├── 20260401_01_itemsに統一する指示書.md
 │   ├── 20260401_02_event.test.ts全面作り直し指示書.md
-│   └── 20260402_01ui.pipelineStepList.oninputインテグレーションテスト修正指示書.md
+│   └── 20260402_01_ui.pipelineStepList.oninput_インテグレーションテスト修正指示書.md
 ├── playwright.config.ts
 ├── README.md
 ├── scripts
@@ -10153,7 +10153,7 @@ describe("ui.outputOpenBtn.onclick", () => {
 
 
 ================================================
-FILE: plans/20260402_01ui.pipelineStepList.oninputインテグレーションテスト修正指示書.md
+FILE: plans/20260402_01_ui.pipelineStepList.oninput_インテグレーションテスト修正指示書.md
 ================================================
 # `ui.pipelineStepList.oninput` インテグレーションテスト修正指示書
 
