@@ -7,20 +7,23 @@
     <style>
       /* apps/random-picker/src/style.css */
       :root {
-        --bg-gradient-start: #141e30;
-        --bg-gradient-end: #243b55;
-        --card-bg: rgba(255, 255, 255, 0.05);
-        --card-border: rgba(255, 255, 255, 0.1);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        --text-primary: #ffffff;
-        --text-secondary: rgba(255, 255, 255, 0.7);
-        --text-placeholder: rgba(255, 255, 255, 0.4);
-        --accent-glow: rgba(0, 212, 255, 0.6);
-        --btn-bg: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-        --btn-hover: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
-        --output-bg: rgba(0, 0, 0, 0.2);
+        --bg-gradient-start: #0d1b2e;
+        --bg-gradient-end: #1a2e4a;
+        --card-bg: rgba(255, 255, 255, 0.07);
+        --card-border: rgba(255, 255, 255, 0.14);
+        --card-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.55);
+        --text-primary: #f0f4ff;
+        --text-secondary: rgba(180, 205, 235, 0.85);
+        --text-placeholder: rgba(140, 175, 210, 0.45);
+        --accent-glow: rgba(0, 212, 255, 0.55);
+        --btn-bg: linear-gradient(135deg, #00c8f0 0%, #2b6fd4 100%);
+        --btn-hover: linear-gradient(135deg, #2b6fd4 0%, #00c8f0 100%);
+        --output-bg: rgba(0, 0, 0, 0.25);
         --output-glow:
-          0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
+          0 0 20px rgba(0, 210, 255, 0.75), 0 0 40px rgba(0, 210, 255, 0.35);
+        --step-bg: rgba(255, 255, 255, 0.065);
+        --step-bg-hover: rgba(255, 255, 255, 0.11);
+        --step-border: rgba(255, 255, 255, 0.11);
         --font-family: system-ui, -apple-system, sans-serif;
         --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
@@ -42,7 +45,7 @@
         min-height: 100vh;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         padding: 20px;
         overflow-x: hidden;
         position: relative;
@@ -55,20 +58,21 @@
         border-radius: 24px;
         box-shadow: var(--card-shadow);
         width: 100%;
-        max-width: 600px;
-        padding: 40px;
+        max-width: 100%;
+        padding: 32px;
         z-index: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
+        display: grid;
+        grid-template-columns: 1fr 1.4fr 1fr;
+        gap: 20px;
+        align-items: stretch;
         position: relative;
-        overflow: hidden;
         animation: fadeIn 0.3s ease-out;
       }
       .input-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        min-height: 0;
       }
       .input-header,
       .output-header {
@@ -125,15 +129,21 @@
       }
       #input,
       #output {
-        height: 180px;
+        flex: 1;
+        min-height: 180px;
+        height: auto;
         color: var(--text-primary);
         resize: vertical;
-        scrollbar-width: thin;
+        white-space: pre;
+        overflow-x: auto;
+        overflow-y: auto;
+        scrollbar-width: auto;
         scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
       }
       #input::-webkit-scrollbar,
       #output::-webkit-scrollbar {
         width: 8px;
+        height: 10px;
       }
       #input::-webkit-scrollbar-track,
       #output::-webkit-scrollbar-track {
@@ -144,11 +154,15 @@
         background-color: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
+      #input::-webkit-scrollbar-corner,
+      #output::-webkit-scrollbar-corner {
+        background: transparent;
+      }
       #input:focus,
       #output:focus {
-        border-color: rgba(0, 212, 255, 0.5);
+        border-color: rgba(0, 200, 240, 0.5);
         background: rgba(0, 0, 0, 0.3);
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+        box-shadow: 0 0 18px rgba(0, 200, 240, 0.12);
       }
       button {
         background: var(--btn-bg);
@@ -165,12 +179,12 @@
       }
       button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+        box-shadow: 0 6px 20px rgba(0, 200, 240, 0.3);
         background: var(--btn-hover);
       }
       button:active {
         transform: translateY(1px);
-        box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+        box-shadow: 0 2px 10px rgba(0, 200, 240, 0.3);
       }
       button:disabled {
         background: rgba(255, 255, 255, 0.1);
@@ -184,7 +198,7 @@
         flex-direction: column;
         gap: 12px;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(0, 0, 0, 0.22);
         border: 1px solid var(--card-border);
         border-radius: 20px;
       }
@@ -196,19 +210,24 @@
       .pipeline-step-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 1px;
         min-height: 40px;
+        flex: 1;
       }
       .pipeline-step-item {
         display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        align-items: stretch;
+        gap: 8px;
+        padding: 0 8px;
+        min-height: 28px;
+        background: var(--step-bg);
+        border: 1px solid var(--step-border);
+        border-radius: 4px;
         cursor: grab;
         transition: var(--transition-smooth);
+      }
+      .pipeline-step-item:hover {
+        background: var(--step-bg-hover);
       }
       .pipeline-step-item.dragging {
         opacity: 0.5;
@@ -222,35 +241,57 @@
         cursor: grab;
         display: flex;
         align-items: center;
+        padding: 4px 0;
+      }
+      .pipeline-drag-handle svg {
+        width: 12px;
+        height: 12px;
       }
       .pipeline-step-name {
         flex: 1;
+        display: flex;
+        align-items: center;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.78rem;
+        padding: 4px 0;
       }
       .pipeline-step-params {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+      }
+      .pipeline-step-params span {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        padding: 4px 0;
       }
       .pipeline-step-params input {
-        width: 60px;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        padding: 4px 8px;
+        width: 56px;
+        align-self: stretch;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+        padding: 0 6px;
         color: var(--text-primary);
-        font-size: 0.85rem;
+        font-size: 0.78rem;
+      }
+      .pipeline-step-params input[type="number"]::-webkit-inner-spin-button,
+      .pipeline-step-params input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: inner-spin-button;
+        opacity: 1;
+        height: auto;
       }
       .pipeline-delete-btn {
         background: transparent;
         color: var(--text-placeholder);
         border: none;
-        padding: 4px;
-        border-radius: 6px;
+        padding: 4px 2px;
+        border-radius: 3px;
         cursor: pointer;
         display: flex;
         align-items: center;
+        align-self: stretch;
         transition: var(--transition-smooth);
         box-shadow: none;
         font-size: 0;
@@ -266,13 +307,17 @@
       }
       .pipeline-add-controls select {
         flex: 1;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #1a2d47;
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 12px;
         padding: 8px 12px;
         color: var(--text-primary);
         font-family: var(--font-family);
         cursor: pointer;
+      }
+      .pipeline-add-controls select option {
+        background: #1a2d47;
+        color: #f0f4ff;
       }
       .pipeline-add-controls button {
         padding: 8px 20px;
@@ -285,19 +330,21 @@
       }
       .pipeline-empty-msg {
         text-align: center;
-        padding: 20px;
+        padding: 16px;
         color: var(--text-placeholder);
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         border: 1px dashed rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        border-radius: 6px;
       }
       .output-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
+        min-height: 0;
       }
-      @media (max-width: 600px) {
+      @media (max-width: 900px) {
         .glass-container {
+          grid-template-columns: 1fr;
           padding: 24px;
           border-radius: 20px;
         }
@@ -352,7 +399,7 @@
             </button>
           </div>
         </div>
-        <textarea id="input"></textarea>
+        <textarea id="input" wrap="off"></textarea>
       </div>
 
       <div class="pipeline-section">
@@ -404,7 +451,7 @@
             </button>
           </div>
         </div>
-        <textarea id="output" readonly></textarea>
+        <textarea id="output" readonly wrap="off"></textarea>
       </div>
     </div>
 
