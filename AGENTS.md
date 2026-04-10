@@ -89,5 +89,7 @@
 - コミットの共同作成者
   - Antigravity
     - `Co-authored-by: gemini-code-assist[bot] <176961590+gemini-code-assist[bot]@users.noreply.github.com>`
+  - Claude Code
+    - `Co-authored-by: Claude <noreply@anthropic.com>`
   - Codex
     - `Co-authored-by: Codex <noreply@openai.com>`
